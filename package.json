@@ -1,0 +1,15 @@
+{
+  "name": "ai-driven-developer-assist",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "t.ohkura",
+  "type": "module",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "test"
+  }
+}

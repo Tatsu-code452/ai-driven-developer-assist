@@ -1,69 +1,132 @@
-export type ConverterResponse = {
-    success: boolean;
-    taskCount: number;
-    documentCount: number;
-}
+import path from "path";
 
-export type ConverterRequest = {
-    files: File[];
-}
+import {
+  parseMarkdownFile
+} from "./markdownParser/parseMarkdownFile";
 
-export type File = {
-    name: string;
-    type: string;
-    size: number;
-    content: ArrayBuffer;
-}
+import {
+  extractTasks
+} from "./TaskExtractor";
 
-export type ConverterService = {
-    convert: (request: ConverterRequest) => Promise<ConverterResponse>
-}
+import {
+  extractDocuments
+} from "./DocumentExtractor";
 
-export type ConverterServiceRequest = {
+import {
+  exportDocuments,
+  exportTasks
+} from "./JsonExporter";
 
-}
+export type ConvertResult = {
+  taskCount: number;
+  documentCount: number;
+  tasksFile: string;
+  documentsFile: string;
+};
 
-export type ConverterServiceResponse = {
-}
+export const convertMarkdownFile =
+  (
+    markdownFile: string,
+    outputDir: string
+  ): ConvertResult => {
 
-export type ConverterServiceError = {
-}
+    const document =
+      parseMarkdownFile(
+        markdownFile
+      );
 
-export type ConverterServiceRequestBody = {
-}
+    const tasks =
+      extractTasks(
+        document
+      );
 
-export type ConverterServiceResponseBody = {
-}
+    const documents =
+      extractDocuments(
+        document
+      );
 
-export type ConverterServiceErrorBody = {
-}
+    const tasksFile =
+      exportTasks(
+        tasks,
+        outputDir
+      );
 
-export type ConverterServiceRequestHeaders = {
-}
+    const documentsFile =
+      exportDocuments(
+        documents,
+        outputDir
+      );
 
-export type ConverterServiceResponseHeaders = {
-}
+    return {
+      taskCount:
+        tasks.length,
 
-export type ConverterServiceErrorHeaders = {
-}
+      documentCount:
+        documents.length,
 
-export type ConverterServiceRequestParams = {
-}
+      tasksFile,
 
-export type ConverterServiceResponseParams = {
-}
+      documentsFile
+    };
+  };
 
-export type ConverterServiceErrorParams = {
-}
+export const convertMarkdownFiles =
+  (
+    markdownFiles: string[],
+    outputDir: string
+  ) => {
 
-export type ConverterServiceRequestQuery = {
-}
+    const documents =
+      markdownFiles.map(
+        parseMarkdownFile
+      );
 
-export type ConverterServiceResponseQuery = {
-}
+    const allTasks =
+      documents.flatMap(
+        extractTasks
+      );
 
-export type ConverterServiceErrorQuery = {
-}
+    const allDocuments =
+      documents.flatMap(
+        extractDocuments
+      );
 
+    const tasksFile =
+      exportTasks(
+        allTasks,
+        outputDir
+      );
 
+    const documentsFile =
+      exportDocuments(
+        allDocuments,
+        outputDir
+      );
 
+    return {
+
+      taskCount:
+        allTasks.length,
+
+      documentCount:
+        allDocuments.length,
+
+      tasksFile,
+
+      documentsFile
+
+    };
+
+  };
+
+export const createOutputDirectory =
+  (
+    rootDir = "data"
+  ) => {
+
+    return path.join(
+      rootDir,
+      "generated"
+    );
+
+  };

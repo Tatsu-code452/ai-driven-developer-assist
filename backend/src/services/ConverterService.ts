@@ -1,132 +1,87 @@
 import path from "path";
 
 import {
-  parseMarkdownFile
-} from "./markdownParser/parseMarkdownFile";
+  parseMarkdownContent
+} from "@/services/markdownParser/parseMarkdownContent";
 
 import {
   extractTasks
-} from "./TaskExtractor";
+} from "@/services/TaskExtractor";
 
 import {
   extractDocuments
-} from "./DocumentExtractor";
+} from "@/services/DocumentExtractor";
 
 import {
-  exportDocuments,
-  exportTasks
-} from "./JsonExporter";
+  exportTasks,
+  exportDocuments
+} from "@/services/JsonExporter";
 
-export type ConvertResult = {
-  taskCount: number;
-  documentCount: number;
-  tasksFile: string;
-  documentsFile: string;
-};
+export const convertMarkdown =
+(
+  markdown: string,
+  outputRoot = "data"
+) => {
 
-export const convertMarkdownFile =
-  (
-    markdownFile: string,
-    outputDir: string
-  ): ConvertResult => {
+  const document =
+    parseMarkdownContent(
+      markdown
+    );
 
-    const document =
-      parseMarkdownFile(
-        markdownFile
-      );
+  const tasks =
+    extractTasks(
+      document
+    );
 
-    const tasks =
-      extractTasks(
-        document
-      );
+  const documents =
+    extractDocuments(
+      document
+    );
 
-    const documents =
-      extractDocuments(
-        document
-      );
+  const outputDir =
+    path.join(
+      outputRoot,
+      "generated"
+    );
 
-    const tasksFile =
-      exportTasks(
-        tasks,
-        outputDir
-      );
+  const tasksFile =
+    exportTasks(
+      tasks,
+      outputDir
+    );
 
-    const documentsFile =
-      exportDocuments(
-        documents,
-        outputDir
-      );
+  const documentsFile =
+    exportDocuments(
+      documents,
+      outputDir
+    );
 
-    return {
+  return {
+
+    document,
+
+    tasks,
+
+    documents,
+
+    output: {
+
+      tasksFile,
+
+      documentsFile
+
+    },
+
+    summary: {
+
       taskCount:
         tasks.length,
 
       documentCount:
-        documents.length,
+        documents.length
 
-      tasksFile,
-
-      documentsFile
-    };
-  };
-
-export const convertMarkdownFiles =
-  (
-    markdownFiles: string[],
-    outputDir: string
-  ) => {
-
-    const documents =
-      markdownFiles.map(
-        parseMarkdownFile
-      );
-
-    const allTasks =
-      documents.flatMap(
-        extractTasks
-      );
-
-    const allDocuments =
-      documents.flatMap(
-        extractDocuments
-      );
-
-    const tasksFile =
-      exportTasks(
-        allTasks,
-        outputDir
-      );
-
-    const documentsFile =
-      exportDocuments(
-        allDocuments,
-        outputDir
-      );
-
-    return {
-
-      taskCount:
-        allTasks.length,
-
-      documentCount:
-        allDocuments.length,
-
-      tasksFile,
-
-      documentsFile
-
-    };
+    }
 
   };
 
-export const createOutputDirectory =
-  (
-    rootDir = "data"
-  ) => {
-
-    return path.join(
-      rootDir,
-      "generated"
-    );
-
-  };
+};

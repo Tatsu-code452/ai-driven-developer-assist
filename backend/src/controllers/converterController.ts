@@ -1,24 +1,47 @@
-import { parseMarkdownContent } from "@/services/markdownParser/parseMarkdownContent";
-import { Request, Response } from "express";
+import {
+  convertMarkdown
+} from "@/services/ConverterService";
 
-export const convertMarkdown = (
+import {
+  Request,
+  Response
+} from "express";
+
+export const convertMarkdownHandler =
+(
   req: Request,
   res: Response
 ) => {
 
-  const content = req.body.content;
+  const content =
+    req.body.content;
 
   if (!content) {
-    return res.status(400).json({
-      success: false,
-      message: "content is required"
-    });
+
+    return res
+      .status(400)
+      .json({
+
+        success: false,
+
+        message:
+          "content is required"
+
+      });
+
   }
 
-  const document = parseMarkdownContent(content);
+  const result =
+    convertMarkdown(
+      content
+    );
 
   return res.json({
+
     success: true,
-    data: document
+
+    data: result
+
   });
+
 };

@@ -1,6 +1,3 @@
-import fs from "fs";
-import path from "path";
-
 import {
   describe,
   expect,
@@ -8,7 +5,7 @@ import {
 } from "vitest";
 
 import {
-  convertMarkdownFile
+  convertMarkdown
 } from "../ConverterService";
 
 describe(
@@ -16,50 +13,77 @@ describe(
   () => {
 
     it(
-      "Markdownから管理データ生成",
+      "markdownを管理データへ変換",
       () => {
 
-        const baseDir =
-          ".test-converter";
-
-        fs.mkdirSync(
-          baseDir,
-          {
-            recursive:true
-          }
-        );
-
-        const markdownFile =
-          path.join(
-            baseDir,
-            "sample.md"
-          );
-
-        fs.writeFileSync(
-          markdownFile,
+        const result =
+          convertMarkdown(
 `
 # 要件定義書
 
 - API実装
 - 画面作成
+- テスト対応
 `
-        );
-
-        const result =
-          convertMarkdownFile(
-            markdownFile,
-            baseDir
           );
 
         expect(
-          result.documentCount
+          result.summary
+            .taskCount
+        )
+          .toBe(3);
+
+        expect(
+          result.summary
+            .documentCount
         )
           .toBe(1);
 
+      }
+    );
+
+    it(
+      "生成Taskを返却",
+      () => {
+
+        const result =
+          convertMarkdown(
+`
+# WBS
+
+- API実装
+`
+          );
+
         expect(
-          result.taskCount
+          result.tasks[0]
+            .id
         )
-          .toBe(2);
+          .toBe(
+            "TSK-001"
+          );
+
+      }
+    );
+
+    it(
+      "Documentを返却",
+      () => {
+
+        const result =
+          convertMarkdown(
+`
+# 要件定義書
+`
+          );
+
+        expect(
+          result.documents[0]
+            .id
+        )
+          .toBe(
+            "REQ-001"
+          );
 
       }
     );

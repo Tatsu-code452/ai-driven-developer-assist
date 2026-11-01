@@ -41,7 +41,7 @@ export const parseLists = (
         startLine = index + 1;
       }
 
-      currentItems.push(match[1].trim());
+      currentItems.push(match[2].trim());
 
       return;
     }

@@ -61,29 +61,52 @@ export const env = {
 FILE: backend\src\controllers\converterController.ts
 ================================================================================
 
-import { parseMarkdownContent } from "@/services/markdownParser/parseMarkdownContent";
-import { Request, Response } from "express";
+import {
+  convertMarkdown
+} from "@/services/ConverterService";
 
-export const convertMarkdown = (
+import {
+  Request,
+  Response
+} from "express";
+
+export const convertMarkdownHandler =
+(
   req: Request,
   res: Response
 ) => {
 
-  const content = req.body.content;
+  const content =
+    req.body.content;
 
   if (!content) {
-    return res.status(400).json({
-      success: false,
-      message: "content is required"
-    });
+
+    return res
+      .status(400)
+      .json({
+
+        success: false,
+
+        message:
+          "content is required"
+
+      });
+
   }
 
-  const document = parseMarkdownContent(content);
+  const result =
+    convertMarkdown(
+      content
+    );
 
   return res.json({
+
     success: true,
-    data: document
+
+    data: result
+
   });
+
 };
 
 
@@ -290,12 +313,19 @@ export const readJson =
 FILE: backend\src\routes\converterRoutes.ts
 ================================================================================
 
-import { convertMarkdown } from "@/controllers/converterController";
-import { Router } from "express";
+import { Router }
+from "express";
+
+import {
+  convertMarkdownHandler
+} from "@/controllers/converterController";
 
 const router = Router();
 
-router.post("/markdown", convertMarkdown);
+router.post(
+  "/markdown",
+  convertMarkdownHandler
+);
 
 export default router;
 
@@ -340,135 +370,90 @@ FILE: backend\src\services\ConverterService.ts
 import path from "path";
 
 import {
-  parseMarkdownFile
-} from "./markdownParser/parseMarkdownFile";
+  parseMarkdownContent
+} from "@/services/markdownParser/parseMarkdownContent";
 
 import {
   extractTasks
-} from "./TaskExtractor";
+} from "@/services/TaskExtractor";
 
 import {
   extractDocuments
-} from "./DocumentExtractor";
+} from "@/services/DocumentExtractor";
 
 import {
-  exportDocuments,
-  exportTasks
-} from "./JsonExporter";
+  exportTasks,
+  exportDocuments
+} from "@/services/JsonExporter";
 
-export type ConvertResult = {
-  taskCount: number;
-  documentCount: number;
-  tasksFile: string;
-  documentsFile: string;
-};
+export const convertMarkdown =
+(
+  markdown: string,
+  outputRoot = "data"
+) => {
 
-export const convertMarkdownFile =
-  (
-    markdownFile: string,
-    outputDir: string
-  ): ConvertResult => {
+  const document =
+    parseMarkdownContent(
+      markdown
+    );
 
-    const document =
-      parseMarkdownFile(
-        markdownFile
-      );
+  const tasks =
+    extractTasks(
+      document
+    );
 
-    const tasks =
-      extractTasks(
-        document
-      );
+  const documents =
+    extractDocuments(
+      document
+    );
 
-    const documents =
-      extractDocuments(
-        document
-      );
+  const outputDir =
+    path.join(
+      outputRoot,
+      "generated"
+    );
 
-    const tasksFile =
-      exportTasks(
-        tasks,
-        outputDir
-      );
+  const tasksFile =
+    exportTasks(
+      tasks,
+      outputDir
+    );
 
-    const documentsFile =
-      exportDocuments(
-        documents,
-        outputDir
-      );
+  const documentsFile =
+    exportDocuments(
+      documents,
+      outputDir
+    );
 
-    return {
+  return {
+
+    document,
+
+    tasks,
+
+    documents,
+
+    output: {
+
+      tasksFile,
+
+      documentsFile
+
+    },
+
+    summary: {
+
       taskCount:
         tasks.length,
 
       documentCount:
-        documents.length,
+        documents.length
 
-      tasksFile,
-
-      documentsFile
-    };
-  };
-
-export const convertMarkdownFiles =
-  (
-    markdownFiles: string[],
-    outputDir: string
-  ) => {
-
-    const documents =
-      markdownFiles.map(
-        parseMarkdownFile
-      );
-
-    const allTasks =
-      documents.flatMap(
-        extractTasks
-      );
-
-    const allDocuments =
-      documents.flatMap(
-        extractDocuments
-      );
-
-    const tasksFile =
-      exportTasks(
-        allTasks,
-        outputDir
-      );
-
-    const documentsFile =
-      exportDocuments(
-        allDocuments,
-        outputDir
-      );
-
-    return {
-
-      taskCount:
-        allTasks.length,
-
-      documentCount:
-        allDocuments.length,
-
-      tasksFile,
-
-      documentsFile
-
-    };
+    }
 
   };
 
-export const createOutputDirectory =
-  (
-    rootDir = "data"
-  ) => {
-
-    return path.join(
-      rootDir,
-      "generated"
-    );
-
-  };
+};
 
 
 
@@ -857,7 +842,7 @@ export const parseLists = (
         startLine = index + 1;
       }
 
-      currentItems.push(match[1].trim());
+      currentItems.push(match[2].trim());
 
       return;
     }
@@ -1210,9 +1195,6 @@ export const hasTaskSection =
 FILE: backend\src\services\__tests__\ConverterService.test.ts
 ================================================================================
 
-import fs from "fs";
-import path from "path";
-
 import {
   describe,
   expect,
@@ -1220,7 +1202,7 @@ import {
 } from "vitest";
 
 import {
-  convertMarkdownFile
+  convertMarkdown
 } from "../ConverterService";
 
 describe(
@@ -1228,50 +1210,77 @@ describe(
   () => {
 
     it(
-      "Markdownから管理データ生成",
+      "markdownを管理データへ変換",
       () => {
 
-        const baseDir =
-          ".test-converter";
-
-        fs.mkdirSync(
-          baseDir,
-          {
-            recursive:true
-          }
-        );
-
-        const markdownFile =
-          path.join(
-            baseDir,
-            "sample.md"
-          );
-
-        fs.writeFileSync(
-          markdownFile,
+        const result =
+          convertMarkdown(
 `
 # 要件定義書
 
 - API実装
 - 画面作成
+- テスト対応
 `
-        );
-
-        const result =
-          convertMarkdownFile(
-            markdownFile,
-            baseDir
           );
 
         expect(
-          result.documentCount
+          result.summary
+            .taskCount
+        )
+          .toBe(3);
+
+        expect(
+          result.summary
+            .documentCount
         )
           .toBe(1);
 
+      }
+    );
+
+    it(
+      "生成Taskを返却",
+      () => {
+
+        const result =
+          convertMarkdown(
+`
+# WBS
+
+- API実装
+`
+          );
+
         expect(
-          result.taskCount
+          result.tasks[0]
+            .id
         )
-          .toBe(2);
+          .toBe(
+            "TSK-001"
+          );
+
+      }
+    );
+
+    it(
+      "Documentを返却",
+      () => {
+
+        const result =
+          convertMarkdown(
+`
+# 要件定義書
+`
+          );
+
+        expect(
+          result.documents[0]
+            .id
+        )
+          .toBe(
+            "REQ-001"
+          );
 
       }
     );
@@ -2183,6 +2192,38 @@ exportSource(
   targetDir,
   outputFile
 );
+
+
+
+================================================================================
+FILE: backend\src\types\ConvertResponse.ts
+================================================================================
+
+export type ConvertResponse = {
+
+  success: boolean;
+
+  data: {
+
+    document: unknown;
+
+    tasks: unknown[];
+
+    documents: unknown[];
+
+    output: {
+      tasksFile: string;
+      documentsFile: string;
+    };
+
+    summary: {
+      taskCount: number;
+      documentCount: number;
+    };
+
+  };
+
+};
 
 
 

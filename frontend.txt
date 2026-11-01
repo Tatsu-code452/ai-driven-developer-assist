@@ -22,6 +22,189 @@ export const App = () => {
 
 
 ================================================================================
+FILE: frontend\src\components\converter\DocumentTable.tsx
+================================================================================
+
+import type { Document } from "../../types/ConverterResult";
+
+type Props = {
+    documents: Document[];
+};
+
+export const DocumentTable = (props: Props) => {
+    return (
+        <table
+            className="
+      w-full
+      border
+      text-sm
+      "
+        >
+            <thead>
+                <tr
+                    className="
+          bg-slate-100
+          "
+                >
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Type</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {props.documents.map((document) => (
+                    <tr key={document.id}>
+                        <td>{document.id}</td>
+
+                        <td>{document.title}</td>
+
+                        <td>{document.type}</td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    );
+};
+
+
+
+================================================================================
+FILE: frontend\src\components\converter\SummaryPanel.tsx
+================================================================================
+
+type Props = {
+  taskCount: number;
+  documentCount: number;
+};
+
+export const SummaryPanel = (
+  props: Props
+) => {
+
+  return (
+
+    <div
+      className="
+      grid
+      grid-cols-2
+      gap-4
+      "
+    >
+
+      <div
+        className="
+        p-4
+        bg-blue-50
+        rounded
+        border
+        "
+      >
+        <div
+          className="
+          text-sm
+          text-slate-500
+          "
+        >
+          Task
+        </div>
+
+        <div
+          className="
+          text-3xl
+          font-bold
+          "
+        >
+          {props.taskCount}
+        </div>
+
+      </div>
+
+      <div
+        className="
+        p-4
+        bg-green-50
+        rounded
+        border
+        "
+      >
+        <div
+          className="
+          text-sm
+          text-slate-500
+          "
+        >
+          Document
+        </div>
+
+        <div
+          className="
+          text-3xl
+          font-bold
+          "
+        >
+          {props.documentCount}
+        </div>
+
+      </div>
+
+    </div>
+
+  );
+
+};
+
+
+
+================================================================================
+FILE: frontend\src\components\converter\TaskTable.tsx
+================================================================================
+
+import type { Task } from "../../types/ConverterResult";
+
+type Props = {
+    tasks: Task[];
+};
+
+export const TaskTable = (props: Props) => {
+    return (
+        <table
+            className="
+      w-full
+      border
+      text-sm
+      "
+        >
+            <thead>
+                <tr
+                    className="
+          bg-slate-100
+          "
+                >
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {props.tasks.map((task) => (
+                    <tr key={task.id}>
+                        <td>{task.id}</td>
+
+                        <td>{task.title}</td>
+
+                        <td>{task.status}</td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    );
+};
+
+
+
+================================================================================
 FILE: frontend\src\components\JsonViewer.tsx
 ================================================================================
 
@@ -91,19 +274,25 @@ FILE: frontend\src\pages\ConverterPage.tsx
 ================================================================================
 
 import { useState } from "react";
-import { JsonViewer } from "../components/JsonViewer";
+import { DocumentTable } from "../components/converter/DocumentTable";
+import { SummaryPanel } from "../components/converter/SummaryPanel";
+import { TaskTable } from "../components/converter/TaskTable";
 import { convertMarkdown } from "../services/converterApi";
+import type { ConverterResult } from "../types/ConverterResult";
 
-const INIT_TEXT = `# Sample
-
-## Overview
-
-- Task A
-- Task B
-`;
 export const ConverterPage = () => {
-    const [markdown, setMarkdown] = useState(INIT_TEXT);
-    const [result, setResult] = useState();
+    const [markdown, setMarkdown] = useState(`
+# 要件定義書
+
+## 実装対象
+
+- API実装
+- Task一覧画面作成
+- ConverterService実装
+`);
+
+    const [result, setResult] = useState<ConverterResult>();
+
     const [loading, setLoading] = useState(false);
 
     const execute = async () => {
@@ -119,37 +308,126 @@ export const ConverterPage = () => {
     };
 
     return (
-        <div className="max-w-7xl mx-auto ">
-            <h1 className="text-2xl font-bold mb-4 ">管理データ変換</h1>
+        <div
+            className="
+      max-w-full
+      space-y-6
+      "
+        >
+            <h1
+                className="
+        text-3xl
+        font-bold
+        "
+            >
+                SCR-CONV-001 管理データ変換
+            </h1>
 
-            <div className="grid grid-cols-2 gap-4 ">
-                <div>
-                    <label className="block mb-2 font-semibold ">
-                        Markdown
-                    </label>
+            <SummaryPanel
+                taskCount={result?.data.summary.taskCount ?? 0}
+                documentCount={result?.data.summary.documentCount ?? 0}
+            />
+
+            <div
+                className="
+        grid
+        grid-cols-2
+        gap-6
+        "
+            >
+                <section>
+                    <h2
+                        className="
+            font-bold
+            mb-2
+            "
+                    >
+                        Markdown入力
+                    </h2>
 
                     <textarea
                         value={markdown}
                         onChange={(event) => setMarkdown(event.target.value)}
-                        className="w-full h-150 border rounded p-3 font-mono "
+                        className="
+            w-full
+            h-[600px]
+            border
+            rounded
+            p-4
+            font-mono
+            "
                     />
-                </div>
 
-                <div>
-                    <div className="flex justify-between mb-2 ">
-                        <label className="font-semibold ">Parse Result</label>
+                    <button
+                        onClick={execute}
+                        disabled={loading}
+                        className="
+            mt-4
+            bg-blue-600
+            text-white
+            px-4
+            py-2
+            rounded
+            "
+                    >
+                        {loading ? "変換中..." : "管理データ変換"}
+                    </button>
+                </section>
 
-                        <button
-                            onClick={execute}
-                            disabled={loading}
-                            className="bg-blue-600 text-white px-4 py-2 rounded "
+                <section
+                    className="
+          space-y-6
+          "
+                >
+                    <div>
+                        <h2
+                            className="
+              font-bold
+              mb-2
+              "
                         >
-                            {loading ? "実行中..." : "変換"}
-                        </button>
+                            Task一覧
+                        </h2>
+
+                        <TaskTable tasks={result?.data.tasks ?? []} />
                     </div>
 
-                    <JsonViewer data={result} />
-                </div>
+                    <div>
+                        <h2
+                            className="
+              font-bold
+              mb-2
+              "
+                        >
+                            Document一覧
+                        </h2>
+
+                        <DocumentTable
+                            documents={result?.data.documents ?? []}
+                        />
+                    </div>
+
+                    {result && (
+                        <div
+                            className="
+                border
+                rounded
+                p-4
+                text-sm
+                "
+                        >
+                            <div>
+                                tasks:
+                                {result.data.output.tasksFile}
+                            </div>
+
+                            <div>
+                                documents:
+                                {result.data.output.documentsFile}
+                            </div>
+                        </div>
+                    )}
+                </section>
             </div>
         </div>
     );
@@ -186,6 +464,51 @@ export const convertMarkdown = async (
     );
 
   return response.data;
+};
+
+
+
+================================================================================
+FILE: frontend\src\types\ConverterResult.ts
+================================================================================
+
+export type Task = {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  priority: string;
+};
+
+export type Document = {
+  id: string;
+  title: string;
+  type: string;
+  path: string;
+};
+
+export type ConverterResult = {
+
+  success: boolean;
+
+  data: {
+
+    tasks: Task[];
+
+    documents: Document[];
+
+    summary: {
+      taskCount: number;
+      documentCount: number;
+    };
+
+    output: {
+      tasksFile: string;
+      documentsFile: string;
+    };
+
+  };
+
 };
 
 

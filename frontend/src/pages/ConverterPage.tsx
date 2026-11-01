@@ -1,17 +1,23 @@
 import { useState } from "react";
-import { JsonViewer } from "../components/JsonViewer";
+import { DocumentTable } from "../components/converter/DocumentTable";
+import { SummaryPanel } from "../components/converter/SummaryPanel";
+import { TaskTable } from "../components/converter/TaskTable";
 import { convertMarkdown } from "../services/converterApi";
+import type { ConverterResult } from "../types/ConverterResult";
 
-const INIT_TEXT = `# Sample
-
-## Overview
-
-- Task A
-- Task B
-`;
 export const ConverterPage = () => {
-    const [markdown, setMarkdown] = useState(INIT_TEXT);
-    const [result, setResult] = useState();
+    const [markdown, setMarkdown] = useState(`
+# 要件定義書
+
+## 実装対象
+
+- API実装
+- Task一覧画面作成
+- ConverterService実装
+`);
+
+    const [result, setResult] = useState<ConverterResult>();
+
     const [loading, setLoading] = useState(false);
 
     const execute = async () => {
@@ -27,37 +33,126 @@ export const ConverterPage = () => {
     };
 
     return (
-        <div className="max-w-7xl mx-auto ">
-            <h1 className="text-2xl font-bold mb-4 ">管理データ変換</h1>
+        <div
+            className="
+      max-w-full
+      space-y-6
+      "
+        >
+            <h1
+                className="
+        text-3xl
+        font-bold
+        "
+            >
+                SCR-CONV-001 管理データ変換
+            </h1>
 
-            <div className="grid grid-cols-2 gap-4 ">
-                <div>
-                    <label className="block mb-2 font-semibold ">
-                        Markdown
-                    </label>
+            <SummaryPanel
+                taskCount={result?.data.summary.taskCount ?? 0}
+                documentCount={result?.data.summary.documentCount ?? 0}
+            />
+
+            <div
+                className="
+        grid
+        grid-cols-2
+        gap-6
+        "
+            >
+                <section>
+                    <h2
+                        className="
+            font-bold
+            mb-2
+            "
+                    >
+                        Markdown入力
+                    </h2>
 
                     <textarea
                         value={markdown}
                         onChange={(event) => setMarkdown(event.target.value)}
-                        className="w-full h-150 border rounded p-3 font-mono "
+                        className="
+            w-full
+            h-[600px]
+            border
+            rounded
+            p-4
+            font-mono
+            "
                     />
-                </div>
 
-                <div>
-                    <div className="flex justify-between mb-2 ">
-                        <label className="font-semibold ">Parse Result</label>
+                    <button
+                        onClick={execute}
+                        disabled={loading}
+                        className="
+            mt-4
+            bg-blue-600
+            text-white
+            px-4
+            py-2
+            rounded
+            "
+                    >
+                        {loading ? "変換中..." : "管理データ変換"}
+                    </button>
+                </section>
 
-                        <button
-                            onClick={execute}
-                            disabled={loading}
-                            className="bg-blue-600 text-white px-4 py-2 rounded "
+                <section
+                    className="
+          space-y-6
+          "
+                >
+                    <div>
+                        <h2
+                            className="
+              font-bold
+              mb-2
+              "
                         >
-                            {loading ? "実行中..." : "変換"}
-                        </button>
+                            Task一覧
+                        </h2>
+
+                        <TaskTable tasks={result?.data.tasks ?? []} />
                     </div>
 
-                    <JsonViewer data={result} />
-                </div>
+                    <div>
+                        <h2
+                            className="
+              font-bold
+              mb-2
+              "
+                        >
+                            Document一覧
+                        </h2>
+
+                        <DocumentTable
+                            documents={result?.data.documents ?? []}
+                        />
+                    </div>
+
+                    {result && (
+                        <div
+                            className="
+                border
+                rounded
+                p-4
+                text-sm
+                "
+                        >
+                            <div>
+                                tasks:
+                                {result.data.output.tasksFile}
+                            </div>
+
+                            <div>
+                                documents:
+                                {result.data.output.documentsFile}
+                            </div>
+                        </div>
+                    )}
+                </section>
             </div>
         </div>
     );

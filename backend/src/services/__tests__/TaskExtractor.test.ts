@@ -6,7 +6,7 @@ import {
 
 import {
   parseMarkdownContent
-} from "../MarkdownParser";
+} from "../markdownParser/parseMarkdownContent";
 
 import {
   extractTasks,

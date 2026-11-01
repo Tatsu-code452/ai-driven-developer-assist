@@ -6,12 +6,12 @@ import {
 
 import {
   parseMarkdownContent
-} from "../MarkdownParser";
+} from "../markdownParser/parseMarkdownContent";
 
 import {
-  extractDocuments,
+  createDocumentId,
   detectDocumentType,
-  createDocumentId
+  extractDocuments
 } from "../DocumentExtractor";
 
 describe(

@@ -1,9 +1,16 @@
 [
   {
+    "id": "DOC-001",
+    "title": "WBS（現時点版）",
+    "type": "DOC",
+    "path": "",
+    "source": "WBS（現時点版）"
+  },
+  {
     "id": "REQ-001",
-    "title": "要件定義書",
+    "title": "AI駆動型開発支援システム 要件定義書",
     "type": "REQ",
     "path": "",
-    "source": "要件定義書"
+    "source": "AI駆動型開発支援システム 要件定義書"
   }
 ]

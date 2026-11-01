@@ -13,9 +13,16 @@ import {
 } from "@/services/DocumentExtractor";
 
 import {
-  exportTasks,
-  exportDocuments
-} from "@/services/JsonExporter";
+  loadTasks,
+  mergeTasks,
+  saveTasks
+} from "@/repositories/TaskRepository";
+
+import {
+  loadDocuments,
+  mergeDocuments,
+  saveDocuments
+} from "@/repositories/DocumentRepository";
 
 export const convertMarkdown =
 (
@@ -28,31 +35,53 @@ export const convertMarkdown =
       markdown
     );
 
-  const tasks =
-    extractTasks(
-      document
-    );
-
-  const documents =
-    extractDocuments(
-      document
-    );
-
   const outputDir =
     path.join(
       outputRoot,
       "generated"
     );
 
+  const newTasks =
+    extractTasks(
+      document
+    );
+
+  const newDocuments =
+    extractDocuments(
+      document
+    );
+
+  const currentTasks =
+    loadTasks(
+      outputDir
+    );
+
+  const currentDocuments =
+    loadDocuments(
+      outputDir
+    );
+
+  const mergedTasks =
+    mergeTasks(
+      currentTasks,
+      newTasks
+    );
+
+  const mergedDocuments =
+    mergeDocuments(
+      currentDocuments,
+      newDocuments
+    );
+
   const tasksFile =
-    exportTasks(
-      tasks,
+    saveTasks(
+      mergedTasks,
       outputDir
     );
 
   const documentsFile =
-    exportDocuments(
-      documents,
+    saveDocuments(
+      mergedDocuments,
       outputDir
     );
 
@@ -60,9 +89,11 @@ export const convertMarkdown =
 
     document,
 
-    tasks,
+    tasks:
+      mergedTasks,
 
-    documents,
+    documents:
+      mergedDocuments,
 
     output: {
 
@@ -75,10 +106,10 @@ export const convertMarkdown =
     summary: {
 
       taskCount:
-        tasks.length,
+        mergedTasks.length,
 
       documentCount:
-        documents.length
+        mergedDocuments.length
 
     }
 

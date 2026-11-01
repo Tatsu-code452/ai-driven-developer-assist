@@ -11,5 +11,8 @@
   },
   "scripts": {
     "test": "test"
+  },
+  "devDependencies": {
+    "vitest": "4.1.12"
   }
 }

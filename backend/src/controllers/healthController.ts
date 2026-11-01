@@ -1,0 +1,13 @@
+import { Request, Response } from "express";
+
+export const getHealth = (
+  _req: Request,
+  res: Response
+) => {
+
+  res.json({
+    success: true,
+    status: "UP",
+    timestamp: new Date().toISOString()
+  });
+};

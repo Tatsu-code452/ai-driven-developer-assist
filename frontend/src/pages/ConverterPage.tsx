@@ -1,170 +1,64 @@
 import { useState } from "react";
+import { JsonViewer } from "../components/JsonViewer";
+import { convertMarkdown } from "../services/converterApi";
 
-import {
-  convertMarkdown
-} from "../services/converterApi";
-
-import {
-  JsonViewer
-} from "../components/JsonViewer";
-
-export const ConverterPage = () => {
-
-  const [
-    markdown,
-    setMarkdown
-  ] = useState(
-`# Sample
+const INIT_TEXT = `# Sample
 
 ## Overview
 
 - Task A
 - Task B
-`
-  );
+`;
+export const ConverterPage = () => {
+    const [markdown, setMarkdown] = useState(INIT_TEXT);
+    const [result, setResult] = useState();
+    const [loading, setLoading] = useState(false);
 
-  const [
-    result,
-    setResult
-  ] = useState();
+    const execute = async () => {
+        try {
+            setLoading(true);
 
-  const [
-    loading,
-    setLoading
-  ] = useState(false);
+            const response = await convertMarkdown(markdown);
 
-  const execute =
-    async () => {
-
-      try {
-
-        setLoading(true);
-
-        const response =
-          await convertMarkdown(
-            markdown
-          );
-
-        setResult(
-          response
-        );
-
-      } finally {
-
-        setLoading(false);
-
-      }
-
+            setResult(response);
+        } finally {
+            setLoading(false);
+        }
     };
 
-  return (
+    return (
+        <div className="max-w-7xl mx-auto ">
+            <h1 className="text-2xl font-bold mb-4 ">管理データ変換</h1>
 
-    <div
-      className="
-      max-w-7xl
-      mx-auto
-      "
-    >
+            <div className="grid grid-cols-2 gap-4 ">
+                <div>
+                    <label className="block mb-2 font-semibold ">
+                        Markdown
+                    </label>
 
-      <h1
-        className="
-        text-2xl
-        font-bold
-        mb-4
-        "
-      >
-        管理データ変換
-      </h1>
+                    <textarea
+                        value={markdown}
+                        onChange={(event) => setMarkdown(event.target.value)}
+                        className="w-full h-150 border rounded p-3 font-mono "
+                    />
+                </div>
 
-      <div
-        className="
-        grid
-        grid-cols-2
-        gap-4
-        "
-      >
+                <div>
+                    <div className="flex justify-between mb-2 ">
+                        <label className="font-semibold ">Parse Result</label>
 
-        <div>
+                        <button
+                            onClick={execute}
+                            disabled={loading}
+                            className="bg-blue-600 text-white px-4 py-2 rounded "
+                        >
+                            {loading ? "実行中..." : "変換"}
+                        </button>
+                    </div>
 
-          <label
-            className="
-            block
-            mb-2
-            font-semibold
-            "
-          >
-            Markdown
-          </label>
-
-          <textarea
-            value={markdown}
-            onChange={(
-              event
-            ) =>
-              setMarkdown(
-                event.target.value
-              )
-            }
-            className="
-            w-full
-            h-[600px]
-            border
-            rounded
-            p-3
-            font-mono
-            "
-          />
-
+                    <JsonViewer data={result} />
+                </div>
+            </div>
         </div>
-
-        <div>
-
-          <div
-            className="
-            flex
-            justify-between
-            mb-2
-            "
-          >
-
-            <label
-              className="
-              font-semibold
-              "
-            >
-              Parse Result
-            </label>
-
-            <button
-              onClick={execute}
-              disabled={loading}
-              className="
-              bg-blue-600
-              text-white
-              px-4
-              py-2
-              rounded
-              "
-            >
-              {
-                loading
-                  ? "実行中..."
-                  : "変換"
-              }
-            </button>
-
-          </div>
-
-          <JsonViewer
-            data={result}
-          />
-
-        </div>
-
-      </div>
-
-    </div>
-
-  );
-
+    );
 };

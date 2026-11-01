@@ -1,0 +1,2200 @@
+
+================================================================================
+FILE: backend\src\app.ts
+================================================================================
+
+import cors from "cors";
+import express from "express";
+import { errorHandler } from "./middlewares/errorHandler";
+import routes from "./routes";
+
+export const createApp = () => {
+
+  const app = express();
+
+  app.use(cors());
+
+  app.use(
+    express.json({
+      limit: "10mb"
+    })
+  );
+
+  app.use(
+    express.urlencoded({
+      extended: true
+    })
+  );
+
+  app.get(
+    "/",
+    (_req, res) => {
+      res.json({
+        application: "AI Driven Dev Support",
+        version: "0.1.0"
+      });
+    }
+  );
+
+  app.use("/api", routes);
+
+  app.use(errorHandler);
+
+  return app;
+};
+
+
+
+================================================================================
+FILE: backend\src\config\env.ts
+================================================================================
+
+export const env = {
+  appName: process.env.APP_NAME ?? "AI Driven Dev Support",
+  port: Number(process.env.PORT ?? 3000),
+  nodeEnv: process.env.NODE_ENV ?? "development"
+};
+
+
+
+================================================================================
+FILE: backend\src\controllers\converterController.ts
+================================================================================
+
+import { parseMarkdownContent } from "@/services/markdownParser/parseMarkdownContent";
+import { Request, Response } from "express";
+
+export const convertMarkdown = (
+  req: Request,
+  res: Response
+) => {
+
+  const content = req.body.content;
+
+  if (!content) {
+    return res.status(400).json({
+      success: false,
+      message: "content is required"
+    });
+  }
+
+  const document = parseMarkdownContent(content);
+
+  return res.json({
+    success: true,
+    data: document
+  });
+};
+
+
+
+================================================================================
+FILE: backend\src\controllers\healthController.ts
+================================================================================
+
+import { Request, Response } from "express";
+
+export const getHealth = (
+  _req: Request,
+  res: Response
+) => {
+
+  res.json({
+    success: true,
+    status: "UP",
+    timestamp: new Date().toISOString()
+  });
+};
+
+
+
+================================================================================
+FILE: backend\src\index.ts
+================================================================================
+
+import { env } from "@/config/env";
+import "dotenv/config";
+import { createApp } from "./app";
+
+const app = createApp();
+
+app.listen(
+  env.port,
+  () => {
+    console.log(`[${env.appName}] started`);
+    console.log(`http://localhost:${env.port}`);
+  }
+);
+
+
+
+================================================================================
+FILE: backend\src\middlewares\errorHandler.ts
+================================================================================
+
+import { Request, Response, NextFunction } from "express";
+
+export const errorHandler = (
+  error: unknown,
+  _req: Request,
+  res: Response,
+  _next: NextFunction
+) => {
+
+  console.error(error);
+
+  res.status(500).json({
+    success: false,
+    message:
+      error instanceof Error
+        ? error.message
+        : "Internal Server Error"
+  });
+};
+
+
+
+================================================================================
+FILE: backend\src\models\Document.ts
+================================================================================
+
+export type DocumentType =
+  | "REQ"
+  | "DES"
+  | "DET"
+  | "TST"
+  | "OPS"
+  | "DOC";
+
+export type Document = {
+  id: string;
+  title: string;
+  type: DocumentType;
+  path: string;
+  source: string;
+};
+
+
+
+================================================================================
+FILE: backend\src\models\DocumentModel.ts
+================================================================================
+
+import type { Heading } from "./Heading";
+import type { MarkdownList } from "./MarkdownList";
+import type { MarkdownTable } from "./MarkdownTable";
+
+export type DocumentModel = {
+  fileName: string;
+  title: string;
+  rawContent: string;
+  headings: Heading[];
+  lists: MarkdownList[];
+  tables: MarkdownTable[];
+};
+
+
+
+================================================================================
+FILE: backend\src\models\Heading.ts
+================================================================================
+
+export type Heading = {
+  level: number;
+  text: string;
+  lineNumber: number;
+};
+
+
+
+================================================================================
+FILE: backend\src\models\MarkdownList.ts
+================================================================================
+
+export type MarkdownList = {
+  items: string[];
+  lineNumber: number;
+};
+
+
+
+================================================================================
+FILE: backend\src\models\MarkdownTable.ts
+================================================================================
+
+export type MarkdownTable = {
+  headers: string[];
+  rows: string[][];
+  lineNumber: number;
+};
+
+
+
+================================================================================
+FILE: backend\src\models\Task.ts
+================================================================================
+
+export type TaskStatus =
+  | "TODO"
+  | "DOING"
+  | "DONE";
+
+export type TaskPriority =
+  | "LOW"
+  | "NORMAL"
+  | "HIGH";
+
+export type Task = {
+  id: string;
+  title: string;
+  description: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  source: string;
+};
+
+
+
+================================================================================
+FILE: backend\src\repositories\FileRepository.ts
+================================================================================
+
+import fs from "fs";
+
+export const readJson =
+(
+  filePath: string
+) => {
+
+  if (
+    !fs.existsSync(
+      filePath
+    )
+  ) {
+
+    return null;
+
+  }
+
+  return JSON.parse(
+    fs.readFileSync(
+      filePath,
+      "utf-8"
+    )
+  );
+};
+
+
+
+================================================================================
+FILE: backend\src\routes\converterRoutes.ts
+================================================================================
+
+import { convertMarkdown } from "@/controllers/converterController";
+import { Router } from "express";
+
+const router = Router();
+
+router.post("/markdown", convertMarkdown);
+
+export default router;
+
+
+
+================================================================================
+FILE: backend\src\routes\healthRoutes.ts
+================================================================================
+
+import { getHealth } from "@/controllers/healthController";
+import { Router } from "express";
+
+const router = Router();
+
+router.get("/", getHealth);
+
+export default router;
+
+
+
+================================================================================
+FILE: backend\src\routes\index.ts
+================================================================================
+
+import { Router } from "express";
+import converterRoutes from "./converterRoutes";
+import healthRoutes from "./healthRoutes";
+
+const router = Router();
+
+router.use("/health", healthRoutes);
+router.use("/converter", converterRoutes);
+
+export default router;
+
+
+
+================================================================================
+FILE: backend\src\services\ConverterService.ts
+================================================================================
+
+import path from "path";
+
+import {
+  parseMarkdownFile
+} from "./markdownParser/parseMarkdownFile";
+
+import {
+  extractTasks
+} from "./TaskExtractor";
+
+import {
+  extractDocuments
+} from "./DocumentExtractor";
+
+import {
+  exportDocuments,
+  exportTasks
+} from "./JsonExporter";
+
+export type ConvertResult = {
+  taskCount: number;
+  documentCount: number;
+  tasksFile: string;
+  documentsFile: string;
+};
+
+export const convertMarkdownFile =
+  (
+    markdownFile: string,
+    outputDir: string
+  ): ConvertResult => {
+
+    const document =
+      parseMarkdownFile(
+        markdownFile
+      );
+
+    const tasks =
+      extractTasks(
+        document
+      );
+
+    const documents =
+      extractDocuments(
+        document
+      );
+
+    const tasksFile =
+      exportTasks(
+        tasks,
+        outputDir
+      );
+
+    const documentsFile =
+      exportDocuments(
+        documents,
+        outputDir
+      );
+
+    return {
+      taskCount:
+        tasks.length,
+
+      documentCount:
+        documents.length,
+
+      tasksFile,
+
+      documentsFile
+    };
+  };
+
+export const convertMarkdownFiles =
+  (
+    markdownFiles: string[],
+    outputDir: string
+  ) => {
+
+    const documents =
+      markdownFiles.map(
+        parseMarkdownFile
+      );
+
+    const allTasks =
+      documents.flatMap(
+        extractTasks
+      );
+
+    const allDocuments =
+      documents.flatMap(
+        extractDocuments
+      );
+
+    const tasksFile =
+      exportTasks(
+        allTasks,
+        outputDir
+      );
+
+    const documentsFile =
+      exportDocuments(
+        allDocuments,
+        outputDir
+      );
+
+    return {
+
+      taskCount:
+        allTasks.length,
+
+      documentCount:
+        allDocuments.length,
+
+      tasksFile,
+
+      documentsFile
+
+    };
+
+  };
+
+export const createOutputDirectory =
+  (
+    rootDir = "data"
+  ) => {
+
+    return path.join(
+      rootDir,
+      "generated"
+    );
+
+  };
+
+
+
+================================================================================
+FILE: backend\src\services\DocumentExtractor.ts
+================================================================================
+
+import type { Document } from "../models/Document";
+import type { DocumentModel } from "../models/DocumentModel";
+
+export const extractDocuments = (
+  document: DocumentModel
+): Document[] => {
+
+  const documentType =
+    detectDocumentType(
+      document
+    );
+
+  return [
+    {
+      id:
+        createDocumentId(
+          documentType,
+          1
+        ),
+      title:
+        document.title,
+      type:
+        documentType,
+      path:
+        document.fileName,
+      source:
+        document.title
+    }
+  ];
+};
+
+export const detectDocumentType =
+(
+  document: DocumentModel
+) => {
+
+  const title =
+    document.title
+      .toLowerCase();
+
+  const fileName =
+    document.fileName
+      .toLowerCase();
+
+  const value =
+    title + " " +
+    fileName;
+
+  if (
+    value.includes("要件") ||
+    value.includes(
+      "requirements"
+    )
+  ) {
+    return "REQ";
+  }
+
+  if (
+    value.includes(
+      "基本設計"
+    ) ||
+    value.includes(
+      "アーキテクチャ"
+    ) ||
+    value.includes(
+      "design"
+    )
+  ) {
+    return "DES";
+  }
+
+  if (
+    value.includes(
+      "詳細設計"
+    )
+  ) {
+    return "DET";
+  }
+
+  if (
+    value.includes(
+      "テスト"
+    )
+  ) {
+    return "TST";
+  }
+
+  if (
+    value.includes(
+      "運用"
+    )
+  ) {
+    return "OPS";
+  }
+
+  return "DOC";
+};
+
+export const createDocumentId =
+(
+  prefix: string,
+  sequence: number
+): string => {
+
+  return (
+    prefix +
+    "-" +
+    String(
+      sequence
+    ).padStart(
+      3,
+      "0"
+    )
+  );
+};
+
+
+
+================================================================================
+FILE: backend\src\services\JsonExporter.ts
+================================================================================
+
+import fs from "fs";
+import path from "path";
+
+type ExportOptions<T> = {
+  outputDir: string;
+  fileName: string;
+  data: T;
+};
+
+const ensureDirectory = (
+  directory: string
+): void => {
+
+  if (
+    fs.existsSync(directory)
+  ) {
+    return;
+  }
+
+  fs.mkdirSync(
+    directory,
+    {
+      recursive: true
+    }
+  );
+};
+
+export const exportJson = <
+  T
+>(
+  options:
+    ExportOptions<T>
+): string => {
+
+  ensureDirectory(
+    options.outputDir
+  );
+
+  const filePath =
+    path.join(
+      options.outputDir,
+      options.fileName
+    );
+
+  fs.writeFileSync(
+    filePath,
+    JSON.stringify(
+      options.data,
+      null,
+      2
+    ),
+    "utf-8"
+  );
+
+  return filePath;
+};
+
+export const exportTasks = (
+  tasks: unknown[],
+  outputDir: string
+): string => {
+
+  return exportJson({
+    outputDir,
+    fileName:
+      "tasks.json",
+    data: tasks
+  });
+
+};
+
+export const exportDocuments = (
+  documents: unknown[],
+  outputDir: string
+): string => {
+
+  return exportJson({
+    outputDir,
+    fileName:
+      "documents.json",
+    data: documents
+  });
+
+};
+
+export const exportIssues = (
+  issues: unknown[],
+  outputDir: string
+): string => {
+
+  return exportJson({
+    outputDir,
+    fileName:
+      "issues.json",
+    data: issues
+  });
+
+};
+
+export const exportQAs = (
+  qas: unknown[],
+  outputDir: string
+): string => {
+
+  return exportJson({
+    outputDir,
+    fileName:
+      "qa.json",
+    data: qas
+  });
+
+};
+
+export const exportTraceability =
+(
+  items: unknown[],
+  outputDir: string
+): string => {
+
+  return exportJson({
+    outputDir,
+    fileName:
+      "traceability.json",
+    data: items
+  });
+
+};
+
+
+
+================================================================================
+FILE: backend\src\services\markdownParser\index.ts
+================================================================================
+
+import { DocumentModel } from "@/models/DocumentModel";
+import { parseMarkdownFile } from "@/services/markdownParser/parseMarkdownFile";
+
+/**
+ * ファイルを受け取り、markdownをパースしてDocumentModelを返す
+ * @param filePath ファイルのパス
+ * @returns パース結果
+ * 
+ */
+export const execute = async (filePath: string): Promise<DocumentModel> => {
+    return parseMarkdownFile(filePath);
+}
+
+
+
+================================================================================
+FILE: backend\src\services\markdownParser\parseMarkdownContent.ts
+================================================================================
+
+import { DocumentModel } from "@/models/DocumentModel";
+import { parseLists } from "@/services/markdownParser/parseMarkdownList";
+import { parseTables } from "@/services/markdownParser/parseMarkdownTable";
+import { extractTitle, parseHeadings } from "@/services/markdownParser/parseUtils";
+
+/**
+ * マークダウンコンテンツを解析する
+ * @param content マークダウンコンテンツ
+ * @returns 解析されたドキュメントモデル
+ */
+export const parseMarkdownContent = (
+    content: string
+): DocumentModel => {
+
+    const headings = parseHeadings(content);
+
+    return {
+        fileName: "",
+        title: extractTitle(headings),
+        rawContent: content,
+        headings,
+        lists: parseLists(content),
+        tables: parseTables(content)
+    };
+};
+
+
+
+================================================================================
+FILE: backend\src\services\markdownParser\parseMarkdownFile.ts
+================================================================================
+
+import { DocumentModel } from "@/models/DocumentModel";
+import { parseMarkdownContent } from "@/services/markdownParser/parseMarkdownContent";
+import fs from "fs";
+import path from "path";
+
+/**
+ * マークダウンファイルを解析する
+ * @param filePath ファイルパス
+ * @returns 解析されたドキュメントモデル
+ */
+export const parseMarkdownFile = (
+    filePath: string
+): DocumentModel => {
+
+    const content = fs.readFileSync(filePath, "utf-8");
+
+    const document = parseMarkdownContent(content);
+
+    return {
+        ...document,
+        fileName: path.basename(filePath)
+    };
+};
+
+
+
+
+================================================================================
+FILE: backend\src\services\markdownParser\parseMarkdownList.ts
+================================================================================
+
+import { MarkdownList } from "@/models/MarkdownList";
+import { BREAK_LINE, LIST_ITEM } from "@/utils/textConst";
+
+/**
+ * Markdownのリストをパースする
+ * @param content パース対象の文字列
+ * @returns パース結果
+ */
+export const parseLists = (
+  content: string
+): MarkdownList[] => {
+
+  const lines = content.split(BREAK_LINE);
+
+  const result: MarkdownList[] = [];
+
+  let currentItems: string[] = [];
+
+  let startLine = 0;
+
+  const flush = () => {
+    if (currentItems.length === 0) {
+      return;
+    }
+
+    result.push({
+      items: [...currentItems],
+      lineNumber: startLine
+    });
+
+    currentItems = [];
+    startLine = 0;
+  };
+
+  lines.forEach((line, index) => {
+    const match = line.match(LIST_ITEM);
+
+    if (match) {
+
+      if (currentItems.length === 0) {
+        startLine = index + 1;
+      }
+
+      currentItems.push(match[1].trim());
+
+      return;
+    }
+
+    flush();
+  });
+
+  flush();
+
+  return result;
+};
+
+
+
+================================================================================
+FILE: backend\src\services\markdownParser\parseMarkdownTable.ts
+================================================================================
+
+import { MarkdownTable } from "@/models/MarkdownTable";
+import { BREAK_LINE, TABLE_SEPARATOR } from "@/utils/textConst";
+
+/**
+ * マークダウンコンテンツからテーブルを抽出する
+ * @param content マークダウンコンテンツ
+ * @returns 抽出されたテーブルの配列
+ */
+export const parseTables = (
+  content: string
+): MarkdownTable[] => {
+
+  const lines = content.split(BREAK_LINE);
+  const tables: MarkdownTable[] = [];
+
+  let index = 0;
+  while (
+    index < lines.length
+  ) {
+    const headerLine = lines[index];
+    const separatorLine = lines[index + 1];
+    const isHeader = headerLine?.includes("|");
+
+    const isSeparator =
+      separatorLine &&
+      TABLE_SEPARATOR.test(separatorLine);
+
+    if (!isHeader || !isSeparator) {
+      index++;
+      continue;
+    }
+
+    const headers = parseTableRow(headerLine);
+    const rows: string[][] = [];
+
+    let rowIndex = index + 2;
+
+    while (
+      rowIndex < lines.length &&
+      lines[rowIndex].includes("|")
+    ) {
+      rows.push(parseTableRow(lines[rowIndex]));
+      rowIndex++;
+    }
+
+    tables.push({
+      headers,
+      rows,
+      lineNumber: index + 1
+    });
+
+    index = rowIndex;
+  }
+
+  return tables;
+};
+
+/**
+ * テーブルの行を解析する
+ * @param line テーブルの行
+ * @returns 解析されたセルの配列
+ */
+const parseTableRow = (
+  line: string
+): string[] => {
+
+  return line
+    .split("|")
+    .map(
+      item => item.trim()
+    )
+    .filter(
+      item => item.length > 0
+    );
+};
+
+
+
+================================================================================
+FILE: backend\src\services\markdownParser\parseUtils.ts
+================================================================================
+
+import { Heading } from "@/models/Heading";
+import { BREAK_LINE, HEADING } from "@/utils/textConst";
+
+/**
+ * マークダウンコンテンツから見出しを抽出する
+ * @param content マークダウンコンテンツ
+ * @returns 抽出された見出しの配列
+ */
+export const parseHeadings = (
+  content: string
+): Heading[] => {
+
+  const lines = content.split(BREAK_LINE);
+
+  return lines
+    .map((line, index) => {
+      const match = line.match(HEADING);
+
+      if (!match) {
+        return null;
+      }
+
+      return {
+        level: match[1].length,
+        text: match[2].trim(),
+        lineNumber: index + 1
+      };
+    })
+    .filter(
+      (heading): heading is Heading => heading !== null
+    );
+};
+
+/**
+ * 見出しからタイトルを抽出する
+ * @param headings 見出しの配列
+ * @returns 抽出されたタイトル
+ */
+export const extractTitle = (
+  headings: Heading[]
+): string => {
+
+  const h1 =
+    headings.find(
+      heading => heading.level === 1
+    );
+
+  return h1?.text ?? "";
+};
+
+
+
+================================================================================
+FILE: backend\src\services\TaskExtractor.ts
+================================================================================
+
+import type { DocumentModel } from "../models/DocumentModel";
+import type { Task } from "../models/Task";
+
+const TASK_KEYWORDS = [
+
+  "作成",
+  "実装",
+  "対応",
+  "修正",
+  "追加",
+  "削除",
+  "変更",
+
+  "作る",
+  "実施",
+
+  "Create",
+  "Implement",
+  "Fix",
+  "Update"
+
+];
+
+const TASK_SECTION_KEYWORDS = [
+
+  "タスク",
+  "Task",
+  "TODO",
+  "ToDo",
+  "WBS",
+  "実装"
+
+];
+
+export const extractTasks = (
+  document: DocumentModel
+): Task[] => {
+
+  const tasksFromLists =
+    extractTasksFromLists(
+      document
+    );
+
+  const uniqueTasks =
+    uniqueByTitle(
+      tasksFromLists
+    );
+
+  return uniqueTasks.map(
+    (task, index) => ({
+      ...task,
+      id:
+        "TSK-" +
+        String(
+          index + 1
+        ).padStart(
+          3,
+          "0"
+        )
+    })
+  );
+};
+
+const extractTasksFromLists = (
+  document: DocumentModel
+): Omit<Task, "id">[] => {
+
+  const tasks:
+    Omit<Task, "id">[] = [];
+
+  for (
+    const list of document.lists
+  ) {
+
+    for (
+      const item of list.items
+    ) {
+
+      if (
+        !isTaskCandidate(
+          item
+        )
+      ) {
+        continue;
+      }
+
+      tasks.push({
+        title:
+          normalizeTitle(
+            item
+          ),
+
+        description:
+          item,
+
+        status:
+          "TODO",
+
+        priority:
+          "NORMAL",
+
+        source:
+          document.title
+      });
+    }
+  }
+
+  return tasks;
+};
+
+const isTaskCandidate = (
+  text: string
+): boolean => {
+
+  return TASK_KEYWORDS.some(
+    keyword =>
+      text.includes(
+        keyword
+      )
+  );
+};
+
+const normalizeTitle = (
+  text: string
+): string => {
+
+  return text
+    .replace(
+      /^\[[ xX]\]\s*/,
+      ""
+    )
+    .trim();
+};
+
+const uniqueByTitle = <
+  T extends {
+    title: string;
+  }
+>(
+  values: T[]
+): T[] => {
+
+  const map =
+    new Map<
+      string,
+      T
+    >();
+
+  values.forEach(
+    value => {
+
+      if (
+        map.has(
+          value.title
+        )
+      ) {
+        return;
+      }
+
+      map.set(
+        value.title,
+        value
+      );
+
+    }
+  );
+
+  return [
+    ...map.values()
+  ];
+};
+
+export const hasTaskSection =
+  (
+    document: DocumentModel
+  ): boolean => {
+
+    return document.headings.some(
+      heading =>
+
+        TASK_SECTION_KEYWORDS.some(
+          keyword =>
+            heading.text.includes(
+              keyword
+            )
+        )
+
+    );
+  };
+
+
+
+================================================================================
+FILE: backend\src\services\__tests__\ConverterService.test.ts
+================================================================================
+
+import fs from "fs";
+import path from "path";
+
+import {
+  describe,
+  expect,
+  it
+} from "vitest";
+
+import {
+  convertMarkdownFile
+} from "../ConverterService";
+
+describe(
+  "ConverterService",
+  () => {
+
+    it(
+      "Markdownから管理データ生成",
+      () => {
+
+        const baseDir =
+          ".test-converter";
+
+        fs.mkdirSync(
+          baseDir,
+          {
+            recursive:true
+          }
+        );
+
+        const markdownFile =
+          path.join(
+            baseDir,
+            "sample.md"
+          );
+
+        fs.writeFileSync(
+          markdownFile,
+`
+# 要件定義書
+
+- API実装
+- 画面作成
+`
+        );
+
+        const result =
+          convertMarkdownFile(
+            markdownFile,
+            baseDir
+          );
+
+        expect(
+          result.documentCount
+        )
+          .toBe(1);
+
+        expect(
+          result.taskCount
+        )
+          .toBe(2);
+
+      }
+    );
+
+  }
+);
+
+
+
+================================================================================
+FILE: backend\src\services\__tests__\DocumentExtractor.test.ts
+================================================================================
+
+import {
+  describe,
+  expect,
+  it
+} from "vitest";
+
+import {
+  parseMarkdownContent
+} from "../markdownParser/parseMarkdownContent";
+
+import {
+  createDocumentId,
+  detectDocumentType,
+  extractDocuments
+} from "../DocumentExtractor";
+
+describe(
+  "DocumentExtractor",
+  () => {
+
+    describe(
+      "detectDocumentType",
+      () => {
+
+        it(
+          "要件定義書をREQ判定",
+          () => {
+
+            const document =
+              parseMarkdownContent(`
+# 要件定義書
+`);
+
+            expect(
+              detectDocumentType(
+                document
+              )
+            ).toBe(
+              "REQ"
+            );
+
+          }
+        );
+
+        it(
+          "基本設計書をDES判定",
+          () => {
+
+            const document =
+              parseMarkdownContent(`
+# 基本設計書
+`);
+
+            expect(
+              detectDocumentType(
+                document
+              )
+            ).toBe(
+              "DES"
+            );
+
+          }
+        );
+
+        it(
+          "詳細設計書をDET判定",
+          () => {
+
+            const document =
+              parseMarkdownContent(`
+# 詳細設計書
+`);
+
+            expect(
+              detectDocumentType(
+                document
+              )
+            ).toBe(
+              "DET"
+            );
+
+          }
+        );
+
+        it(
+          "テスト仕様書をTST判定",
+          () => {
+
+            const document =
+              parseMarkdownContent(`
+# テスト仕様書
+`);
+
+            expect(
+              detectDocumentType(
+                document
+              )
+            ).toBe(
+              "TST"
+            );
+
+          }
+        );
+
+      }
+    );
+
+    describe(
+      "createDocumentId",
+      () => {
+
+        it(
+          "REQ採番",
+          () => {
+
+            expect(
+              createDocumentId(
+                "REQ",
+                1
+              )
+            ).toBe(
+              "REQ-001"
+            );
+
+          }
+        );
+
+        it(
+          "DES採番",
+          () => {
+
+            expect(
+              createDocumentId(
+                "DES",
+                12
+              )
+            ).toBe(
+              "DES-012"
+            );
+
+          }
+        );
+
+      }
+    );
+
+    describe(
+      "extractDocuments",
+      () => {
+
+        it(
+          "要件定義書からDocument生成",
+          () => {
+
+            const model =
+              parseMarkdownContent(`
+# 要件定義書
+`);
+
+            const result =
+              extractDocuments(
+                model
+              );
+
+            expect(result)
+              .toHaveLength(1);
+
+            expect(
+              result[0].id
+            ).toBe(
+              "REQ-001"
+            );
+
+          }
+        );
+
+        it(
+          "基本設計書からDocument生成",
+          () => {
+
+            const model =
+              parseMarkdownContent(`
+# 基本設計書
+`);
+
+            const result =
+              extractDocuments(
+                model
+              );
+
+            expect(
+              result[0].type
+            ).toBe(
+              "DES"
+            );
+
+          }
+        );
+
+      }
+    );
+
+  }
+);
+
+
+
+================================================================================
+FILE: backend\src\services\__tests__\JsonExporter.test.ts
+================================================================================
+
+import fs from "fs";
+import path from "path";
+
+import {
+  describe,
+  expect,
+  it,
+  beforeEach,
+  afterEach
+} from "vitest";
+
+import {
+  exportTasks,
+  exportDocuments,
+  exportJson
+} from "../JsonExporter";
+
+const OUTPUT_DIR =
+  path.join(
+    process.cwd(),
+    ".test-output"
+  );
+
+describe(
+  "JsonExporter",
+  () => {
+
+    beforeEach(
+      () => {
+
+        if (
+          fs.existsSync(
+            OUTPUT_DIR
+          )
+        ) {
+
+          fs.rmSync(
+            OUTPUT_DIR,
+            {
+              recursive: true,
+              force: true
+            }
+          );
+
+        }
+
+      }
+    );
+
+    afterEach(
+      () => {
+
+        if (
+          fs.existsSync(
+            OUTPUT_DIR
+          )
+        ) {
+
+          fs.rmSync(
+            OUTPUT_DIR,
+            {
+              recursive: true,
+              force: true
+            }
+          );
+
+        }
+
+      }
+    );
+
+    it(
+      "任意のJSONを書き出せる",
+      () => {
+
+        const filePath =
+          exportJson({
+            outputDir:
+              OUTPUT_DIR,
+            fileName:
+              "sample.json",
+            data: {
+              id: 1
+            }
+          });
+
+        expect(
+          fs.existsSync(
+            filePath
+          )
+        )
+          .toBe(true);
+
+      }
+    );
+
+    it(
+      "tasks.jsonを書き出せる",
+      () => {
+
+        const filePath =
+          exportTasks(
+            [
+              {
+                id:
+                  "TSK-001"
+              }
+            ],
+            OUTPUT_DIR
+          );
+
+        expect(
+          path.basename(
+            filePath
+          )
+        )
+          .toBe(
+            "tasks.json"
+          );
+
+      }
+    );
+
+    it(
+      "documents.jsonを書き出せる",
+      () => {
+
+        const filePath =
+          exportDocuments(
+            [
+              {
+                id:
+                  "REQ-001"
+              }
+            ],
+            OUTPUT_DIR
+          );
+
+        expect(
+          path.basename(
+            filePath
+          )
+        )
+          .toBe(
+            "documents.json"
+          );
+
+      }
+    );
+
+    it(
+      "JSON内容が保存される",
+      () => {
+
+        const filePath =
+          exportTasks(
+            [
+              {
+                id:
+                  "TSK-001",
+                title:
+                  "Task"
+              }
+            ],
+            OUTPUT_DIR
+          );
+
+        const json =
+          JSON.parse(
+            fs.readFileSync(
+              filePath,
+              "utf-8"
+            )
+          );
+
+        expect(
+          json[0].id
+        )
+          .toBe(
+            "TSK-001"
+          );
+
+      }
+    );
+
+  }
+);
+
+
+
+================================================================================
+FILE: backend\src\services\__tests__\MarkdownParser.test.ts
+================================================================================
+
+import { describe, expect, it } from "vitest";
+
+import { parseMarkdownContent } from "@/services/markdownParser/parseMarkdownContent";
+import { parseLists } from "@/services/markdownParser/parseMarkdownList";
+import { parseTables } from "@/services/markdownParser/parseMarkdownTable";
+import { extractTitle, parseHeadings } from "@/services/markdownParser/parseUtils";
+
+describe("MarkdownParser", () => {
+
+  describe("parseHeadings", () => {
+
+    it("H1を解析できる", () => {
+
+      const markdown = "# Title";
+
+      const result =
+        parseHeadings(markdown);
+
+      expect(result).toHaveLength(1);
+
+      expect(result[0]).toEqual({
+        level: 1,
+        text: "Title",
+        lineNumber: 1
+      });
+    });
+
+    it("複数階層の見出しを解析できる", () => {
+
+      const markdown = `
+# Root
+
+## Child
+
+### GrandChild
+`;
+
+      const result =
+        parseHeadings(markdown);
+
+      expect(result).toHaveLength(3);
+
+      expect(result[0].level)
+        .toBe(1);
+
+      expect(result[1].level)
+        .toBe(2);
+
+      expect(result[2].level)
+        .toBe(3);
+    });
+
+  });
+
+  describe("extractTitle", () => {
+
+    it("最初のH1をタイトルとして取得する", () => {
+
+      const headings =
+        parseHeadings(`
+# Requirements
+
+## Section
+`);
+
+      expect(
+        extractTitle(headings)
+      ).toBe("Requirements");
+    });
+
+    it("H1が存在しない場合は空文字を返す", () => {
+
+      const headings =
+        parseHeadings(`
+## Section
+`);
+
+      expect(
+        extractTitle(headings)
+      ).toBe("");
+    });
+
+  });
+
+  describe("parseLists", () => {
+
+    it("箇条書きを解析できる", () => {
+
+      const markdown = `
+- Task A
+- Task B
+- Task C
+`;
+
+      const result =
+        parseLists(markdown);
+
+      expect(result)
+        .toHaveLength(1);
+
+      expect(result[0].items)
+        .toEqual([
+          "Task A",
+          "Task B",
+          "Task C"
+        ]);
+    });
+
+    it("複数ブロックのリストを解析できる", () => {
+
+      const markdown = `
+- A
+- B
+
+text
+
+- C
+- D
+`;
+
+      const result =
+        parseLists(markdown);
+
+      expect(result)
+        .toHaveLength(2);
+    });
+
+  });
+
+  describe("parseTables", () => {
+
+    it("Markdownテーブルを解析できる", () => {
+
+      const markdown = `
+| Name | Value |
+|------|-------|
+| A | 1 |
+| B | 2 |
+`;
+
+      const result =
+        parseTables(markdown);
+
+      expect(result)
+        .toHaveLength(1);
+
+      expect(result[0].headers)
+        .toEqual([
+          "Name",
+          "Value"
+        ]);
+
+      expect(result[0].rows)
+        .toHaveLength(2);
+    });
+
+    it("テーブルが存在しない場合は空配列", () => {
+
+      const markdown =
+        "# Sample";
+
+      const result =
+        parseTables(markdown);
+
+      expect(result)
+        .toEqual([]);
+    });
+
+  });
+
+  describe("parseMarkdownContent", () => {
+
+    it("DocumentModelを生成できる", () => {
+
+      const markdown = `
+# Sample
+
+## Section
+
+- Task A
+
+| Name | Value |
+|------|-------|
+| A | 1 |
+`;
+
+      const result =
+        parseMarkdownContent(
+          markdown
+        );
+
+      expect(result.title)
+        .toBe("Sample");
+
+      expect(result.headings)
+        .toHaveLength(2);
+
+      expect(result.lists)
+        .toHaveLength(1);
+
+      expect(result.tables)
+        .toHaveLength(1);
+    });
+
+    it("空文字でも例外にならない", () => {
+
+      const result =
+        parseMarkdownContent("");
+
+      expect(result.title)
+        .toBe("");
+
+      expect(result.headings)
+        .toEqual([]);
+
+      expect(result.lists)
+        .toEqual([]);
+
+      expect(result.tables)
+        .toEqual([]);
+    });
+
+  });
+
+});
+
+
+
+================================================================================
+FILE: backend\src\services\__tests__\TaskExtractor.test.ts
+================================================================================
+
+import {
+  describe,
+  expect,
+  it
+} from "vitest";
+
+import {
+  parseMarkdownContent
+} from "../markdownParser/parseMarkdownContent";
+
+import {
+  extractTasks,
+  hasTaskSection
+} from "../TaskExtractor";
+
+describe(
+  "TaskExtractor",
+  () => {
+
+    it(
+      "作成を含むリストをTaskへ変換",
+      () => {
+
+        const document =
+          parseMarkdownContent(`
+# WBS
+
+- ダッシュボード作成
+- API実装
+- テスト対応
+`);
+
+        const tasks =
+          extractTasks(
+            document
+          );
+
+        expect(tasks)
+          .toHaveLength(3);
+
+        expect(
+          tasks[0].id
+        )
+          .toBe(
+            "TSK-001"
+          );
+
+      }
+    );
+
+    it(
+      "重複タイトルは除外",
+      () => {
+
+        const document =
+          parseMarkdownContent(`
+# WBS
+
+- API実装
+- API実装
+`);
+
+        const tasks =
+          extractTasks(
+            document
+          );
+
+        expect(tasks)
+          .toHaveLength(1);
+
+      }
+    );
+
+    it(
+      "タスク以外は除外",
+      () => {
+
+        const document =
+          parseMarkdownContent(`
+# Sample
+
+- 概要説明
+- システム概要
+`);
+
+        const tasks =
+          extractTasks(
+            document
+          );
+
+        expect(tasks)
+          .toHaveLength(0);
+
+      }
+    );
+
+    it(
+      "タスクセクションを検知",
+      () => {
+
+        const document =
+          parseMarkdownContent(`
+# WBS
+
+## タスク一覧
+`);
+
+        expect(
+          hasTaskSection(
+            document
+          )
+        )
+          .toBe(
+            true
+          );
+
+      }
+    );
+
+  }
+);
+
+
+
+================================================================================
+FILE: backend\src\tools\export-source.ts
+================================================================================
+
+import fs from "fs";
+import path from "path";
+
+const IGNORE_DIRS = [
+
+  "node_modules",
+  "dist",
+  ".git",
+  "coverage"
+
+];
+
+const collectFiles =
+(
+  directory: string
+): string[] => {
+
+  const entries =
+    fs.readdirSync(
+      directory,
+      {
+        withFileTypes:true
+      }
+    );
+
+  return entries.flatMap(
+    entry => {
+
+      const fullPath =
+        path.join(
+          directory,
+          entry.name
+        );
+
+      if (
+        entry.isDirectory()
+      ) {
+
+        if (
+          IGNORE_DIRS.includes(
+            entry.name
+          )
+        ) {
+          return [];
+        }
+
+        return collectFiles(
+          fullPath
+        );
+      }
+
+      return [fullPath];
+
+    }
+  );
+};
+
+const exportSource =
+(
+  targetDir: string,
+  outputFile: string
+) => {
+
+  const files =
+    collectFiles(
+      targetDir
+    );
+
+  let output = "";
+
+  for (
+    const file of files
+  ) {
+
+    output +=
+      "\n" +
+      "=".repeat(80) +
+      "\n";
+
+    output +=
+      "FILE: " +
+      file +
+      "\n";
+
+    output +=
+      "=".repeat(80) +
+      "\n\n";
+
+    output +=
+      fs.readFileSync(
+        file,
+        "utf-8"
+      );
+
+    output +=
+      "\n\n";
+  }
+
+  fs.writeFileSync(
+    outputFile,
+    output,
+    "utf-8"
+  );
+
+  console.log(
+    "Export Complete:"
+    + outputFile
+  );
+};
+
+const targetDir =
+  process.argv[2];
+
+const outputFile =
+  process.argv[3] ??
+  "source-export.txt";
+
+if (
+  !targetDir
+) {
+
+  console.error(
+    "Usage: export-source <dir>"
+  );
+
+  process.exit(1);
+
+}
+
+exportSource(
+  targetDir,
+  outputFile
+);
+
+
+
+================================================================================
+FILE: backend\src\utils\textConst.ts
+================================================================================
+
+export const BREAK_LINE = /\r?\n/;
+
+export const HEADING = /^(#{1,6})\s+(.+)$/;
+
+export const LIST_ITEM = /^(\s*)[-*+]\s+(.+)$/;
+
+export const TABLE_SEPARATOR = /^\s*\|?[\s:-]+\|/;
+

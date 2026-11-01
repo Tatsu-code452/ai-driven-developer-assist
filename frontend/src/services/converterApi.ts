@@ -7,9 +7,7 @@ export const convertMarkdown = async (
   const response =
     await api.post(
       "/converter/markdown",
-      {
-        content
-      }
+      { content }
     );
 
   return response.data;

@@ -1,0 +1,223 @@
+
+================================================================================
+FILE: frontend\src\App.tsx
+================================================================================
+
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { AppLayout } from "./layouts/AppLayout";
+import { ConverterPage } from "./pages/ConverterPage";
+
+export const App = () => {
+    return (
+        <BrowserRouter>
+            <Routes>
+                <Route element={<AppLayout />}>
+                    <Route path="/" element={<ConverterPage />} />
+                </Route>
+            </Routes>
+        </BrowserRouter>
+    );
+};
+
+
+
+================================================================================
+FILE: frontend\src\components\JsonViewer.tsx
+================================================================================
+
+type Props = {
+    data: unknown;
+};
+
+export const JsonViewer = (props: Props) => {
+    return (
+        <pre className="bg-slate-900 text-green-400 p-4 rounded overflow-auto text-sm">
+            {JSON.stringify(props.data, null, 2)}
+        </pre>
+    );
+};
+
+
+
+================================================================================
+FILE: frontend\src\index.css
+================================================================================
+
+@import "tailwindcss";
+
+
+
+================================================================================
+FILE: frontend\src\layouts\AppLayout.tsx
+================================================================================
+
+import { Outlet } from "react-router-dom";
+
+export const AppLayout = () => {
+    return (
+        <div className="min-h-screen bg-slate-100 ">
+            <header className="bg-slate-900 text-white px-6 py-4 text-xl font-bold ">
+                AI駆動型開発支援
+            </header>
+
+            <main className="p-6">
+                <Outlet />
+            </main>
+        </div>
+    );
+};
+
+
+
+================================================================================
+FILE: frontend\src\main.tsx
+================================================================================
+
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { App } from "./App";
+import "./index.css";
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+    <React.StrictMode>
+        <App />
+    </React.StrictMode>,
+);
+
+
+
+================================================================================
+FILE: frontend\src\pages\ConverterPage.tsx
+================================================================================
+
+import { useState } from "react";
+import { JsonViewer } from "../components/JsonViewer";
+import { convertMarkdown } from "../services/converterApi";
+
+const INIT_TEXT = `# Sample
+
+## Overview
+
+- Task A
+- Task B
+`;
+export const ConverterPage = () => {
+    const [markdown, setMarkdown] = useState(INIT_TEXT);
+    const [result, setResult] = useState();
+    const [loading, setLoading] = useState(false);
+
+    const execute = async () => {
+        try {
+            setLoading(true);
+
+            const response = await convertMarkdown(markdown);
+
+            setResult(response);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="max-w-7xl mx-auto ">
+            <h1 className="text-2xl font-bold mb-4 ">管理データ変換</h1>
+
+            <div className="grid grid-cols-2 gap-4 ">
+                <div>
+                    <label className="block mb-2 font-semibold ">
+                        Markdown
+                    </label>
+
+                    <textarea
+                        value={markdown}
+                        onChange={(event) => setMarkdown(event.target.value)}
+                        className="w-full h-150 border rounded p-3 font-mono "
+                    />
+                </div>
+
+                <div>
+                    <div className="flex justify-between mb-2 ">
+                        <label className="font-semibold ">Parse Result</label>
+
+                        <button
+                            onClick={execute}
+                            disabled={loading}
+                            className="bg-blue-600 text-white px-4 py-2 rounded "
+                        >
+                            {loading ? "実行中..." : "変換"}
+                        </button>
+                    </div>
+
+                    <JsonViewer data={result} />
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+
+================================================================================
+FILE: frontend\src\services\api.ts
+================================================================================
+
+import axios from "axios";
+
+export const api = axios.create({
+  baseURL: "http://localhost:3000/api"
+});
+
+
+
+================================================================================
+FILE: frontend\src\services\converterApi.ts
+================================================================================
+
+import { api } from "./api";
+
+export const convertMarkdown = async (
+  content: string
+) => {
+
+  const response =
+    await api.post(
+      "/converter/markdown",
+      { content }
+    );
+
+  return response.data;
+};
+
+
+
+================================================================================
+FILE: frontend\src\types\DocumentModel.ts
+================================================================================
+
+export type Heading = {
+  level: number;
+  text: string;
+  lineNumber: number;
+};
+
+export type MarkdownList = {
+  items: string[];
+  lineNumber: number;
+};
+
+export type MarkdownTable = {
+  headers: string[];
+  rows: string[][];
+  lineNumber: number;
+};
+
+export type DocumentModel = {
+  fileName: string;
+  title: string;
+  rawContent: string;
+  headings: Heading[];
+  lists: MarkdownList[];
+  tables: MarkdownTable[];
+};
+
+

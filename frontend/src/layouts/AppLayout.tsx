@@ -1,15 +1,96 @@
-import { Outlet } from "react-router-dom";
+import {
+  Outlet,
+  NavLink
+} from "react-router-dom";
+
+import {
+  screens
+} from "../config/screens";
 
 export const AppLayout = () => {
-    return (
-        <div className="min-h-screen bg-slate-100 ">
-            <header className="bg-slate-900 text-white px-6 py-4 text-xl font-bold ">
-                AI駆動型開発支援
-            </header>
 
-            <main className="p-6">
-                <Outlet />
-            </main>
+  return (
+
+    <div
+      className="
+      h-screen
+      flex
+      "
+    >
+
+      <aside
+        className="
+        w-80
+        bg-white
+        border-r
+        overflow-auto
+        "
+      >
+
+        <div
+          className="
+          p-4
+          font-bold
+          text-lg
+          border-b
+          "
+        >
+          AI駆動型開発支援
         </div>
-    );
+
+        {
+
+          screens.map(
+            screen => (
+
+              <NavLink
+                key={screen[0]}
+                to={screen[2]}
+                className="
+                block
+                px-3
+                py-2
+                border-b
+                hover:bg-slate-100
+                "
+              >
+                <div
+                  className="
+                  text-xs
+                  text-slate-500
+                  "
+                >
+                  {screen[0]}
+                </div>
+
+                <div>
+                  {screen[1]}
+                </div>
+
+              </NavLink>
+
+            )
+          )
+
+        }
+
+      </aside>
+
+      <main
+        className="
+        flex-1
+        overflow-auto
+        p-6
+        bg-slate-100
+        "
+      >
+
+        <Outlet />
+
+      </main>
+
+    </div>
+
+  );
+
 };

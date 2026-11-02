@@ -1,10 +1,55 @@
-import { Router } from "express";
-import converterRoutes from "./converterRoutes";
-import healthRoutes from "./healthRoutes";
+import { Router }
+from "express";
 
-const router = Router();
+import healthRoutes
+from "./healthRoutes";
 
-router.use("/health", healthRoutes);
-router.use("/converter", converterRoutes);
+import converterRoutes
+from "./converterRoutes";
+
+import taskRoutes
+from "./taskRoutes";
+
+import documentRoutes
+from "./documentRoutes";
+
+import projectRoutes
+from "./projectRoutes";
+
+import dashboardRoutes
+from "./dashboardRoutes";
+
+const router =
+  Router();
+
+router.use(
+  "/health",
+  healthRoutes
+);
+
+router.use(
+  "/converter",
+  converterRoutes
+);
+
+router.use(
+  "/tasks",
+  taskRoutes
+);
+
+router.use(
+  "/documents",
+  documentRoutes
+);
+
+router.use(
+  "/projects",
+  projectRoutes
+);
+
+router.use(
+  "/dashboard",
+  dashboardRoutes
+);
 
 export default router;

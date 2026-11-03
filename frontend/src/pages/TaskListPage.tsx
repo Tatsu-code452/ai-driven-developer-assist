@@ -1,4 +1,8 @@
 import {
+  Link
+} from "react-router-dom";
+
+import {
   useEffect,
   useState
 } from "react";
@@ -59,11 +63,8 @@ export const TaskListPage =
           <tr>
 
             <th>ID</th>
-
             <th>タイトル</th>
-
             <th>状態</th>
-
             <th>優先度</th>
 
           </tr>
@@ -81,7 +82,19 @@ export const TaskListPage =
                 >
 
                   <td>
-                    {item.id}
+
+                    <Link
+                      className="
+                      text-blue-600
+                      "
+                      to={
+                        "/tasks/detail?id=" +
+                        item.id
+                      }
+                    >
+                      {item.id}
+                    </Link>
+
                   </td>
 
                   <td>

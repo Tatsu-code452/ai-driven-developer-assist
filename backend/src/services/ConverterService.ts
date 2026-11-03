@@ -25,94 +25,95 @@ import {
 } from "@/repositories/DocumentRepository";
 
 export const convertMarkdown =
-(
-  markdown: string,
-  outputRoot = "data"
-) => {
+  (
+    markdown: string,
+    outputRoot = "data"
+  ) => {
 
-  const document =
-    parseMarkdownContent(
-      markdown
-    );
+    const document =
+      parseMarkdownContent(
+        markdown
+      );
 
-  const outputDir =
-    path.join(
-      outputRoot,
-      "generated"
-    );
+    const outputDir =
+      path.join(
+        outputRoot,
+        "generated"
+      );
 
-  const newTasks =
-    extractTasks(
-      document
-    );
+    const newTasks =
+      extractTasks(
+        document
+      );
 
-  const newDocuments =
-    extractDocuments(
-      document
-    );
+    const newDocuments =
+      extractDocuments(
+        document
+      );
 
-  const currentTasks =
-    loadTasks(
-      outputDir
-    );
+    const currentTasks =
+      loadTasks(
+        outputDir
+      );
 
-  const currentDocuments =
-    loadDocuments(
-      outputDir
-    );
+    const currentDocuments =
+      loadDocuments(
+        outputDir
+      );
 
-  const mergedTasks =
-    mergeTasks(
-      currentTasks,
-      newTasks
-    );
+    const mergedTasks =
+      mergeTasks(
+        currentTasks,
+        newTasks
+      );
 
-  const mergedDocuments =
-    mergeDocuments(
-      currentDocuments,
-      newDocuments
-    );
+    const mergedDocuments =
+      mergeDocuments(
+        currentDocuments,
+        newDocuments
+      );
 
-  const tasksFile =
-    saveTasks(
-      mergedTasks,
-      outputDir
-    );
+    const tasksFile =
+      saveTasks(
+        mergedTasks,
+        outputDir
+      );
 
-  const documentsFile =
-    saveDocuments(
-      mergedDocuments,
-      outputDir
-    );
+    const documentsFile =
+      saveDocuments(
+        mergedDocuments,
+        outputDir
+      );
 
-  return {
 
-    document,
+    return {
 
-    tasks:
-      mergedTasks,
+      document,
 
-    documents:
-      mergedDocuments,
+      tasks:
+        mergedTasks,
 
-    output: {
+      documents:
+        mergedDocuments,
 
-      tasksFile,
+      output: {
 
-      documentsFile
+        tasksFile,
 
-    },
+        documentsFile
 
-    summary: {
+      },
 
-      taskCount:
-        mergedTasks.length,
+      summary: {
 
-      documentCount:
-        mergedDocuments.length
+        taskCount:
+          mergedTasks.length,
 
-    }
+        documentCount:
+          mergedDocuments.length
+
+      }
+
+    };
 
   };
-
-};

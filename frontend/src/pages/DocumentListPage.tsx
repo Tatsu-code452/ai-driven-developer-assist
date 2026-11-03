@@ -1,4 +1,8 @@
 import {
+  Link
+} from "react-router-dom";
+
+import {
   useEffect,
   useState
 } from "react";
@@ -59,9 +63,7 @@ export const DocumentListPage =
           <tr>
 
             <th>ID</th>
-
             <th>タイトル</th>
-
             <th>種別</th>
 
           </tr>
@@ -79,7 +81,19 @@ export const DocumentListPage =
                 >
 
                   <td>
-                    {item.id}
+
+                    <Link
+                      className="
+                      text-blue-600
+                      "
+                      to={
+                        "/documents/detail?id=" +
+                        item.id
+                      }
+                    >
+                      {item.id}
+                    </Link>
+
                   </td>
 
                   <td>

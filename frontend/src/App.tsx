@@ -1,162 +1,85 @@
-import {
-  BrowserRouter,
-  Route,
-  Routes
-} from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
-import {
-  AppLayout
-} from "./layouts/AppLayout";
+import { AppLayout } from "./layouts/AppLayout";
 
-import {
-  ConverterPage
-} from "./pages/ConverterPage";
+import { ConverterPage } from "./pages/ConverterPage";
 
-import {
-  PlaceholderPage
-} from "./pages/common/PlaceholderPage";
+import { PlaceholderPage } from "./pages/common/PlaceholderPage";
 
-import {
-  DashboardPage
-} from "./pages/DashboardPage";
+import { DashboardPage } from "./pages/DashboardPage";
 
-import {
-  ProjectListPage
-} from "./pages/ProjectListPage";
+import { ProjectListPage } from "./pages/ProjectListPage";
 
-import {
-  DocumentListPage
-} from "./pages/DocumentListPage";
+import { DocumentListPage } from "./pages/DocumentListPage";
 
-import {
-  TaskListPage
-} from "./pages/TaskListPage";
+import { TaskListPage } from "./pages/TaskListPage";
 
-import {
-  screens
-} from "./config/screens";
+import { screens } from "./config/screens";
+import { DocumentDetailPage } from "./pages/DocumentDetailPage";
+import { TaskDetailPage } from "./pages/TaskDetailPage";
 
 export const App = () => {
+    return (
+        <BrowserRouter>
+            <Routes>
+                <Route element={<AppLayout />}>
+                    {/* ホーム */}
+                    <Route path="/" element={<DashboardPage />} />
 
-  return (
+                    {/* SCR-001 */}
+                    <Route path="/dashboard" element={<DashboardPage />} />
 
-    <BrowserRouter>
+                    {/* SCR-002 */}
+                    <Route path="/projects" element={<ProjectListPage />} />
 
-      <Routes>
+                    {/* SCR-007 */}
+                    <Route path="/documents" element={<DocumentListPage />} />
 
-        <Route
-          element={
-            <AppLayout />
-          }
-        >
+                    <Route
+                        path="/documents/detail"
+                        element={<DocumentDetailPage />}
+                    />
 
-          {/* ホーム */}
-          <Route
-            path="/"
-            element={
-              <DashboardPage />
-            }
-          />
+                    {/* SCR-021 */}
+                    <Route path="/tasks" element={<TaskListPage />} />
 
-          {/* SCR-001 */}
-          <Route
-            path="/dashboard"
-            element={
-              <DashboardPage />
-            }
-          />
+                    <Route path="/tasks/detail" element={<TaskDetailPage />} />
 
-          {/* SCR-002 */}
-          <Route
-            path="/projects"
-            element={
-              <ProjectListPage />
-            }
-          />
+                    {/* SCR-025 */}
+                    <Route path="/converter" element={<ConverterPage />} />
 
-          {/* SCR-007 */}
-          <Route
-            path="/documents"
-            element={
-              <DocumentListPage />
-            }
-          />
+                    {screens.map((screen) => {
+                        const [screenId, title, route] = screen;
 
-          {/* SCR-021 */}
-          <Route
-            path="/tasks"
-            element={
-              <TaskListPage />
-            }
-          />
+                        const implemented = [
+                            "SCR-001",
+                            "SCR-002",
+                            "SCR-007",
+                            "SCR-008",
+                            "SCR-021",
+                            "SCR-022",
+                            "SCR-025",
+                        ];
 
-          {/* SCR-025 */}
-          <Route
-            path="/converter"
-            element={
-              <ConverterPage />
-            }
-          />
-
-          {
-
-            screens.map(
-              screen => {
-
-                const [
-                  screenId,
-                  title,
-                  route
-                ] = screen;
-
-                const implemented = [
-                  "SCR-001",
-                  "SCR-002",
-                  "SCR-007",
-                  "SCR-021",
-                  "SCR-025"
-                ];
-
-                if (
-                  implemented.includes(
-                    screenId
-                  )
-                ) {
-
-                  return null;
-
-                }
-
-                return (
-
-                  <Route
-                    key={screenId}
-                    path={route}
-                    element={
-                      <PlaceholderPage
-                        screenId={
-                          screenId
+                        if (implemented.includes(screenId)) {
+                            return null;
                         }
-                        title={
-                          title
-                        }
-                      />
-                    }
-                  />
 
-                );
-
-              }
-            )
-
-          }
-
-        </Route>
-
-      </Routes>
-
-    </BrowserRouter>
-
-  );
-
+                        return (
+                            <Route
+                                key={screenId}
+                                path={route}
+                                element={
+                                    <PlaceholderPage
+                                        screenId={screenId}
+                                        title={title}
+                                    />
+                                }
+                            />
+                        );
+                    })}
+                </Route>
+            </Routes>
+        </BrowserRouter>
+    );
 };

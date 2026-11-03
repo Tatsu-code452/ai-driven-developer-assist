@@ -1,6 +1,10 @@
 import type { DocumentModel } from "../models/DocumentModel";
 import type { Task } from "../models/Task";
 
+type Options = {
+  nextId?: () => string;
+};
+
 const TASK_KEYWORDS = [
 
   "作成",
@@ -33,32 +37,33 @@ const TASK_SECTION_KEYWORDS = [
 ];
 
 export const extractTasks = (
-  document: DocumentModel
+  document: DocumentModel,
+  options?: Options
 ): Task[] => {
 
-  const tasksFromLists =
+  const tasks =
     extractTasksFromLists(
       document
     );
 
   const uniqueTasks =
     uniqueByTitle(
-      tasksFromLists
+      tasks
     );
 
   return uniqueTasks.map(
-    (task, index) => ({
+    task => ({
+
       ...task,
+
       id:
-        "TSK-" +
-        String(
-          index + 1
-        ).padStart(
-          3,
-          "0"
-        )
+        options?.nextId
+          ? options.nextId()
+          : "TSK-000"
+
     })
   );
+
 };
 
 const extractTasksFromLists = (

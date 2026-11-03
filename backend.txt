@@ -1,6 +1,6 @@
 
 ================================================================================
-FILE: backend\src\app.ts
+FILE: src\app.ts
 ================================================================================
 
 import cors from "cors";
@@ -46,7 +46,7 @@ export const createApp = () => {
 
 
 ================================================================================
-FILE: backend\src\config\env.ts
+FILE: src\config\env.ts
 ================================================================================
 
 export const env = {
@@ -58,7 +58,86 @@ export const env = {
 
 
 ================================================================================
-FILE: backend\src\controllers\converterController.ts
+FILE: src\controllers\contextController.ts
+================================================================================
+
+import {
+  Request,
+  Response
+} from "express";
+
+import {
+  loadContexts
+} from "@/repositories/ContextRepository";
+
+export const getContexts =
+(
+  _req: Request,
+  res: Response
+) => {
+
+  const items =
+    loadContexts(
+      "data/generated"
+    );
+
+  res.json({
+
+    success: true,
+
+    items,
+
+    count:
+      items.length
+
+  });
+
+};
+
+export const getContextDetail =
+(
+  req: Request,
+  res: Response
+) => {
+
+  const items =
+    loadContexts(
+      "data/generated"
+    );
+
+  const item =
+    items.find(
+      context =>
+        context.id ===
+        req.params.id
+    );
+
+  if (!item) {
+
+    return res
+      .status(404)
+      .json({
+
+        success: false
+
+      });
+
+  }
+
+  res.json({
+
+    success: true,
+
+    item
+
+  });
+
+};
+
+
+
+================================================================================
+FILE: src\controllers\converterController.ts
 ================================================================================
 
 import {
@@ -112,7 +191,118 @@ export const convertMarkdownHandler =
 
 
 ================================================================================
-FILE: backend\src\controllers\healthController.ts
+FILE: src\controllers\dashboardController.ts
+================================================================================
+
+import { Request, Response } from "express";
+
+import {
+  loadTasks
+} from "@/repositories/TaskRepository";
+
+import {
+  loadDocuments
+} from "@/repositories/DocumentRepository";
+
+export const getDashboard =
+(
+  _req: Request,
+  res: Response
+) => {
+
+  const tasks =
+    loadTasks(
+      "data/generated"
+    );
+
+  const documents =
+    loadDocuments(
+      "data/generated"
+    );
+
+  const completedTasks =
+    tasks.filter(
+      task =>
+        task.status === "DONE"
+    );
+
+  return res.json({
+
+    success: true,
+
+    summary: {
+
+      taskCount:
+        tasks.length,
+
+      completedTaskCount:
+        completedTasks.length,
+
+      documentCount:
+        documents.length,
+
+      progress:
+        tasks.length === 0
+          ? 0
+          : Math.round(
+              (
+                completedTasks.length /
+                tasks.length
+              ) * 100
+            )
+
+    },
+
+    latestTasks:
+      tasks.slice(-5),
+
+    latestDocuments:
+      documents.slice(-5)
+
+  });
+
+};
+
+
+
+================================================================================
+FILE: src\controllers\documentController.ts
+================================================================================
+
+import { Request, Response } from "express";
+
+import {
+  loadDocuments
+} from "@/repositories/DocumentRepository";
+
+export const getDocuments =
+(
+  _req: Request,
+  res: Response
+) => {
+
+  const documents =
+    loadDocuments(
+      "data/generated"
+    );
+
+  return res.json({
+
+    success: true,
+
+    items: documents,
+
+    count:
+      documents.length
+
+  });
+
+};
+
+
+
+================================================================================
+FILE: src\controllers\healthController.ts
 ================================================================================
 
 import { Request, Response } from "express";
@@ -132,7 +322,315 @@ export const getHealth = (
 
 
 ================================================================================
-FILE: backend\src\index.ts
+FILE: src\controllers\issueController.ts
+================================================================================
+
+import {
+  Request,
+  Response
+} from "express";
+
+export const getIssues =
+(
+  _req: Request,
+  res: Response
+) => {
+
+  res.json({
+
+    success: true,
+
+    items: [
+
+      {
+
+        id:
+          "BUG-001",
+
+        title:
+          "採番重複対応",
+
+        status:
+          "OPEN"
+
+      }
+
+    ]
+
+  });
+
+};
+
+
+
+================================================================================
+FILE: src\controllers\matrixController.ts
+================================================================================
+
+import {
+  loadTraceability
+} from "@/repositories/TraceabilityRepository";
+
+export const getMatrix =
+(
+  _req,
+  res
+) => {
+
+  const items =
+    loadTraceability(
+      "data/generated"
+    );
+
+  const matrix =
+    items.map(
+      item => ({
+
+        source:
+          item.sourceId,
+
+        target:
+          item.targetId,
+
+        relation:
+          item.relationType
+
+      })
+    );
+
+  res.json({
+
+    success: true,
+
+    items:
+      matrix
+
+  });
+
+};
+
+
+
+================================================================================
+FILE: src\controllers\projectController.ts
+================================================================================
+
+import {
+  Request,
+  Response
+} from "express";
+
+import {
+  loadTasks
+} from "@/repositories/TaskRepository";
+
+import {
+  loadDocuments
+} from "@/repositories/DocumentRepository";
+
+export const getProjects =
+(
+  _req,
+  res
+) => {
+
+  const tasks =
+    loadTasks(
+      "data/generated"
+    );
+
+  const documents =
+    loadDocuments(
+      "data/generated"
+    );
+
+  res.json({
+
+    success: true,
+
+    items: [
+
+      {
+
+        id:
+          "PRJ-001",
+
+        name:
+          "AI駆動型開発支援システム",
+
+        taskCount:
+          tasks.length,
+
+        documentCount:
+          documents.length,
+
+        status:
+          "進行中"
+
+      }
+
+    ]
+
+  });
+
+};
+
+export const getProjectDetail =
+(
+  _req: Request,
+  res: Response
+) => {
+
+  const tasks =
+    loadTasks(
+      "data/generated"
+    );
+
+  const documents =
+    loadDocuments(
+      "data/generated"
+    );
+
+  res.json({
+
+    success: true,
+
+    item: {
+
+      id:
+        "PRJ-001",
+
+      name:
+        "AI駆動型開発支援システム",
+
+      status:
+        "進行中",
+
+      taskCount:
+        tasks.length,
+
+      documentCount:
+        documents.length
+
+    }
+
+  });
+
+};
+
+
+
+================================================================================
+FILE: src\controllers\qaController.ts
+================================================================================
+
+import {
+  Request,
+  Response
+} from "express";
+
+export const getQAs =
+(
+  _req: Request,
+  res: Response
+) => {
+
+  res.json({
+
+    success: true,
+
+    items: [
+
+      {
+
+        id:
+          "QAA-001",
+
+        question:
+          "採番方式検討",
+
+        status:
+          "OPEN"
+
+      }
+
+    ]
+
+  });
+
+};
+
+
+
+================================================================================
+FILE: src\controllers\taskController.ts
+================================================================================
+
+import { Request, Response } from "express";
+
+import {
+  loadTasks
+} from "@/repositories/TaskRepository";
+
+export const getTasks =
+(
+  _req: Request,
+  res: Response
+) => {
+
+  const tasks =
+    loadTasks(
+      "data/generated"
+    );
+
+  return res.json({
+
+    success: true,
+
+    items: tasks,
+
+    count:
+      tasks.length
+
+  });
+
+};
+
+
+
+================================================================================
+FILE: src\controllers\traceabilityController.ts
+================================================================================
+
+import {
+  loadTraceability
+} from "@/repositories/TraceabilityRepository";
+
+export const getTraceability =
+(
+  _req,
+  res
+) => {
+
+  const items =
+    loadTraceability(
+      "data/generated"
+    );
+
+  res.json({
+
+    success: true,
+
+    items
+
+  });
+
+};
+
+
+
+================================================================================
+FILE: src\index.ts
 ================================================================================
 
 import { env } from "@/config/env";
@@ -152,7 +650,7 @@ app.listen(
 
 
 ================================================================================
-FILE: backend\src\middlewares\errorHandler.ts
+FILE: src\middlewares\errorHandler.ts
 ================================================================================
 
 import { Request, Response, NextFunction } from "express";
@@ -178,7 +676,33 @@ export const errorHandler = (
 
 
 ================================================================================
-FILE: backend\src\models\Document.ts
+FILE: src\models\Context.ts
+================================================================================
+
+export type Context = {
+  id: string;
+  title: string;
+  type: string;
+  description: string;
+
+  status:
+    | "ACTIVE"
+    | "ARCHIVED";
+
+  documentIds: string[];
+  taskIds: string[];
+
+  issueIds: string[];
+  qaIds: string[];
+
+  createdAt: string;
+  updatedAt: string;
+};
+
+
+
+================================================================================
+FILE: src\models\Document.ts
 ================================================================================
 
 export type DocumentType =
@@ -200,7 +724,7 @@ export type Document = {
 
 
 ================================================================================
-FILE: backend\src\models\DocumentModel.ts
+FILE: src\models\DocumentModel.ts
 ================================================================================
 
 import type { Heading } from "./Heading";
@@ -219,7 +743,7 @@ export type DocumentModel = {
 
 
 ================================================================================
-FILE: backend\src\models\Heading.ts
+FILE: src\models\Heading.ts
 ================================================================================
 
 export type Heading = {
@@ -231,7 +755,7 @@ export type Heading = {
 
 
 ================================================================================
-FILE: backend\src\models\MarkdownList.ts
+FILE: src\models\MarkdownList.ts
 ================================================================================
 
 export type MarkdownList = {
@@ -242,7 +766,7 @@ export type MarkdownList = {
 
 
 ================================================================================
-FILE: backend\src\models\MarkdownTable.ts
+FILE: src\models\MarkdownTable.ts
 ================================================================================
 
 export type MarkdownTable = {
@@ -254,7 +778,7 @@ export type MarkdownTable = {
 
 
 ================================================================================
-FILE: backend\src\models\Task.ts
+FILE: src\models\Task.ts
 ================================================================================
 
 export type TaskStatus =
@@ -279,7 +803,231 @@ export type Task = {
 
 
 ================================================================================
-FILE: backend\src\repositories\FileRepository.ts
+FILE: src\models\Traceability.ts
+================================================================================
+
+export type Traceability = {
+
+  sourceId: string;
+
+  targetId: string;
+
+  relationType:
+    | "REQ-DES"
+    | "DES-TSK"
+    | "REQ-TSK";
+
+};
+
+
+
+================================================================================
+FILE: src\repositories\ContextRepository.ts
+================================================================================
+
+import fs from "fs";
+import path from "path";
+
+import type {
+  Context
+} from "@/models/Context";
+
+const FILE_NAME =
+  "contexts.json";
+
+export const loadContexts =
+(
+  outputDir: string
+): Context[] => {
+
+  const filePath =
+    path.join(
+      outputDir,
+      FILE_NAME
+    );
+
+  if (
+    !fs.existsSync(
+      filePath
+    )
+  ) {
+    return [];
+  }
+
+  return JSON.parse(
+    fs.readFileSync(
+      filePath,
+      "utf-8"
+    )
+  );
+
+};
+
+export const saveContexts =
+(
+  items: Context[],
+  outputDir: string
+) => {
+
+  fs.mkdirSync(
+    outputDir,
+    {
+      recursive: true
+    }
+  );
+
+  const filePath =
+    path.join(
+      outputDir,
+      FILE_NAME
+    );
+
+  fs.writeFileSync(
+    filePath,
+    JSON.stringify(
+      items,
+      null,
+      2
+    ),
+    "utf-8"
+  );
+
+  return filePath;
+
+};
+
+
+
+================================================================================
+FILE: src\repositories\DocumentRepository.ts
+================================================================================
+
+import fs from "fs";
+import path from "path";
+
+import type { Document }
+from "@/models/Document";
+
+const FILE_NAME =
+  "documents.json";
+
+export const loadDocuments =
+(
+  outputDir: string
+): Document[] => {
+
+  const filePath =
+    path.join(
+      outputDir,
+      FILE_NAME
+    );
+
+  if (
+    !fs.existsSync(
+      filePath
+    )
+  ) {
+    return [];
+  }
+
+  return JSON.parse(
+    fs.readFileSync(
+      filePath,
+      "utf-8"
+    )
+  );
+
+};
+
+export const saveDocuments =
+(
+  documents: Document[],
+  outputDir: string
+) => {
+
+  fs.mkdirSync(
+    outputDir,
+    {
+      recursive:true
+    }
+  );
+
+  const filePath =
+    path.join(
+      outputDir,
+      FILE_NAME
+    );
+
+  fs.writeFileSync(
+    filePath,
+    JSON.stringify(
+      documents,
+      null,
+      2
+    ),
+    "utf-8"
+  );
+
+  return filePath;
+};
+
+export const mergeDocuments =
+(
+  current: Document[],
+  incoming: Document[]
+): Document[] => {
+
+  const map =
+    new Map<
+      string,
+      Document
+    >();
+
+  current.forEach(
+    document =>
+
+      map.set(
+        document.id,
+        document
+      )
+
+  );
+
+  incoming.forEach(
+    document => {
+
+      const exists =
+        [...map.values()]
+          .find(
+            item =>
+              item.title ===
+              document.title
+          );
+
+      if (
+        exists
+      ) {
+        return;
+      }
+
+      map.set(
+        document.id,
+        document
+      );
+
+    }
+  );
+
+  return [
+    ...map.values()
+  ];
+
+};
+
+
+
+================================================================================
+FILE: src\repositories\FileRepository.ts
 ================================================================================
 
 import fs from "fs";
@@ -310,7 +1058,233 @@ export const readJson =
 
 
 ================================================================================
-FILE: backend\src\routes\converterRoutes.ts
+FILE: src\repositories\TaskRepository.ts
+================================================================================
+
+import fs from "fs";
+import path from "path";
+
+import type { Task } from "@/models/Task";
+
+const FILE_NAME =
+  "tasks.json";
+
+export const loadTasks = (
+  outputDir: string
+): Task[] => {
+
+  const filePath =
+    path.join(
+      outputDir,
+      FILE_NAME
+    );
+
+  if (
+    !fs.existsSync(
+      filePath
+    )
+  ) {
+    return [];
+  }
+
+  return JSON.parse(
+    fs.readFileSync(
+      filePath,
+      "utf-8"
+    )
+  );
+};
+
+export const saveTasks = (
+  tasks: Task[],
+  outputDir: string
+) => {
+
+  fs.mkdirSync(
+    outputDir,
+    {
+      recursive: true
+    }
+  );
+
+  const filePath =
+    path.join(
+      outputDir,
+      FILE_NAME
+    );
+
+  fs.writeFileSync(
+    filePath,
+    JSON.stringify(
+      tasks,
+      null,
+      2
+    ),
+    "utf-8"
+  );
+
+  return filePath;
+};
+
+export const mergeTasks = (
+  current: Task[],
+  incoming: Task[]
+): Task[] => {
+
+  const map =
+    new Map<
+      string,
+      Task
+    >();
+
+  current.forEach(
+    task =>
+      map.set(
+        task.id,
+        task
+      )
+  );
+
+  incoming.forEach(
+    task => {
+
+      const exists =
+        [...map.values()]
+          .find(
+            item =>
+              item.title ===
+              task.title
+          );
+
+      if (
+        exists
+      ) {
+        return;
+      }
+
+      map.set(
+        task.id,
+        task
+      );
+
+    }
+  );
+
+  return [
+    ...map.values()
+  ];
+};
+
+
+
+================================================================================
+FILE: src\repositories\TraceabilityRepository.ts
+================================================================================
+
+import fs from "fs";
+import path from "path";
+
+import type {
+  Traceability
+} from "@/models/Traceability";
+
+const FILE_NAME =
+  "traceability.json";
+
+export const loadTraceability =
+(
+  outputDir: string
+) => {
+
+  const filePath =
+    path.join(
+      outputDir,
+      FILE_NAME
+    );
+
+  if (
+    !fs.existsSync(
+      filePath
+    )
+  ) {
+    return [];
+  }
+
+  return JSON.parse(
+    fs.readFileSync(
+      filePath,
+      "utf-8"
+    )
+  );
+
+};
+
+export const saveTraceability =
+(
+  items:
+    Traceability[],
+  outputDir: string
+) => {
+
+  fs.mkdirSync(
+    outputDir,
+    {
+      recursive: true
+    }
+  );
+
+  fs.writeFileSync(
+
+    path.join(
+      outputDir,
+      FILE_NAME
+    ),
+
+    JSON.stringify(
+      items,
+      null,
+      2
+    ),
+
+    "utf-8"
+
+  );
+
+};
+
+
+
+================================================================================
+FILE: src\routes\contextRoutes.ts
+================================================================================
+
+import { Router }
+from "express";
+
+import {
+  getContexts,
+  getContextDetail
+} from "@/controllers/contextController";
+
+const router =
+  Router();
+
+router.get(
+  "/",
+  getContexts
+);
+
+router.get(
+  "/:id",
+  getContextDetail
+);
+
+export default router;
+
+
+
+================================================================================
+FILE: src\routes\converterRoutes.ts
 ================================================================================
 
 import { Router }
@@ -332,7 +1306,53 @@ export default router;
 
 
 ================================================================================
-FILE: backend\src\routes\healthRoutes.ts
+FILE: src\routes\dashboardRoutes.ts
+================================================================================
+
+import { Router }
+from "express";
+
+import {
+  getDashboard
+} from "@/controllers/dashboardController";
+
+const router =
+  Router();
+
+router.get(
+  "/",
+  getDashboard
+);
+
+export default router;
+
+
+
+================================================================================
+FILE: src\routes\documentRoutes.ts
+================================================================================
+
+import { Router }
+from "express";
+
+import {
+  getDocuments
+} from "@/controllers/documentController";
+
+const router =
+  Router();
+
+router.get(
+  "/",
+  getDocuments
+);
+
+export default router;
+
+
+
+================================================================================
+FILE: src\routes\healthRoutes.ts
 ================================================================================
 
 import { getHealth } from "@/controllers/healthController";
@@ -347,109 +1367,219 @@ export default router;
 
 
 ================================================================================
-FILE: backend\src\routes\index.ts
+FILE: src\routes\index.ts
 ================================================================================
 
 import { Router } from "express";
-import converterRoutes from "./converterRoutes";
+
 import healthRoutes from "./healthRoutes";
 
-const router = Router();
+import converterRoutes from "./converterRoutes";
 
-router.use("/health", healthRoutes);
-router.use("/converter", converterRoutes);
+import taskRoutes from "./taskRoutes";
+
+import documentRoutes from "./documentRoutes";
+
+import projectRoutes from "./projectRoutes";
+
+import dashboardRoutes from "./dashboardRoutes";
+
+import matrixRoutes from "@/routes/matrixRoutes";
+import traceabilityRoutes from "@/routes/traceabilityRoutes";
+import contextRoutes from "./contextRoutes";
+
+const router =
+  Router();
+
+router.use(
+  "/health",
+  healthRoutes
+);
+
+router.use(
+  "/converter",
+  converterRoutes
+);
+
+router.use(
+  "/tasks",
+  taskRoutes
+);
+
+router.use(
+  "/documents",
+  documentRoutes
+);
+
+router.use(
+  "/projects",
+  projectRoutes
+);
+
+router.use(
+  "/contexts",
+  contextRoutes
+);
+
+router.use(
+  "/dashboard",
+  dashboardRoutes
+);
+
+router.use(
+  "/traceability",
+  traceabilityRoutes
+);
+
+router.use(
+  "/traceability/matrix",
+  matrixRoutes
+);
 
 export default router;
 
 
 
 ================================================================================
-FILE: backend\src\services\ConverterService.ts
+FILE: src\routes\matrixRoutes.ts
 ================================================================================
 
-import path from "path";
+import { Router }
+from "express";
 
 import {
-  parseMarkdownContent
-} from "@/services/markdownParser/parseMarkdownContent";
+  getMatrix
+} from "@/controllers/matrixController";
+
+const router =
+  Router();
+
+router.get(
+  "/",
+  getMatrix
+);
+
+export default router;
+
+
+
+================================================================================
+FILE: src\routes\projectRoutes.ts
+================================================================================
+
+import { Router }
+from "express";
 
 import {
-  extractTasks
-} from "@/services/TaskExtractor";
+  getProjects
+} from "@/controllers/projectController";
+
+const router =
+  Router();
+
+router.get(
+  "/",
+  getProjects
+);
+
+export default router;
+
+
+
+================================================================================
+FILE: src\routes\taskRoutes.ts
+================================================================================
+
+import { Router }
+from "express";
 
 import {
-  extractDocuments
-} from "@/services/DocumentExtractor";
+  getTasks
+} from "@/controllers/taskController";
+
+const router =
+  Router();
+
+router.get(
+  "/",
+  getTasks
+);
+
+export default router;
+
+
+
+================================================================================
+FILE: src\routes\traceabilityRoutes.ts
+================================================================================
+
+import { Router }
+from "express";
 
 import {
-  exportTasks,
-  exportDocuments
-} from "@/services/JsonExporter";
+  getTraceability
+} from "@/controllers/traceabilityController";
 
-export const convertMarkdown =
+const router =
+  Router();
+
+router.get(
+  "/",
+  getTraceability
+);
+
+export default router;
+
+
+
+================================================================================
+FILE: src\services\contextBuilder\buildContext.ts
+================================================================================
+
+import type {
+  Context
+} from "@/models/Context";
+
+export const buildContext =
 (
-  markdown: string,
-  outputRoot = "data"
-) => {
+  id: string,
+  title: string,
+  type: string,
+  taskIds: string[],
+  documentIds: string[]
+): Context => {
 
-  const document =
-    parseMarkdownContent(
-      markdown
-    );
-
-  const tasks =
-    extractTasks(
-      document
-    );
-
-  const documents =
-    extractDocuments(
-      document
-    );
-
-  const outputDir =
-    path.join(
-      outputRoot,
-      "generated"
-    );
-
-  const tasksFile =
-    exportTasks(
-      tasks,
-      outputDir
-    );
-
-  const documentsFile =
-    exportDocuments(
-      documents,
-      outputDir
-    );
+  const now =
+    new Date()
+      .toISOString();
 
   return {
 
-    document,
+    id,
 
-    tasks,
+    title,
 
-    documents,
+    description:
+      title,
 
-    output: {
+    type,
 
-      tasksFile,
+    status:
+      "ACTIVE",
 
-      documentsFile
+    taskIds,
 
-    },
+    documentIds,
 
-    summary: {
+    issueIds: [],
 
-      taskCount:
-        tasks.length,
+    qaIds: [],
 
-      documentCount:
-        documents.length
+    createdAt:
+      now,
 
-    }
+    updatedAt:
+      now
 
   };
 
@@ -458,118 +1588,387 @@ export const convertMarkdown =
 
 
 ================================================================================
-FILE: backend\src\services\DocumentExtractor.ts
+FILE: src\services\ConverterService.ts
+================================================================================
+
+import path from "path";
+
+import {
+  loadTasks,
+  mergeTasks,
+  saveTasks
+} from "@/repositories/TaskRepository";
+
+import {
+  loadDocuments,
+  mergeDocuments,
+  saveDocuments
+} from "@/repositories/DocumentRepository";
+
+import {
+  createIdAllocator
+} from "@/services/idGenerator/IdGenerator";
+
+import {
+  extractTasks
+} from "@/services/TaskExtractor";
+
+import {
+  detectDocumentType,
+  extractDocuments
+} from "@/services/DocumentExtractor";
+
+import {
+  parseMarkdownContent
+} from "@/services/markdownParser/parseMarkdownContent";
+
+import {
+  loadContexts,
+  saveContexts
+} from "@/repositories/ContextRepository";
+import { buildContext } from "@/services/contextBuilder/buildContext";
+
+export const convertMarkdown =
+  (
+    markdown: string,
+    outputRoot = "data"
+  ) => {
+
+    const document =
+      parseMarkdownContent(
+        markdown
+      );
+
+    const outputDir =
+      path.join(
+        outputRoot,
+        "generated"
+      );
+
+    const currentTasks =
+      loadTasks(
+        outputDir
+      );
+
+    const currentDocuments =
+      loadDocuments(
+        outputDir
+      );
+
+    const taskAllocator =
+      createIdAllocator(
+        "TSK",
+        currentTasks
+      );
+
+    const docType =
+      detectDocumentType(
+        document
+      );
+
+    const documentAllocator =
+      createIdAllocator(
+        docType,
+        currentDocuments
+      );
+
+    const newTasks =
+      extractTasks(
+        document,
+        {
+          nextId:
+            taskAllocator
+        }
+      );
+
+    const newDocuments =
+      extractDocuments(
+        document,
+        {
+          nextId:
+            documentAllocator
+        }
+      );
+
+    const mergedTasks =
+      mergeTasks(
+        currentTasks,
+        newTasks
+      );
+
+    const mergedDocuments =
+      mergeDocuments(
+        currentDocuments,
+        newDocuments
+      );
+
+    const tasksFile =
+      saveTasks(
+        mergedTasks,
+        outputDir
+      );
+
+    const documentsFile =
+      saveDocuments(
+        mergedDocuments,
+        outputDir
+      );
+
+    const contexts =
+      loadContexts(
+        outputDir
+      );
+
+    const contextAllocator =
+      createIdAllocator(
+        "CTX",
+        contexts
+      );
+
+    const context =
+      buildContext(
+        contextAllocator(),
+        document.title,
+        docType,
+        newTasks.map(
+          task => task.id
+        ),
+        newDocuments.map(
+          doc => doc.id
+        )
+      );
+
+    contexts.push(
+      context
+    );
+
+    saveContexts(
+      contexts,
+      outputDir
+    );
+
+    return {
+
+      document,
+
+      tasks:
+        mergedTasks,
+
+      documents:
+        mergedDocuments,
+
+      output: {
+
+        tasksFile,
+
+        documentsFile
+
+      },
+
+      summary: {
+
+        taskCount:
+          mergedTasks.length,
+
+        documentCount:
+          mergedDocuments.length
+
+      }
+
+    };
+  };
+
+
+
+================================================================================
+FILE: src\services\DocumentExtractor.ts
 ================================================================================
 
 import type { Document } from "../models/Document";
 import type { DocumentModel } from "../models/DocumentModel";
 
+type Options = {
+  nextId?: () => string;
+};
+
 export const extractDocuments = (
-  document: DocumentModel
+  document: DocumentModel,
+  options?: Options
 ): Document[] => {
 
-  const documentType =
+  const type =
     detectDocumentType(
       document
     );
 
   return [
+
     {
       id:
-        createDocumentId(
-          documentType,
-          1
-        ),
+        options?.nextId
+          ? options.nextId()
+          : createDocumentId(
+            type,
+            1
+          ),
+
       title:
         document.title,
-      type:
-        documentType,
+
+      type,
+
       path:
         document.fileName,
+
       source:
         document.title
     }
+
   ];
+
 };
 
 export const detectDocumentType =
-(
-  document: DocumentModel
-) => {
+  (
+    document: DocumentModel
+  ) => {
 
-  const title =
-    document.title
-      .toLowerCase();
+    const title =
+      document.title
+        .toLowerCase();
 
-  const fileName =
-    document.fileName
-      .toLowerCase();
+    const fileName =
+      document.fileName
+        .toLowerCase();
 
-  const value =
-    title + " " +
-    fileName;
+    const value =
+      title + " " +
+      fileName;
 
-  if (
-    value.includes("要件") ||
-    value.includes(
-      "requirements"
-    )
-  ) {
-    return "REQ";
-  }
+    if (
+      value.includes("要件") ||
+      value.includes(
+        "requirements"
+      )
+    ) {
+      return "REQ";
+    }
 
-  if (
-    value.includes(
-      "基本設計"
-    ) ||
-    value.includes(
-      "アーキテクチャ"
-    ) ||
-    value.includes(
-      "design"
-    )
-  ) {
-    return "DES";
-  }
+    if (
+      value.includes(
+        "基本設計"
+      ) ||
+      value.includes(
+        "アーキテクチャ"
+      ) ||
+      value.includes(
+        "design"
+      )
+    ) {
+      return "DES";
+    }
 
-  if (
-    value.includes(
-      "詳細設計"
-    )
-  ) {
-    return "DET";
-  }
+    if (
+      value.includes(
+        "詳細設計"
+      )
+    ) {
+      return "DET";
+    }
 
-  if (
-    value.includes(
-      "テスト"
-    )
-  ) {
-    return "TST";
-  }
+    if (
+      value.includes(
+        "テスト"
+      )
+    ) {
+      return "TST";
+    }
 
-  if (
-    value.includes(
-      "運用"
-    )
-  ) {
-    return "OPS";
-  }
+    if (
+      value.includes(
+        "運用"
+      )
+    ) {
+      return "OPS";
+    }
 
-  return "DOC";
-};
+    return "DOC";
+  };
 
 export const createDocumentId =
-(
+  (
+    prefix: string,
+    sequence: number
+  ): string => {
+
+    return (
+      prefix +
+      "-" +
+      String(
+        sequence
+      ).padStart(
+        3,
+        "0"
+      )
+    );
+  };
+
+
+
+================================================================================
+FILE: src\services\idGenerator\IdGenerator.ts
+================================================================================
+
+type Entity = {
+  id: string;
+};
+
+export const getNextId = (
   prefix: string,
-  sequence: number
+  items: Entity[]
 ): string => {
+
+  const maxNo =
+    items
+      .filter(
+        item =>
+          item.id.startsWith(
+            prefix + "-"
+          )
+      )
+      .map(
+        item =>
+          Number(
+            item.id
+              .replace(
+                prefix + "-",
+                ""
+              )
+          )
+      )
+      .filter(
+        value =>
+          !Number.isNaN(
+            value
+          )
+      )
+      .reduce(
+        (
+          current,
+          value
+        ) =>
+          Math.max(
+            current,
+            value
+          ),
+        0
+      );
 
   return (
     prefix +
     "-" +
     String(
-      sequence
+      maxNo + 1
     ).padStart(
       3,
       "0"
@@ -577,10 +1976,47 @@ export const createDocumentId =
   );
 };
 
+export const createIdAllocator =
+(
+  prefix: string,
+  items: Entity[]
+) => {
+
+  let current =
+    Number(
+      getNextId(
+        prefix,
+        items
+      ).replace(
+        prefix + "-",
+        ""
+      )
+    );
+
+  return () => {
+
+    const value =
+      prefix +
+      "-" +
+      String(
+        current
+      ).padStart(
+        3,
+        "0"
+      );
+
+    current++;
+
+    return value;
+
+  };
+
+};
+
 
 
 ================================================================================
-FILE: backend\src\services\JsonExporter.ts
+FILE: src\services\JsonExporter.ts
 ================================================================================
 
 import fs from "fs";
@@ -714,7 +2150,7 @@ export const exportTraceability =
 
 
 ================================================================================
-FILE: backend\src\services\markdownParser\index.ts
+FILE: src\services\markdownParser\index.ts
 ================================================================================
 
 import { DocumentModel } from "@/models/DocumentModel";
@@ -733,7 +2169,7 @@ export const execute = async (filePath: string): Promise<DocumentModel> => {
 
 
 ================================================================================
-FILE: backend\src\services\markdownParser\parseMarkdownContent.ts
+FILE: src\services\markdownParser\parseMarkdownContent.ts
 ================================================================================
 
 import { DocumentModel } from "@/models/DocumentModel";
@@ -765,7 +2201,7 @@ export const parseMarkdownContent = (
 
 
 ================================================================================
-FILE: backend\src\services\markdownParser\parseMarkdownFile.ts
+FILE: src\services\markdownParser\parseMarkdownFile.ts
 ================================================================================
 
 import { DocumentModel } from "@/models/DocumentModel";
@@ -796,7 +2232,7 @@ export const parseMarkdownFile = (
 
 
 ================================================================================
-FILE: backend\src\services\markdownParser\parseMarkdownList.ts
+FILE: src\services\markdownParser\parseMarkdownList.ts
 ================================================================================
 
 import { MarkdownList } from "@/models/MarkdownList";
@@ -858,7 +2294,7 @@ export const parseLists = (
 
 
 ================================================================================
-FILE: backend\src\services\markdownParser\parseMarkdownTable.ts
+FILE: src\services\markdownParser\parseMarkdownTable.ts
 ================================================================================
 
 import { MarkdownTable } from "@/models/MarkdownTable";
@@ -940,7 +2376,7 @@ const parseTableRow = (
 
 
 ================================================================================
-FILE: backend\src\services\markdownParser\parseUtils.ts
+FILE: src\services\markdownParser\parseUtils.ts
 ================================================================================
 
 import { Heading } from "@/models/Heading";
@@ -996,11 +2432,15 @@ export const extractTitle = (
 
 
 ================================================================================
-FILE: backend\src\services\TaskExtractor.ts
+FILE: src\services\TaskExtractor.ts
 ================================================================================
 
 import type { DocumentModel } from "../models/DocumentModel";
 import type { Task } from "../models/Task";
+
+type Options = {
+  nextId?: () => string;
+};
 
 const TASK_KEYWORDS = [
 
@@ -1034,32 +2474,33 @@ const TASK_SECTION_KEYWORDS = [
 ];
 
 export const extractTasks = (
-  document: DocumentModel
+  document: DocumentModel,
+  options?: Options
 ): Task[] => {
 
-  const tasksFromLists =
+  const tasks =
     extractTasksFromLists(
       document
     );
 
   const uniqueTasks =
     uniqueByTitle(
-      tasksFromLists
+      tasks
     );
 
   return uniqueTasks.map(
-    (task, index) => ({
+    task => ({
+
       ...task,
+
       id:
-        "TSK-" +
-        String(
-          index + 1
-        ).padStart(
-          3,
-          "0"
-        )
+        options?.nextId
+          ? options.nextId()
+          : "TSK-000"
+
     })
   );
+
 };
 
 const extractTasksFromLists = (
@@ -1192,7 +2633,7 @@ export const hasTaskSection =
 
 
 ================================================================================
-FILE: backend\src\services\__tests__\ConverterService.test.ts
+FILE: src\services\__tests__\ConverterService.test.ts
 ================================================================================
 
 import {
@@ -1291,7 +2732,7 @@ describe(
 
 
 ================================================================================
-FILE: backend\src\services\__tests__\DocumentExtractor.test.ts
+FILE: src\services\__tests__\DocumentExtractor.test.ts
 ================================================================================
 
 import {
@@ -1502,7 +2943,146 @@ describe(
 
 
 ================================================================================
-FILE: backend\src\services\__tests__\JsonExporter.test.ts
+FILE: src\services\__tests__\DocumentRepository.test.ts
+================================================================================
+
+import {
+  describe,
+  expect,
+  it
+} from "vitest";
+
+import {
+  mergeDocuments
+} from "@/repositories/DocumentRepository";
+
+describe(
+  "DocumentRepository",
+  () => {
+
+    it(
+      "重複Documentを除外",
+      () => {
+
+        const result =
+          mergeDocuments(
+
+            [
+              {
+                id:"REQ-001",
+                title:"要件定義書"
+              } as any
+            ],
+
+            [
+              {
+                id:"REQ-002",
+                title:"要件定義書"
+              } as any
+            ]
+
+          );
+
+        expect(
+          result
+        )
+          .toHaveLength(
+            1
+          );
+
+      }
+    );
+
+  }
+);
+
+
+
+================================================================================
+FILE: src\services\__tests__\IdGenerator.test.ts
+================================================================================
+
+import {
+  describe,
+  expect,
+  it
+} from "vitest";
+
+import {
+  getNextId,
+  createIdAllocator
+} from "../idGenerator/IdGenerator";
+
+describe(
+  "IdGenerator",
+  () => {
+
+    it(
+      "次のTaskID取得",
+      () => {
+
+        const id =
+          getNextId(
+            "TSK",
+            [
+              {
+                id:
+                "TSK-001"
+              },
+              {
+                id:
+                "TSK-002"
+              }
+            ]
+          );
+
+        expect(id)
+          .toBe(
+            "TSK-003"
+          );
+
+      }
+    );
+
+    it(
+      "採番連続生成",
+      () => {
+
+        const next =
+          createIdAllocator(
+            "REQ",
+            [
+              {
+                id:
+                "REQ-005"
+              }
+            ]
+          );
+
+        expect(
+          next()
+        )
+          .toBe(
+            "REQ-006"
+          );
+
+        expect(
+          next()
+        )
+          .toBe(
+            "REQ-007"
+          );
+
+      }
+    );
+
+  }
+);
+
+
+
+================================================================================
+FILE: src\services\__tests__\JsonExporter.test.ts
 ================================================================================
 
 import fs from "fs";
@@ -1696,7 +3276,7 @@ describe(
 
 
 ================================================================================
-FILE: backend\src\services\__tests__\MarkdownParser.test.ts
+FILE: src\services\__tests__\MarkdownParser.test.ts
 ================================================================================
 
 import { describe, expect, it } from "vitest";
@@ -1928,7 +3508,7 @@ text
 
 
 ================================================================================
-FILE: backend\src\services\__tests__\TaskExtractor.test.ts
+FILE: src\services\__tests__\TaskExtractor.test.ts
 ================================================================================
 
 import {
@@ -2056,7 +3636,63 @@ describe(
 
 
 ================================================================================
-FILE: backend\src\tools\export-source.ts
+FILE: src\services\__tests__\TaskRepository.test.ts
+================================================================================
+
+import {
+  describe,
+  expect,
+  it
+} from "vitest";
+
+import {
+  mergeTasks
+} from "@/repositories/TaskRepository";
+
+describe(
+  "TaskRepository",
+  () => {
+
+    it(
+      "重複Taskを除外",
+      () => {
+
+        const result =
+          mergeTasks(
+
+            [
+              {
+                id:"TSK-001",
+                title:"API実装"
+              } as any
+            ],
+
+            [
+              {
+                id:"TSK-002",
+                title:"API実装"
+              } as any
+            ]
+
+          );
+
+        expect(
+          result
+        )
+          .toHaveLength(
+            1
+          );
+
+      }
+    );
+
+  }
+);
+
+
+
+================================================================================
+FILE: src\tools\export-source.ts
 ================================================================================
 
 import fs from "fs";
@@ -2196,7 +3832,7 @@ exportSource(
 
 
 ================================================================================
-FILE: backend\src\types\ConvertResponse.ts
+FILE: src\types\ConvertResponse.ts
 ================================================================================
 
 export type ConvertResponse = {
@@ -2228,7 +3864,7 @@ export type ConvertResponse = {
 
 
 ================================================================================
-FILE: backend\src\utils\textConst.ts
+FILE: src\utils\textConst.ts
 ================================================================================
 
 export const BREAK_LINE = /\r?\n/;

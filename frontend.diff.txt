@@ -1,0 +1,132 @@
+diff --git a/frontend/src/pages/TraceabilityMatrixPage.tsx b/frontend/src/pages/TraceabilityMatrixPage.tsx
+index 7cf01fd..0a3d3a5 100644
+--- a/frontend/src/pages/TraceabilityMatrixPage.tsx
++++ b/frontend/src/pages/TraceabilityMatrixPage.tsx
+@@ -1,28 +1,41 @@
+-export const TraceabilityMatrixPage =
+-() => {
++import { useEffect, useState } from "react";
+ 
+-  return (
++import { fetchMatrix } from "../services/matrixApi";
+ 
+-    <div>
++export const TraceabilityMatrixPage = () => {
++    const [items, setItems] = useState<any[]>([]);
+ 
+-      <h1>
+-        SCR-016
+-        トレーサビリティマトリクス
+-      </h1>
++    useEffect(() => {
++        fetchMatrix().then((result) => setItems(result.items));
++    }, []);
+ 
+-      <div
+-        className="
+-        bg-white
+-        border
+-        rounded
+-        p-4
+-        "
+-      >
+-        Matrix
+-      </div>
++    return (
++        <div>
++            <h1>SCR-016 トレーサビリティマトリクス</h1>
+ 
+-    </div>
++            <table>
++                <thead>
++                    <tr>
++                        <th>Source</th>
+ 
+-  );
++                        <th>Target</th>
+ 
++                        <th>Relation</th>
++                    </tr>
++                </thead>
++
++                <tbody>
++                    {items.map((item) => (
++                        <tr key={item.source + item.target}>
++                            <td>{item.source}</td>
++
++                            <td>{item.target}</td>
++
++                            <td>{item.relation}</td>
++                        </tr>
++                    ))}
++                </tbody>
++            </table>
++        </div>
++    );
+ };
+diff --git a/frontend/src/pages/TraceabilityPage.tsx b/frontend/src/pages/TraceabilityPage.tsx
+index c224032..a2d3921 100644
+--- a/frontend/src/pages/TraceabilityPage.tsx
++++ b/frontend/src/pages/TraceabilityPage.tsx
+@@ -1,28 +1,41 @@
+-export const TraceabilityPage =
+-() => {
++import { useEffect, useState } from "react";
+ 
+-  return (
++import { fetchTraceability } from "../services/traceabilityApi";
+ 
+-    <div>
++export const TraceabilityPage = () => {
++    const [items, setItems] = useState<any[]>([]);
+ 
+-      <h1>
+-        SCR-015
+-        トレーサビリティ管理
+-      </h1>
++    useEffect(() => {
++        fetchTraceability().then((result) => setItems(result.items));
++    }, []);
+ 
+-      <div
+-        className="
+-        bg-white
+-        border
+-        rounded
+-        p-4
+-        "
+-      >
+-        Traceability
+-      </div>
++    return (
++        <div>
++            <h1>SCR-015 トレーサビリティ管理</h1>
+ 
+-    </div>
++            <table>
++                <thead>
++                    <tr>
++                        <th>Source</th>
+ 
+-  );
++                        <th>Target</th>
+ 
++                        <th>Relation</th>
++                    </tr>
++                </thead>
++
++                <tbody>
++                    {items.map((item) => (
++                        <tr key={item.sourceId + item.targetId}>
++                            <td>{item.sourceId}</td>
++
++                            <td>{item.targetId}</td>
++
++                            <td>{item.relationType}</td>
++                        </tr>
++                    ))}
++                </tbody>
++            </table>
++        </div>
++    );
+ };

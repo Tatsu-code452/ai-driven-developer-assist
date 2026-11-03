@@ -1,18 +1,145 @@
 
 ================================================================================
-FILE: frontend\src\App.tsx
+FILE: ..\frontend\src\App.tsx
 ================================================================================
 
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+
 import { AppLayout } from "./layouts/AppLayout";
+
 import { ConverterPage } from "./pages/ConverterPage";
+
+import { PlaceholderPage } from "./pages/common/PlaceholderPage";
+
+import { DashboardPage } from "./pages/DashboardPage";
+
+import { ProjectListPage } from "./pages/ProjectListPage";
+
+import { DocumentListPage } from "./pages/DocumentListPage";
+
+import { TaskListPage } from "./pages/TaskListPage";
+
+import { screens } from "./config/screens";
+import { ContextCreatePage } from "./pages/ContextCreatePage";
+import { ContextDetailPage } from "./pages/ContextDetailPage";
+import { ContextListPage } from "./pages/ContextListPage";
+import { DocumentDetailPage } from "./pages/DocumentDetailPage";
+import { IssueListPage } from "./pages/IssueListPage";
+import { ProjectDetailPage } from "./pages/ProjectDetailPage";
+import { QAListPage } from "./pages/QAListPage";
+import { TaskDetailPage } from "./pages/TaskDetailPage";
+import { TraceabilityMatrixPage } from "./pages/TraceabilityMatrixPage";
+import { TraceabilityPage } from "./pages/TraceabilityPage";
 
 export const App = () => {
     return (
         <BrowserRouter>
             <Routes>
                 <Route element={<AppLayout />}>
-                    <Route path="/" element={<ConverterPage />} />
+                    {/* ホーム */}
+                    <Route path="/" element={<DashboardPage />} />
+
+                    {/* SCR-001 */}
+                    <Route path="/dashboard" element={<DashboardPage />} />
+
+                    {/* SCR-002 */}
+                    <Route path="/projects" element={<ProjectListPage />} />
+
+                    {/* SCR-003 */}
+                    <Route
+                        path="/projects/detail"
+                        element={<ProjectDetailPage />}
+                    />
+
+                    {/* SCR-004 */}
+                    <Route path="/contexts" element={<ContextListPage />} />
+
+                    {/* SCR-005 */}
+                    <Route
+                        path="/contexts/detail"
+                        element={<ContextDetailPage />}
+                    />
+
+                    {/* SCR-006 */}
+                    <Route
+                        path="/contexts/create"
+                        element={<ContextCreatePage />}
+                    />
+
+                    {/* SCR-007 */}
+                    <Route path="/documents" element={<DocumentListPage />} />
+
+                    {/* SCR-008 */}
+                    <Route
+                        path="/documents/detail"
+                        element={<DocumentDetailPage />}
+                    />
+
+                    {/* SCR-015 */}
+                    <Route
+                        path="/traceability"
+                        element={<TraceabilityPage />}
+                    />
+
+                    {/* SCR-016 */}
+                    <Route
+                        path="/traceability/matrix"
+                        element={<TraceabilityMatrixPage />}
+                    />
+
+                    {/* SCR-017 */}
+                    <Route path="/issues" element={<IssueListPage />} />
+
+                    {/* SCR-019 */}
+                    <Route path="/qa" element={<QAListPage />} />
+
+                    {/* SCR-021 */}
+                    <Route path="/tasks" element={<TaskListPage />} />
+
+                    {/* SCR-022 */}
+                    <Route path="/tasks/detail" element={<TaskDetailPage />} />
+
+                    {/* SCR-025 */}
+                    <Route path="/converter" element={<ConverterPage />} />
+
+                    {screens.map((screen) => {
+                        const [screenId, title, route] = screen;
+
+                        const implemented = [
+                            "SCR-001",
+                            "SCR-002",
+                            "SCR-003",
+                            "SCR-004",
+                            "SCR-005",
+                            "SCR-006",
+                            "SCR-007",
+                            "SCR-008",
+                            "SCR-015",
+                            "SCR-016",
+                            "SCR-017",
+                            "SCR-019",
+                            "SCR-021",
+                            "SCR-022",
+                            "SCR-025",
+                        ];
+
+                        if (implemented.includes(screenId)) {
+                            return null;
+                        }
+
+                        return (
+                            <Route
+                                key={screenId}
+                                path={route}
+                                element={
+                                    <PlaceholderPage
+                                        screenId={screenId}
+                                        title={title}
+                                    />
+                                }
+                            />
+                        );
+                    })}
                 </Route>
             </Routes>
         </BrowserRouter>
@@ -22,7 +149,7 @@ export const App = () => {
 
 
 ================================================================================
-FILE: frontend\src\components\converter\DocumentTable.tsx
+FILE: ..\frontend\src\components\converter\DocumentTable.tsx
 ================================================================================
 
 import type { Document } from "../../types/ConverterResult";
@@ -70,7 +197,7 @@ export const DocumentTable = (props: Props) => {
 
 
 ================================================================================
-FILE: frontend\src\components\converter\SummaryPanel.tsx
+FILE: ..\frontend\src\components\converter\SummaryPanel.tsx
 ================================================================================
 
 type Props = {
@@ -157,7 +284,7 @@ export const SummaryPanel = (
 
 
 ================================================================================
-FILE: frontend\src\components\converter\TaskTable.tsx
+FILE: ..\frontend\src\components\converter\TaskTable.tsx
 ================================================================================
 
 import type { Task } from "../../types/ConverterResult";
@@ -205,7 +332,7 @@ export const TaskTable = (props: Props) => {
 
 
 ================================================================================
-FILE: frontend\src\components\JsonViewer.tsx
+FILE: ..\frontend\src\components\JsonViewer.tsx
 ================================================================================
 
 type Props = {
@@ -223,7 +350,135 @@ export const JsonViewer = (props: Props) => {
 
 
 ================================================================================
-FILE: frontend\src\index.css
+FILE: ..\frontend\src\components\layout\Sidebar.tsx
+================================================================================
+
+import {
+  NavLink
+} from "react-router-dom";
+
+import {
+  screens
+} from "../../config/screens";
+
+export const Sidebar =
+() => {
+
+  return (
+
+    <aside
+      className="
+      w-72
+      border-r
+      bg-white
+      overflow-auto
+      "
+    >
+
+      <div
+        className="
+        p-4
+        font-bold
+        border-b
+        "
+      >
+        Menu
+      </div>
+
+      <nav
+        className="p-2"
+      >
+
+        {
+          screens.map(
+            screen => (
+
+              <NavLink
+                key={screen[0]}
+                to={screen[2]}
+                className="
+                block
+                p-2
+                rounded
+                hover:bg-slate-100
+                text-sm
+                "
+              >
+                {screen[0]}
+                <br />
+                {screen[1]}
+              </NavLink>
+
+            )
+          )
+        }
+
+      </nav>
+
+    </aside>
+
+  );
+
+};
+
+
+
+================================================================================
+FILE: ..\frontend\src\config\screens.ts
+================================================================================
+
+export const screens = [
+
+  ["SCR-001", "ダッシュボード", "/dashboard"],
+  ["SCR-002", "プロジェクト一覧", "/projects"],
+  ["SCR-003", "プロジェクト詳細", "/projects/detail"],
+
+  ["SCR-004", "コンテキスト一覧", "/contexts"],
+  ["SCR-005", "コンテキスト詳細", "/contexts/detail"],
+  ["SCR-006", "コンテキスト生成", "/contexts/create"],
+
+  ["SCR-007", "ドキュメント一覧", "/documents"],
+  ["SCR-008", "ドキュメント詳細", "/documents/detail"],
+
+  ["SCR-009", "テンプレート一覧", "/templates"],
+  ["SCR-010", "テンプレート編集", "/templates/edit"],
+
+  ["SCR-011", "プロンプト一覧", "/prompts"],
+  ["SCR-012", "プロンプト編集", "/prompts/edit"],
+
+  ["SCR-013", "AI入力生成", "/ai/input"],
+  ["SCR-014", "AI回答取込", "/ai/import"],
+
+  ["SCR-015", "トレーサビリティ管理", "/traceability"],
+  ["SCR-016", "トレーサビリティマトリクス", "/traceability/matrix"],
+
+  ["SCR-017", "課題一覧", "/issues"],
+  ["SCR-018", "課題詳細", "/issues/detail"],
+
+  ["SCR-019", "QA一覧", "/qa"],
+  ["SCR-020", "QA詳細", "/qa/detail"],
+
+  ["SCR-021", "タスク一覧", "/tasks"],
+  ["SCR-022", "タスク詳細", "/tasks/detail"],
+
+  ["SCR-023", "Git管理", "/git"],
+
+  ["SCR-024", "採番管理", "/sequence"],
+
+  ["SCR-025", "管理データ変換", "/converter"],
+
+  ["SCR-026", "Markdown検証", "/validator/markdown"],
+
+  ["SCR-027", "成果物出力", "/export"],
+
+  ["SCR-028", "設定", "/settings"]
+
+] as const;
+
+
+
+================================================================================
+FILE: ..\frontend\src\index.css
 ================================================================================
 
 @import "tailwindcss";
@@ -231,29 +486,110 @@ FILE: frontend\src\index.css
 
 
 ================================================================================
-FILE: frontend\src\layouts\AppLayout.tsx
+FILE: ..\frontend\src\layouts\AppLayout.tsx
 ================================================================================
 
-import { Outlet } from "react-router-dom";
+import {
+  Outlet,
+  NavLink
+} from "react-router-dom";
+
+import {
+  screens
+} from "../config/screens";
 
 export const AppLayout = () => {
-    return (
-        <div className="min-h-screen bg-slate-100 ">
-            <header className="bg-slate-900 text-white px-6 py-4 text-xl font-bold ">
-                AI駆動型開発支援
-            </header>
 
-            <main className="p-6">
-                <Outlet />
-            </main>
+  return (
+
+    <div
+      className="
+      h-screen
+      flex
+      "
+    >
+
+      <aside
+        className="
+        w-80
+        bg-white
+        border-r
+        overflow-auto
+        "
+      >
+
+        <div
+          className="
+          p-4
+          font-bold
+          text-lg
+          border-b
+          "
+        >
+          AI駆動型開発支援
         </div>
-    );
+
+        {
+
+          screens.map(
+            screen => (
+
+              <NavLink
+                key={screen[0]}
+                to={screen[2]}
+                className="
+                block
+                px-3
+                py-2
+                border-b
+                hover:bg-slate-100
+                "
+              >
+                <div
+                  className="
+                  text-xs
+                  text-slate-500
+                  "
+                >
+                  {screen[0]}
+                </div>
+
+                <div>
+                  {screen[1]}
+                </div>
+
+              </NavLink>
+
+            )
+          )
+
+        }
+
+      </aside>
+
+      <main
+        className="
+        flex-1
+        overflow-auto
+        p-6
+        bg-slate-100
+        "
+      >
+
+        <Outlet />
+
+      </main>
+
+    </div>
+
+  );
+
 };
 
 
 
 ================================================================================
-FILE: frontend\src\main.tsx
+FILE: ..\frontend\src\main.tsx
 ================================================================================
 
 import React from "react";
@@ -270,18 +606,496 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 
 
 ================================================================================
-FILE: frontend\src\pages\ConverterPage.tsx
+FILE: ..\frontend\src\pages\common\PlaceholderPage.tsx
+================================================================================
+
+import {
+  Link
+} from "react-router-dom";
+
+type Props = {
+
+  screenId: string;
+
+  title: string;
+
+};
+
+export const PlaceholderPage = (
+  props: Props
+) => {
+
+  return (
+
+    <div
+      className="
+      space-y-4
+      "
+    >
+
+      <div
+        className="
+        bg-white
+        border
+        rounded
+        p-6
+        "
+      >
+
+        <div
+          className="
+          text-xs
+          text-slate-500
+          "
+        >
+          {props.screenId}
+        </div>
+
+        <h1
+          className="
+          text-3xl
+          font-bold
+          "
+        >
+          {props.title}
+        </h1>
+
+      </div>
+
+      <div
+        className="
+        grid
+        grid-cols-3
+        gap-4
+        "
+      >
+
+        <div
+          className="
+          bg-white
+          border
+          rounded
+          p-4
+          "
+        >
+          情報
+        </div>
+
+        <div
+          className="
+          bg-white
+          border
+          rounded
+          p-4
+          "
+        >
+          一覧
+        </div>
+
+        <div
+          className="
+          bg-white
+          border
+          rounded
+          p-4
+          "
+        >
+          操作
+        </div>
+
+      </div>
+
+      <div
+        className="
+        bg-white
+        border
+        rounded
+        p-4
+        "
+      >
+
+        <table
+          className="
+          w-full
+          "
+        >
+
+          <thead>
+
+          <tr>
+
+            <th>ID</th>
+            <th>名称</th>
+            <th>状態</th>
+
+          </tr>
+
+          </thead>
+
+          <tbody>
+
+            <tr>
+              <td>001</td>
+              <td>サンプル</td>
+              <td>TODO</td>
+            </tr>
+
+            <tr>
+              <td>002</td>
+              <td>サンプル</td>
+              <td>DOING</td>
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+      <div
+        className="
+        flex
+        gap-2
+        "
+      >
+
+        <button
+          className="
+          bg-blue-600
+          text-white
+          px-4
+          py-2
+          rounded
+          "
+        >
+          新規作成
+        </button>
+
+        <button
+          className="
+          border
+          px-4
+          py-2
+          rounded
+          "
+        >
+          検索
+        </button>
+
+        <button
+          className="
+          border
+          px-4
+          py-2
+          rounded
+          "
+        >
+          更新
+        </button>
+
+      </div>
+
+      <Link
+        to="/dashboard"
+      >
+        ダッシュボードへ戻る
+      </Link>
+
+    </div>
+
+  );
+
+};
+
+
+
+================================================================================
+FILE: ..\frontend\src\pages\ContextCreatePage.tsx
+================================================================================
+
+export const ContextCreatePage =
+() => {
+
+  return (
+
+    <div>
+
+      <h1>
+        SCR-006
+        コンテキスト生成
+      </h1>
+
+      <form
+        className="
+        bg-white
+        p-6
+        rounded
+        border
+        "
+      >
+
+        <input
+          placeholder="タイトル"
+          className="
+          border
+          p-2
+          w-full
+          "
+        />
+
+      </form>
+
+    </div>
+
+  );
+
+};
+
+
+
+================================================================================
+FILE: ..\frontend\src\pages\ContextDetailPage.tsx
+================================================================================
+
+import {
+  useEffect,
+  useState
+} from "react";
+
+import {
+  useSearchParams
+} from "react-router-dom";
+
+import {
+  fetchContextDetail
+} from "../services/contextApi";
+
+export const ContextDetailPage =
+() => {
+
+  const [
+    searchParams
+  ] =
+  useSearchParams();
+
+  const id =
+    searchParams.get(
+      "id"
+    );
+
+  const [
+    item,
+    setItem
+  ] =
+  useState<any>();
+
+  useEffect(
+    () => {
+
+      if (!id) {
+        return;
+      }
+
+      fetchContextDetail(
+        id
+      ).then(
+        result =>
+          setItem(
+            result.item
+          )
+      );
+
+    },
+    [id]
+  );
+
+  return (
+
+    <div>
+
+      <h1
+        className="
+        text-3xl
+        font-bold
+        mb-4
+        "
+      >
+        SCR-005
+        コンテキスト詳細
+      </h1>
+
+      <pre
+        className="
+        bg-white
+        p-4
+        border
+        rounded
+        "
+      >
+        {
+          JSON.stringify(
+            item,
+            null,
+            2
+          )
+        }
+      </pre>
+
+    </div>
+
+  );
+
+};
+
+
+
+================================================================================
+FILE: ..\frontend\src\pages\ContextListPage.tsx
+================================================================================
+
+import {
+  useEffect,
+  useState
+} from "react";
+
+import {
+  Link
+} from "react-router-dom";
+
+import {
+  fetchContexts
+} from "../services/contextApi";
+
+export const ContextListPage =
+() => {
+
+  const [
+    items,
+    setItems
+  ] = useState<any[]>(
+    []
+  );
+
+  useEffect(
+    () => {
+
+      fetchContexts()
+        .then(
+          result =>
+            setItems(
+              result.items
+            )
+        );
+
+    },
+    []
+  );
+
+  return (
+
+    <div>
+
+      <h1
+        className="
+        text-3xl
+        font-bold
+        mb-4
+        "
+      >
+        SCR-004
+        コンテキスト一覧
+      </h1>
+
+      <table
+        className="
+        w-full
+        bg-white
+        "
+      >
+
+        <thead>
+
+          <tr>
+
+            <th>ID</th>
+
+            <th>タイトル</th>
+
+            <th>状態</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          {
+            items.map(
+              item => (
+
+                <tr
+                  key={item.id}
+                >
+
+                  <td>
+
+                    <Link
+                      to={
+                        "/contexts/detail?id=" +
+                        item.id
+                      }
+                    >
+
+                      {item.id}
+
+                    </Link>
+
+                  </td>
+
+                  <td>
+                    {item.title}
+                  </td>
+
+                  <td>
+                    {item.status}
+                  </td>
+
+                </tr>
+
+              )
+            )
+          }
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  );
+
+};
+
+
+
+================================================================================
+FILE: ..\frontend\src\pages\ConverterPage.tsx
 ================================================================================
 
 import { useState } from "react";
+
 import { DocumentTable } from "../components/converter/DocumentTable";
 import { SummaryPanel } from "../components/converter/SummaryPanel";
 import { TaskTable } from "../components/converter/TaskTable";
+
 import { convertMarkdown } from "../services/converterApi";
+
 import type { ConverterResult } from "../types/ConverterResult";
 
 export const ConverterPage = () => {
-    const [markdown, setMarkdown] = useState(`
+
+  const [markdown, setMarkdown] =
+    useState(`
 # 要件定義書
 
 ## 実装対象
@@ -291,144 +1105,1015 @@ export const ConverterPage = () => {
 - ConverterService実装
 `);
 
-    const [result, setResult] = useState<ConverterResult>();
+  const [result, setResult] =
+    useState<ConverterResult>();
 
-    const [loading, setLoading] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
 
-    const execute = async () => {
-        try {
-            setLoading(true);
+  const [fileName, setFileName] =
+    useState("");
 
-            const response = await convertMarkdown(markdown);
+  const execute = async () => {
 
-            setResult(response);
-        } finally {
-            setLoading(false);
-        }
+    try {
+
+      setLoading(true);
+
+      const response =
+        await convertMarkdown(
+          markdown
+        );
+
+      setResult(response);
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  };
+
+  const uploadMarkdownFile =
+    async (
+      event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+
+      const file =
+        event.target.files?.[0];
+
+      if (!file) {
+        return;
+      }
+
+      setFileName(
+        file.name
+      );
+
+      const text =
+        await file.text();
+
+      setMarkdown(
+        text
+      );
+
     };
+
+  return (
+
+    <div
+      className="
+      max-w-full
+      space-y-6
+      "
+    >
+
+      <h1
+        className="
+        text-3xl
+        font-bold
+        "
+      >
+        SCR-CONV-001
+        管理データ変換
+      </h1>
+
+      <SummaryPanel
+        taskCount={
+          result?.data.summary.taskCount ?? 0
+        }
+        documentCount={
+          result?.data.summary.documentCount ?? 0
+        }
+      />
+
+      <div
+        className="
+        grid
+        grid-cols-2
+        gap-6
+        "
+      >
+
+        <section>
+
+          <h2
+            className="
+            font-bold
+            mb-2
+            "
+          >
+            Markdown入力
+          </h2>
+
+          <div
+            className="
+            mb-4
+            border
+            rounded
+            bg-white
+            p-4
+            "
+          >
+
+            <label
+              className="
+              block
+              text-sm
+              font-semibold
+              mb-2
+              "
+            >
+              Markdownファイル読込
+            </label>
+
+            <input
+              type="file"
+              accept=".md,.markdown,.txt"
+              onChange={
+                uploadMarkdownFile
+              }
+              className="
+              w-full
+              "
+            />
+
+            {
+              fileName && (
+
+                <div
+                  className="
+                  mt-2
+                  text-xs
+                  text-slate-600
+                  "
+                >
+                  読込ファイル:
+                  {fileName}
+                </div>
+
+              )
+            }
+
+          </div>
+
+          <textarea
+            value={markdown}
+            onChange={
+              event =>
+                setMarkdown(
+                  event.target.value
+                )
+            }
+            className="
+            w-full
+            h-[500px]
+            border
+            rounded
+            p-4
+            font-mono
+            "
+          />
+
+          <div
+            className="
+            flex
+            gap-2
+            mt-4
+            "
+          >
+
+            <button
+              onClick={execute}
+              disabled={loading}
+              className="
+              bg-blue-600
+              text-white
+              px-4
+              py-2
+              rounded
+              "
+            >
+              {
+                loading
+                  ? "変換中..."
+                  : "管理データ変換"
+              }
+            </button>
+
+          </div>
+
+        </section>
+
+        <section
+          className="
+          space-y-6
+          "
+        >
+
+          <div>
+
+            <h2
+              className="
+              font-bold
+              mb-2
+              "
+            >
+              Task一覧
+            </h2>
+
+            <TaskTable
+              tasks={
+                result?.data.tasks ?? []
+              }
+            />
+
+          </div>
+
+          <div>
+
+            <h2
+              className="
+              font-bold
+              mb-2
+              "
+            >
+              Document一覧
+            </h2>
+
+            <DocumentTable
+              documents={
+                result?.data.documents ?? []
+              }
+            />
+
+          </div>
+
+          {
+            result && (
+
+              <div
+                className="
+                border
+                rounded
+                p-4
+                bg-white
+                text-sm
+                "
+              >
+
+                <div>
+
+                  taskCount :
+                  {
+                    result.data.summary.taskCount
+                  }
+
+                </div>
+
+                <div>
+
+                  documentCount :
+                  {
+                    result.data.summary.documentCount
+                  }
+
+                </div>
+
+                <hr
+                  className="
+                  my-2
+                  "
+                />
+
+                <div>
+
+                  tasks :
+                  {
+                    result.data.output.tasksFile
+                  }
+
+                </div>
+
+                <div>
+
+                  documents :
+                  {
+                    result.data.output.documentsFile
+                  }
+
+                </div>
+
+              </div>
+
+            )
+          }
+
+        </section>
+
+      </div>
+
+    </div>
+
+  );
+
+};
+
+
+
+================================================================================
+FILE: ..\frontend\src\pages\DashboardPage.tsx
+================================================================================
+
+import {
+  useEffect,
+  useState
+} from "react";
+
+import {
+  fetchDashboard
+} from "../services/dashboardApi";
+
+export const DashboardPage =
+() => {
+
+  const [
+    data,
+    setData
+  ] = useState<any>();
+
+  useEffect(
+    () => {
+
+      fetchDashboard()
+        .then(
+          setData
+        );
+
+    },
+    []
+  );
+
+  return (
+
+    <div
+      className="
+      space-y-6
+      "
+    >
+
+      <h1
+        className="
+        text-3xl
+        font-bold
+        "
+      >
+        SCR-001
+        ダッシュボード
+      </h1>
+
+      <div
+        className="
+        grid
+        grid-cols-4
+        gap-4
+        "
+      >
+
+        <Card
+          title="Task"
+          value={
+            data?.summary
+              ?.taskCount ?? 0
+          }
+        />
+
+        <Card
+          title="Document"
+          value={
+            data?.summary
+              ?.documentCount ?? 0
+          }
+        />
+
+        <Card
+          title="進捗"
+          value={
+            (data?.summary?.progress ?? 0)
+            + "%"
+          }
+        />
+
+        <Card
+          title="完了"
+          value={
+            data?.summary
+              ?.completedTaskCount ?? 0
+          }
+        />
+
+      </div>
+
+      <div
+        className="
+        grid
+        grid-cols-2
+        gap-4
+        "
+      >
+
+        <section
+          className="
+          bg-white
+          border
+          rounded
+          p-4
+          "
+        >
+
+          <h2
+            className="
+            font-bold
+            mb-3
+            "
+          >
+            最新Task
+          </h2>
+
+          {
+            data?.latestTasks?.map(
+              (
+                task: any
+              ) => (
+
+                <div
+                  key={
+                    task.id
+                  }
+                >
+                  {task.id}
+                  {" "}
+                  {task.title}
+                </div>
+
+              )
+            )
+          }
+
+        </section>
+
+        <section
+          className="
+          bg-white
+          border
+          rounded
+          p-4
+          "
+        >
+
+          <h2
+            className="
+            font-bold
+            mb-3
+            "
+          >
+            最新Document
+          </h2>
+
+          {
+            data?.latestDocuments?.map(
+              (
+                doc: any
+              ) => (
+
+                <div
+                  key={
+                    doc.id
+                  }
+                >
+                  {doc.id}
+                  {" "}
+                  {doc.title}
+                </div>
+
+              )
+            )
+          }
+
+        </section>
+
+      </div>
+
+    </div>
+
+  );
+
+};
+
+const Card =
+(
+  props: any
+) => (
+
+  <div
+    className="
+    bg-white
+    border
+    rounded
+    p-4
+    "
+  >
+
+    <div>
+      {props.title}
+    </div>
+
+    <div
+      className="
+      text-3xl
+      font-bold
+      "
+    >
+      {props.value}
+    </div>
+
+  </div>
+
+);
+
+
+
+================================================================================
+FILE: ..\frontend\src\pages\DocumentDetailPage.tsx
+================================================================================
+
+import {
+  useEffect,
+  useMemo,
+  useState
+} from "react";
+
+import {
+  useSearchParams
+} from "react-router-dom";
+
+import {
+  fetchDocuments
+} from "../services/documentApi";
+
+export const DocumentDetailPage =
+() => {
+
+  const [
+    searchParams
+  ] = useSearchParams();
+
+  const documentId =
+    searchParams.get("id");
+
+  const [
+    documents,
+    setDocuments
+  ] = useState<any[]>(
+    []
+  );
+
+  useEffect(
+    () => {
+
+      fetchDocuments()
+        .then(
+          result =>
+            setDocuments(
+              result.items
+            )
+        );
+
+    },
+    []
+  );
+
+  const document =
+    useMemo(
+      () =>
+        documents.find(
+          item =>
+            item.id ===
+            documentId
+        ),
+      [
+        documents,
+        documentId
+      ]
+    );
+
+  if (!document) {
+
+    return (
+
+      <div
+        className="
+        bg-white
+        border
+        rounded
+        p-6
+        "
+      >
+
+        ドキュメントが見つかりません
+
+      </div>
+
+    );
+
+  }
+
+  return (
+
+    <div
+      className="
+      space-y-4
+      "
+    >
+
+      <h1
+        className="
+        text-3xl
+        font-bold
+        "
+      >
+        SCR-008
+        ドキュメント詳細
+      </h1>
+
+      <div
+        className="
+        bg-white
+        border
+        rounded
+        p-6
+        "
+      >
+
+        <dl
+          className="
+          grid
+          grid-cols-2
+          gap-4
+          "
+        >
+
+          <dt>ID</dt>
+          <dd>{document.id}</dd>
+
+          <dt>タイトル</dt>
+          <dd>{document.title}</dd>
+
+          <dt>種別</dt>
+          <dd>{document.type}</dd>
+
+          <dt>ファイル</dt>
+          <dd>{document.path}</dd>
+
+          <dt>ソース</dt>
+          <dd>{document.source}</dd>
+
+        </dl>
+
+      </div>
+
+    </div>
+
+  );
+
+};
+
+
+
+================================================================================
+FILE: ..\frontend\src\pages\DocumentListPage.tsx
+================================================================================
+
+import {
+  Link
+} from "react-router-dom";
+
+import {
+  useEffect,
+  useState
+} from "react";
+
+import {
+  fetchDocuments
+} from "../services/documentApi";
+
+export const DocumentListPage =
+() => {
+
+  const [
+    items,
+    setItems
+  ] = useState<any[]>(
+    []
+  );
+
+  useEffect(
+    () => {
+
+      fetchDocuments()
+        .then(
+          result =>
+            setItems(
+              result.items
+            )
+        );
+
+    },
+    []
+  );
+
+  return (
+
+    <div>
+
+      <h1
+        className="
+        text-3xl
+        font-bold
+        mb-4
+        "
+      >
+        SCR-007
+        ドキュメント一覧
+      </h1>
+
+      <table
+        className="
+        w-full
+        bg-white
+        "
+      >
+
+        <thead>
+
+          <tr>
+
+            <th>ID</th>
+            <th>タイトル</th>
+            <th>種別</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          {
+            items.map(
+              item => (
+
+                <tr
+                  key={item.id}
+                >
+
+                  <td>
+
+                    <Link
+                      className="
+                      text-blue-600
+                      "
+                      to={
+                        "/documents/detail?id=" +
+                        item.id
+                      }
+                    >
+                      {item.id}
+                    </Link>
+
+                  </td>
+
+                  <td>
+                    {item.title}
+                  </td>
+
+                  <td>
+                    {item.type}
+                  </td>
+
+                </tr>
+
+              )
+            )
+          }
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  );
+
+};
+
+
+
+================================================================================
+FILE: ..\frontend\src\pages\IssueListPage.tsx
+================================================================================
+
+export const IssueListPage =
+() => {
+
+  return (
+
+    <div>
+
+      <h1
+        className="
+        text-3xl
+        font-bold
+        mb-4
+        "
+      >
+        SCR-017
+        課題一覧
+      </h1>
+
+      <table
+        className="
+        w-full
+        bg-white
+        "
+      >
+
+        <tbody>
+
+          <tr>
+
+            <td>
+              BUG-001
+            </td>
+
+            <td>
+              採番重複対応
+            </td>
+
+            <td>
+              OPEN
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  );
+
+};
+
+
+
+================================================================================
+FILE: ..\frontend\src\pages\PlaceholderPage.tsx
+================================================================================
+
+import { useLocation } from "react-router-dom";
+
+type Props = {
+  screenId: string;
+  title: string;
+};
+
+export const PlaceholderPage = (
+  props: Props
+) => {
+
+  const location =
+    useLocation();
+
+  return (
+
+    <div
+      className="
+      bg-white
+      rounded
+      border
+      p-8
+      "
+    >
+
+      <div
+        className="
+        text-sm
+        text-slate-500
+        "
+      >
+        {props.screenId}
+      </div>
+
+      <h1
+        className="
+        text-3xl
+        font-bold
+        mt-2
+        "
+      >
+        {props.title}
+      </h1>
+
+      <div
+        className="
+        mt-6
+        text-slate-600
+        "
+      >
+        Route :
+        {location.pathname}
+      </div>
+
+      <div
+        className="
+        mt-8
+        border-t
+        pt-6
+        "
+      >
+        TODO
+      </div>
+
+    </div>
+
+  );
+
+};
+
+
+
+================================================================================
+FILE: ..\frontend\src\pages\ProjectDetailPage.tsx
+================================================================================
+
+import { useEffect, useMemo, useState } from "react";
+
+import { useSearchParams } from "react-router-dom";
+import { fetchProjects } from "../services/projectApi";
+
+export const ProjectDetailPage = () => {
+    const [searchParams] = useSearchParams();
+
+    const id = searchParams.get("id");
+
+    const [items, setItems] = useState<any[]>([]);
+
+    useEffect(() => {
+        fetchProjects().then((result) => setItems(result.items));
+    }, []);
+
+    const item = useMemo(
+        () => items.find((item) => item.id === id),
+        [items, id],
+    );
+
+    if (!item) {
+        return (
+            <div
+                className="
+        bg-white
+        border
+        rounded
+        p-6
+        "
+            >
+                ドキュメントが見つかりません
+            </div>
+        );
+    }
 
     return (
         <div
             className="
-      max-w-full
-      space-y-6
+      bg-white
+      border
+      rounded
+      p-6
       "
         >
             <h1
                 className="
         text-3xl
         font-bold
+        mb-4
         "
             >
-                SCR-CONV-001 管理データ変換
+                SCR-003 プロジェクト詳細
             </h1>
 
-            <SummaryPanel
-                taskCount={result?.data.summary.taskCount ?? 0}
-                documentCount={result?.data.summary.documentCount ?? 0}
-            />
-
-            <div
-                className="
-        grid
-        grid-cols-2
-        gap-6
-        "
-            >
-                <section>
-                    <h2
-                        className="
-            font-bold
-            mb-2
-            "
-                    >
-                        Markdown入力
-                    </h2>
-
-                    <textarea
-                        value={markdown}
-                        onChange={(event) => setMarkdown(event.target.value)}
-                        className="
-            w-full
-            h-[600px]
-            border
-            rounded
-            p-4
-            font-mono
-            "
-                    />
-
-                    <button
-                        onClick={execute}
-                        disabled={loading}
-                        className="
-            mt-4
-            bg-blue-600
-            text-white
-            px-4
-            py-2
-            rounded
-            "
-                    >
-                        {loading ? "変換中..." : "管理データ変換"}
-                    </button>
-                </section>
-
-                <section
-                    className="
-          space-y-6
-          "
-                >
-                    <div>
-                        <h2
-                            className="
-              font-bold
-              mb-2
-              "
-                        >
-                            Task一覧
-                        </h2>
-
-                        <TaskTable tasks={result?.data.tasks ?? []} />
-                    </div>
-
-                    <div>
-                        <h2
-                            className="
-              font-bold
-              mb-2
-              "
-                        >
-                            Document一覧
-                        </h2>
-
-                        <DocumentTable
-                            documents={result?.data.documents ?? []}
-                        />
-                    </div>
-
-                    {result && (
-                        <div
-                            className="
-                border
-                rounded
-                p-4
-                text-sm
-                "
-                        >
-                            <div>
-                                tasks:
-                                {result.data.output.tasksFile}
-                            </div>
-
-                            <div>
-                                documents:
-                                {result.data.output.documentsFile}
-                            </div>
-                        </div>
-                    )}
-                </section>
-            </div>
+            <pre>{JSON.stringify(item, null, 2)}</pre>
         </div>
     );
 };
@@ -436,7 +2121,493 @@ export const ConverterPage = () => {
 
 
 ================================================================================
-FILE: frontend\src\services\api.ts
+FILE: ..\frontend\src\pages\ProjectListPage.tsx
+================================================================================
+
+import { useEffect, useState } from "react";
+
+import { Link } from "react-router-dom";
+import { fetchProjects } from "../services/projectApi";
+
+export const ProjectListPage = () => {
+    const [items, setItems] = useState<any[]>([]);
+
+    useEffect(() => {
+        fetchProjects().then((result) => setItems(result.items));
+    }, []);
+
+    return (
+        <div>
+            <h1
+                className="
+        text-3xl
+        font-bold
+        mb-4
+        "
+            >
+                SCR-002 プロジェクト一覧
+            </h1>
+
+            <table
+                className="
+        w-full
+        bg-white
+        "
+            >
+                <thead>
+                    <tr>
+                        <th>ID</th>
+
+                        <th>名称</th>
+
+                        <th>Task</th>
+
+                        <th>Document</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {items.map((item) => (
+                        <tr key={item.id}>
+                            <td>
+                                <Link
+                                    className="
+                      text-blue-600
+                      "
+                                    to={"/projects/detail?id=" + item.id}
+                                >
+                                    {item.id}
+                                </Link>
+                            </td>
+
+                            <td>{item.name}</td>
+
+                            <td>{item.taskCount}</td>
+
+                            <td>{item.documentCount}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+};
+
+
+
+================================================================================
+FILE: ..\frontend\src\pages\QAListPage.tsx
+================================================================================
+
+export const QAListPage =
+() => {
+
+  return (
+
+    <div>
+
+      <h1
+        className="
+        text-3xl
+        font-bold
+        mb-4
+        "
+      >
+        SCR-019
+        QA一覧
+      </h1>
+
+      <table
+        className="
+        w-full
+        bg-white
+        "
+      >
+
+        <tbody>
+
+          <tr>
+
+            <td>
+              QAA-001
+            </td>
+
+            <td>
+              採番方式検討
+            </td>
+
+            <td>
+              OPEN
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  );
+
+};
+
+
+
+================================================================================
+FILE: ..\frontend\src\pages\TaskDetailPage.tsx
+================================================================================
+
+import {
+  useMemo
+} from "react";
+
+import {
+  useSearchParams
+} from "react-router-dom";
+
+import {
+  useEffect,
+  useState
+} from "react";
+
+import {
+  fetchTasks
+} from "../services/taskApi";
+
+export const TaskDetailPage =
+() => {
+
+  const [
+    searchParams
+  ] = useSearchParams();
+
+  const taskId =
+    searchParams.get("id");
+
+  const [
+    tasks,
+    setTasks
+  ] = useState<any[]>(
+    []
+  );
+
+  useEffect(
+    () => {
+
+      fetchTasks()
+        .then(
+          result =>
+            setTasks(
+              result.items
+            )
+        );
+
+    },
+    []
+  );
+
+  const task =
+    useMemo(
+      () =>
+        tasks.find(
+          item =>
+            item.id === taskId
+        ),
+      [
+        tasks,
+        taskId
+      ]
+    );
+
+  if (!task) {
+
+    return (
+
+      <div
+        className="
+        bg-white
+        border
+        rounded
+        p-6
+        "
+      >
+
+        タスクが見つかりません
+
+      </div>
+
+    );
+
+  }
+
+  return (
+
+    <div
+      className="
+      space-y-4
+      "
+    >
+
+      <h1
+        className="
+        text-3xl
+        font-bold
+        "
+      >
+        SCR-022
+        タスク詳細
+      </h1>
+
+      <div
+        className="
+        bg-white
+        border
+        rounded
+        p-6
+        "
+      >
+
+        <dl
+          className="
+          grid
+          grid-cols-2
+          gap-4
+          "
+        >
+
+          <dt>ID</dt>
+          <dd>{task.id}</dd>
+
+          <dt>タイトル</dt>
+          <dd>{task.title}</dd>
+
+          <dt>状態</dt>
+          <dd>{task.status}</dd>
+
+          <dt>優先度</dt>
+          <dd>{task.priority}</dd>
+
+          <dt>ソース</dt>
+          <dd>{task.source}</dd>
+
+        </dl>
+
+      </div>
+
+    </div>
+
+  );
+
+};
+
+
+
+================================================================================
+FILE: ..\frontend\src\pages\TaskListPage.tsx
+================================================================================
+
+import {
+  Link
+} from "react-router-dom";
+
+import {
+  useEffect,
+  useState
+} from "react";
+
+import {
+  fetchTasks
+} from "../services/taskApi";
+
+export const TaskListPage =
+() => {
+
+  const [
+    items,
+    setItems
+  ] = useState<any[]>(
+    []
+  );
+
+  useEffect(
+    () => {
+
+      fetchTasks()
+        .then(
+          result =>
+            setItems(
+              result.items
+            )
+        );
+
+    },
+    []
+  );
+
+  return (
+
+    <div>
+
+      <h1
+        className="
+        text-3xl
+        font-bold
+        mb-4
+        "
+      >
+        SCR-021
+        タスク一覧
+      </h1>
+
+      <table
+        className="
+        w-full
+        bg-white
+        "
+      >
+
+        <thead>
+
+          <tr>
+
+            <th>ID</th>
+            <th>タイトル</th>
+            <th>状態</th>
+            <th>優先度</th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          {
+            items.map(
+              item => (
+
+                <tr
+                  key={item.id}
+                >
+
+                  <td>
+
+                    <Link
+                      className="
+                      text-blue-600
+                      "
+                      to={
+                        "/tasks/detail?id=" +
+                        item.id
+                      }
+                    >
+                      {item.id}
+                    </Link>
+
+                  </td>
+
+                  <td>
+                    {item.title}
+                  </td>
+
+                  <td>
+                    {item.status}
+                  </td>
+
+                  <td>
+                    {item.priority}
+                  </td>
+
+                </tr>
+
+              )
+            )
+          }
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  );
+
+};
+
+
+
+================================================================================
+FILE: ..\frontend\src\pages\TraceabilityMatrixPage.tsx
+================================================================================
+
+export const TraceabilityMatrixPage =
+() => {
+
+  return (
+
+    <div>
+
+      <h1>
+        SCR-016
+        トレーサビリティマトリクス
+      </h1>
+
+      <div
+        className="
+        bg-white
+        border
+        rounded
+        p-4
+        "
+      >
+        Matrix
+      </div>
+
+    </div>
+
+  );
+
+};
+
+
+
+================================================================================
+FILE: ..\frontend\src\pages\TraceabilityPage.tsx
+================================================================================
+
+export const TraceabilityPage =
+() => {
+
+  return (
+
+    <div>
+
+      <h1>
+        SCR-015
+        トレーサビリティ管理
+      </h1>
+
+      <div
+        className="
+        bg-white
+        border
+        rounded
+        p-4
+        "
+      >
+        Traceability
+      </div>
+
+    </div>
+
+  );
+
+};
+
+
+
+================================================================================
+FILE: ..\frontend\src\services\api.ts
 ================================================================================
 
 import axios from "axios";
@@ -448,7 +2619,43 @@ export const api = axios.create({
 
 
 ================================================================================
-FILE: frontend\src\services\converterApi.ts
+FILE: ..\frontend\src\services\contextApi.ts
+================================================================================
+
+import { api }
+from "./api";
+
+export const fetchContexts =
+async () => {
+
+  const response =
+    await api.get(
+      "/contexts"
+    );
+
+  return response.data;
+
+};
+
+export const fetchContextDetail =
+async (
+  id: string
+) => {
+
+  const response =
+    await api.get(
+      "/contexts/" +
+      id
+    );
+
+  return response.data;
+
+};
+
+
+
+================================================================================
+FILE: ..\frontend\src\services\converterApi.ts
 ================================================================================
 
 import { api } from "./api";
@@ -469,7 +2676,83 @@ export const convertMarkdown = async (
 
 
 ================================================================================
-FILE: frontend\src\types\ConverterResult.ts
+FILE: ..\frontend\src\services\dashboardApi.ts
+================================================================================
+
+import { api } from "./api";
+
+export const fetchDashboard =
+  async () => {
+
+    const response =
+      await api.get(
+        "/dashboard"
+      );
+
+    return response.data;
+  };
+
+
+
+================================================================================
+FILE: ..\frontend\src\services\documentApi.ts
+================================================================================
+
+import { api } from "./api";
+
+export const fetchDocuments =
+  async () => {
+
+    const response =
+      await api.get(
+        "/documents"
+      );
+
+    return response.data;
+  };
+
+
+
+================================================================================
+FILE: ..\frontend\src\services\projectApi.ts
+================================================================================
+
+import { api } from "./api";
+
+export const fetchProjects =
+  async () => {
+
+    const response =
+      await api.get(
+        "/projects"
+      );
+
+    return response.data;
+  };
+
+
+
+================================================================================
+FILE: ..\frontend\src\services\taskApi.ts
+================================================================================
+
+import { api } from "./api";
+
+export const fetchTasks =
+  async () => {
+
+    const response =
+      await api.get(
+        "/tasks"
+      );
+
+    return response.data;
+  };
+
+
+
+================================================================================
+FILE: ..\frontend\src\types\ConverterResult.ts
 ================================================================================
 
 export type Task = {
@@ -514,7 +2797,7 @@ export type ConverterResult = {
 
 
 ================================================================================
-FILE: frontend\src\types\DocumentModel.ts
+FILE: ..\frontend\src\types\DocumentModel.ts
 ================================================================================
 
 export type Heading = {

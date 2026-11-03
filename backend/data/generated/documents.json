@@ -1,30 +1,9 @@
 [
   {
-    "id": "DOC-001",
-    "title": "タスクDOC",
-    "type": "DOC",
-    "path": "",
-    "source": "タスクDOC"
-  },
-  {
     "id": "REQ-001",
     "title": "AI駆動型開発支援システム 要件定義書",
     "type": "REQ",
     "path": "",
     "source": "AI駆動型開発支援システム 要件定義書"
-  },
-  {
-    "id": "DOC-002",
-    "title": "",
-    "type": "DOC",
-    "path": "",
-    "source": ""
-  },
-  {
-    "id": "DOC-003",
-    "title": "ISSUE",
-    "type": "DOC",
-    "path": "",
-    "source": "ISSUE"
   }
 ]

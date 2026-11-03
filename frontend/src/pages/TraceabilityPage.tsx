@@ -1,28 +1,41 @@
-export const TraceabilityPage =
-() => {
+import { useEffect, useState } from "react";
 
-  return (
+import { fetchTraceability } from "../services/traceabilityApi";
 
-    <div>
+export const TraceabilityPage = () => {
+    const [items, setItems] = useState<any[]>([]);
 
-      <h1>
-        SCR-015
-        トレーサビリティ管理
-      </h1>
+    useEffect(() => {
+        fetchTraceability().then((result) => setItems(result.items));
+    }, []);
 
-      <div
-        className="
-        bg-white
-        border
-        rounded
-        p-4
-        "
-      >
-        Traceability
-      </div>
+    return (
+        <div>
+            <h1>SCR-015 トレーサビリティ管理</h1>
 
-    </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Source</th>
 
-  );
+                        <th>Target</th>
 
+                        <th>Relation</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {items.map((item) => (
+                        <tr key={item.sourceId + item.targetId}>
+                            <td>{item.sourceId}</td>
+
+                            <td>{item.targetId}</td>
+
+                            <td>{item.relationType}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
 };

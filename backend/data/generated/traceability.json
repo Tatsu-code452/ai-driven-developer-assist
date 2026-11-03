@@ -1,0 +1,42 @@
+[
+  {
+    "sourceId": "REQ-001",
+    "targetId": "TSK-001",
+    "relationType": "REQ-TSK"
+  },
+  {
+    "sourceId": "REQ-001",
+    "targetId": "TSK-002",
+    "relationType": "REQ-TSK"
+  },
+  {
+    "sourceId": "REQ-001",
+    "targetId": "TSK-003",
+    "relationType": "REQ-TSK"
+  },
+  {
+    "sourceId": "REQ-001",
+    "targetId": "TSK-004",
+    "relationType": "REQ-TSK"
+  },
+  {
+    "sourceId": "REQ-001",
+    "targetId": "TSK-005",
+    "relationType": "REQ-TSK"
+  },
+  {
+    "sourceId": "REQ-001",
+    "targetId": "TSK-006",
+    "relationType": "REQ-TSK"
+  },
+  {
+    "sourceId": "REQ-001",
+    "targetId": "TSK-007",
+    "relationType": "REQ-TSK"
+  },
+  {
+    "sourceId": "REQ-001",
+    "targetId": "TSK-008",
+    "relationType": "REQ-TSK"
+  }
+]

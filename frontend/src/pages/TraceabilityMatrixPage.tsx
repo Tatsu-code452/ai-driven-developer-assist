@@ -1,28 +1,41 @@
-export const TraceabilityMatrixPage =
-() => {
+import { useEffect, useState } from "react";
 
-  return (
+import { fetchMatrix } from "../services/matrixApi";
 
-    <div>
+export const TraceabilityMatrixPage = () => {
+    const [items, setItems] = useState<any[]>([]);
 
-      <h1>
-        SCR-016
-        トレーサビリティマトリクス
-      </h1>
+    useEffect(() => {
+        fetchMatrix().then((result) => setItems(result.items));
+    }, []);
 
-      <div
-        className="
-        bg-white
-        border
-        rounded
-        p-4
-        "
-      >
-        Matrix
-      </div>
+    return (
+        <div>
+            <h1>SCR-016 トレーサビリティマトリクス</h1>
 
-    </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Source</th>
 
-  );
+                        <th>Target</th>
 
+                        <th>Relation</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {items.map((item) => (
+                        <tr key={item.source + item.target}>
+                            <td>{item.source}</td>
+
+                            <td>{item.target}</td>
+
+                            <td>{item.relation}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
 };

@@ -35,6 +35,16 @@ import {
 } from "@/repositories/ContextRepository";
 import { buildContext } from "@/services/contextBuilder/buildContext";
 
+import {
+  buildTraceability
+} from "@/services/traceabilityBuilder/buildTraceability";
+
+import {
+  loadTraceability,
+  mergeTraceability,
+  saveTraceability
+} from "@/repositories/TraceabilityRepository";
+
 export const convertMarkdown =
   (
     markdown: string,
@@ -151,6 +161,28 @@ export const convertMarkdown =
 
     saveContexts(
       contexts,
+      outputDir
+    );
+
+    const currentTraceability =
+      loadTraceability(
+        outputDir
+      );
+
+    const generatedTraceability =
+      buildTraceability(
+        newDocuments,
+        newTasks
+      );
+
+    const mergedTraceability =
+      mergeTraceability(
+        currentTraceability,
+        generatedTraceability
+      );
+
+    saveTraceability(
+      mergedTraceability,
       outputDir
     );
 

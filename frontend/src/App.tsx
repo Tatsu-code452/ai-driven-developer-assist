@@ -16,6 +16,9 @@ import { TaskListPage } from "./pages/TaskListPage";
 
 import { screens } from "./config/screens";
 import { DocumentDetailPage } from "./pages/DocumentDetailPage";
+import { IssueListPage } from "./pages/IssueListPage";
+import { ProjectDetailPage } from "./pages/ProjectDetailPage";
+import { QAListPage } from "./pages/QAListPage";
 import { TaskDetailPage } from "./pages/TaskDetailPage";
 
 export const App = () => {
@@ -32,17 +35,31 @@ export const App = () => {
                     {/* SCR-002 */}
                     <Route path="/projects" element={<ProjectListPage />} />
 
+                    {/* SCR-003 */}
+                    <Route
+                        path="/projects/detail"
+                        element={<ProjectDetailPage />}
+                    />
+
                     {/* SCR-007 */}
                     <Route path="/documents" element={<DocumentListPage />} />
 
+                    {/* SCR-008 */}
                     <Route
                         path="/documents/detail"
                         element={<DocumentDetailPage />}
                     />
 
+                    {/* SCR-017 */}
+                    <Route path="/issues" element={<IssueListPage />} />
+
+                    {/* SCR-019 */}
+                    <Route path="/qa" element={<QAListPage />} />
+
                     {/* SCR-021 */}
                     <Route path="/tasks" element={<TaskListPage />} />
 
+                    {/* SCR-022 */}
                     <Route path="/tasks/detail" element={<TaskDetailPage />} />
 
                     {/* SCR-025 */}
@@ -54,8 +71,11 @@ export const App = () => {
                         const implemented = [
                             "SCR-001",
                             "SCR-002",
+                            "SCR-003",
                             "SCR-007",
                             "SCR-008",
+                            "SCR-017",
+                            "SCR-019",
                             "SCR-021",
                             "SCR-022",
                             "SCR-025",

@@ -1,18 +1,6 @@
 import path from "path";
 
 import {
-  parseMarkdownContent
-} from "@/services/markdownParser/parseMarkdownContent";
-
-import {
-  extractTasks
-} from "@/services/TaskExtractor";
-
-import {
-  extractDocuments
-} from "@/services/DocumentExtractor";
-
-import {
   loadTasks,
   mergeTasks,
   saveTasks
@@ -24,96 +12,136 @@ import {
   saveDocuments
 } from "@/repositories/DocumentRepository";
 
+import {
+  createIdAllocator
+} from "@/services/idGenerator/IdGenerator";
+
+import {
+  extractTasks
+} from "@/services/TaskExtractor";
+
+import {
+  extractDocuments,
+  detectDocumentType
+} from "@/services/DocumentExtractor";
+
+import {
+  parseMarkdownContent
+} from "@/services/markdownParser/parseMarkdownContent";
+
 export const convertMarkdown =
-  (
-    markdown: string,
-    outputRoot = "data"
-  ) => {
+(
+  markdown: string,
+  outputRoot = "data"
+) => {
 
-    const document =
-      parseMarkdownContent(
-        markdown
-      );
+  const document =
+    parseMarkdownContent(
+      markdown
+    );
 
-    const outputDir =
-      path.join(
-        outputRoot,
-        "generated"
-      );
+  const outputDir =
+    path.join(
+      outputRoot,
+      "generated"
+    );
 
-    const newTasks =
-      extractTasks(
-        document
-      );
+  const currentTasks =
+    loadTasks(
+      outputDir
+    );
 
-    const newDocuments =
-      extractDocuments(
-        document
-      );
+  const currentDocuments =
+    loadDocuments(
+      outputDir
+    );
 
-    const currentTasks =
-      loadTasks(
-        outputDir
-      );
+  const taskAllocator =
+    createIdAllocator(
+      "TSK",
+      currentTasks
+    );
 
-    const currentDocuments =
-      loadDocuments(
-        outputDir
-      );
+  const docType =
+    detectDocumentType(
+      document
+    );
 
-    const mergedTasks =
-      mergeTasks(
-        currentTasks,
-        newTasks
-      );
+  const documentAllocator =
+    createIdAllocator(
+      docType,
+      currentDocuments
+    );
 
-    const mergedDocuments =
-      mergeDocuments(
-        currentDocuments,
-        newDocuments
-      );
-
-    const tasksFile =
-      saveTasks(
-        mergedTasks,
-        outputDir
-      );
-
-    const documentsFile =
-      saveDocuments(
-        mergedDocuments,
-        outputDir
-      );
-
-
-    return {
-
+  const newTasks =
+    extractTasks(
       document,
-
-      tasks:
-        mergedTasks,
-
-      documents:
-        mergedDocuments,
-
-      output: {
-
-        tasksFile,
-
-        documentsFile
-
-      },
-
-      summary: {
-
-        taskCount:
-          mergedTasks.length,
-
-        documentCount:
-          mergedDocuments.length
-
+      {
+        nextId:
+          taskAllocator
       }
+    );
 
-    };
+  const newDocuments =
+    extractDocuments(
+      document,
+      {
+        nextId:
+          documentAllocator
+      }
+    );
+
+  const mergedTasks =
+    mergeTasks(
+      currentTasks,
+      newTasks
+    );
+
+  const mergedDocuments =
+    mergeDocuments(
+      currentDocuments,
+      newDocuments
+    );
+
+  const tasksFile =
+    saveTasks(
+      mergedTasks,
+      outputDir
+    );
+
+  const documentsFile =
+    saveDocuments(
+      mergedDocuments,
+      outputDir
+    );
+
+  return {
+
+    document,
+
+    tasks:
+      mergedTasks,
+
+    documents:
+      mergedDocuments,
+
+    output: {
+
+      tasksFile,
+
+      documentsFile
+
+    },
+
+    summary: {
+
+      taskCount:
+        mergedTasks.length,
+
+      documentCount:
+        mergedDocuments.length
+
+    }
 
   };
+};

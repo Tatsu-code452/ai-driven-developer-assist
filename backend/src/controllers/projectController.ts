@@ -1,4 +1,7 @@
-import { Request, Response } from "express";
+import {
+  Request,
+  Response
+} from "express";
 
 import {
   loadTasks
@@ -10,8 +13,8 @@ import {
 
 export const getProjects =
 (
-  _req: Request,
-  res: Response
+  _req,
+  res
 ) => {
 
   const tasks =
@@ -24,7 +27,7 @@ export const getProjects =
       "data/generated"
     );
 
-  return res.json({
+  res.json({
 
     success: true,
 
@@ -50,6 +53,49 @@ export const getProjects =
       }
 
     ]
+
+  });
+
+};
+
+export const getProjectDetail =
+(
+  _req: Request,
+  res: Response
+) => {
+
+  const tasks =
+    loadTasks(
+      "data/generated"
+    );
+
+  const documents =
+    loadDocuments(
+      "data/generated"
+    );
+
+  res.json({
+
+    success: true,
+
+    item: {
+
+      id:
+        "PRJ-001",
+
+      name:
+        "AI駆動型開発支援システム",
+
+      status:
+        "進行中",
+
+      taskCount:
+        tasks.length,
+
+      documentCount:
+        documents.length
+
+    }
 
   });
 

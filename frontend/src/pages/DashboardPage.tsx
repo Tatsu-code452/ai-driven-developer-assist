@@ -19,7 +19,9 @@ export const DashboardPage =
     () => {
 
       fetchDashboard()
-        .then(setData);
+        .then(
+          setData
+        );
 
     },
     []
@@ -70,10 +72,8 @@ export const DashboardPage =
         <Card
           title="進捗"
           value={
-            (
-              data?.summary
-                ?.progress ?? 0
-            ) + "%"
+            (data?.summary?.progress ?? 0)
+            + "%"
           }
         />
 
@@ -84,6 +84,96 @@ export const DashboardPage =
               ?.completedTaskCount ?? 0
           }
         />
+
+      </div>
+
+      <div
+        className="
+        grid
+        grid-cols-2
+        gap-4
+        "
+      >
+
+        <section
+          className="
+          bg-white
+          border
+          rounded
+          p-4
+          "
+        >
+
+          <h2
+            className="
+            font-bold
+            mb-3
+            "
+          >
+            最新Task
+          </h2>
+
+          {
+            data?.latestTasks?.map(
+              (
+                task: any
+              ) => (
+
+                <div
+                  key={
+                    task.id
+                  }
+                >
+                  {task.id}
+                  {" "}
+                  {task.title}
+                </div>
+
+              )
+            )
+          }
+
+        </section>
+
+        <section
+          className="
+          bg-white
+          border
+          rounded
+          p-4
+          "
+        >
+
+          <h2
+            className="
+            font-bold
+            mb-3
+            "
+          >
+            最新Document
+          </h2>
+
+          {
+            data?.latestDocuments?.map(
+              (
+                doc: any
+              ) => (
+
+                <div
+                  key={
+                    doc.id
+                  }
+                >
+                  {doc.id}
+                  {" "}
+                  {doc.title}
+                </div>
+
+              )
+            )
+          }
+
+        </section>
 
       </div>
 
@@ -107,11 +197,7 @@ const Card =
     "
   >
 
-    <div
-      className="
-      text-slate-500
-      "
-    >
+    <div>
       {props.title}
     </div>
 

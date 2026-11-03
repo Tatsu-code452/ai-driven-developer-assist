@@ -1,117 +1,68 @@
-import {
-  useEffect,
-  useState
-} from "react";
+import { useEffect, useState } from "react";
 
-import {
-  fetchProjects
-} from "../services/projectApi";
+import { Link } from "react-router-dom";
+import { fetchProjects } from "../services/projectApi";
 
-export const ProjectListPage =
-() => {
+export const ProjectListPage = () => {
+    const [items, setItems] = useState<any[]>([]);
 
-  const [
-    items,
-    setItems
-  ] = useState<any[]>(
-    []
-  );
+    useEffect(() => {
+        fetchProjects().then((result) => setItems(result.items));
+    }, []);
 
-  useEffect(
-    () => {
-
-      fetchProjects()
-        .then(
-          result =>
-            setItems(
-              result.items
-            )
-        );
-
-    },
-    []
-  );
-
-  return (
-
-    <div>
-
-      <h1
-        className="
+    return (
+        <div>
+            <h1
+                className="
         text-3xl
         font-bold
         mb-4
         "
-      >
-        SCR-002
-        プロジェクト一覧
-      </h1>
+            >
+                SCR-002 プロジェクト一覧
+            </h1>
 
-      <table
-        className="
+            <table
+                className="
         w-full
         bg-white
         "
-      >
+            >
+                <thead>
+                    <tr>
+                        <th>ID</th>
 
-        <thead>
+                        <th>名称</th>
 
-          <tr>
+                        <th>Task</th>
 
-            <th>ID</th>
+                        <th>Document</th>
+                    </tr>
+                </thead>
 
-            <th>名称</th>
+                <tbody>
+                    {items.map((item) => (
+                        <tr key={item.id}>
+                            <td>
+                                <Link
+                                    className="
+                      text-blue-600
+                      "
+                                    to={"/projects/detail?id=" + item.id}
+                                >
+                                    {item.id}
+                                </Link>
+                            </td>
 
-            <th>Task</th>
+                            <td>{item.name}</td>
 
-            <th>Document</th>
+                            <td>{item.taskCount}</td>
 
-          </tr>
-
-        </thead>
-
-        <tbody>
-
-          {
-            items.map(
-              item => (
-
-                <tr
-                  key={item.id}
-                >
-
-                  <td>
-                    {item.id}
-                  </td>
-
-                  <td>
-                    {item.name}
-                  </td>
-
-                  <td>
-                    {
-                      item.taskCount
-                    }
-                  </td>
-
-                  <td>
-                    {
-                      item.documentCount
-                    }
-                  </td>
-
-                </tr>
-
-              )
-            )
-          }
-
-        </tbody>
-
-      </table>
-
-    </div>
-
-  );
-
+                            <td>{item.documentCount}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
 };

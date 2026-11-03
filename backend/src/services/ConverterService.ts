@@ -21,127 +21,192 @@ import {
 } from "@/services/TaskExtractor";
 
 import {
-  extractDocuments,
-  detectDocumentType
+  detectDocumentType,
+  extractDocuments
 } from "@/services/DocumentExtractor";
 
 import {
   parseMarkdownContent
 } from "@/services/markdownParser/parseMarkdownContent";
 
+import {
+  loadContexts,
+  saveContexts
+} from "@/repositories/ContextRepository";
+
 export const convertMarkdown =
-(
-  markdown: string,
-  outputRoot = "data"
-) => {
+  (
+    markdown: string,
+    outputRoot = "data"
+  ) => {
 
-  const document =
-    parseMarkdownContent(
-      markdown
-    );
+    const document =
+      parseMarkdownContent(
+        markdown
+      );
 
-  const outputDir =
-    path.join(
-      outputRoot,
-      "generated"
-    );
+    const outputDir =
+      path.join(
+        outputRoot,
+        "generated"
+      );
 
-  const currentTasks =
-    loadTasks(
+    const currentTasks =
+      loadTasks(
+        outputDir
+      );
+
+    const currentDocuments =
+      loadDocuments(
+        outputDir
+      );
+
+    const taskAllocator =
+      createIdAllocator(
+        "TSK",
+        currentTasks
+      );
+
+    const docType =
+      detectDocumentType(
+        document
+      );
+
+    const documentAllocator =
+      createIdAllocator(
+        docType,
+        currentDocuments
+      );
+
+    const newTasks =
+      extractTasks(
+        document,
+        {
+          nextId:
+            taskAllocator
+        }
+      );
+
+    const newDocuments =
+      extractDocuments(
+        document,
+        {
+          nextId:
+            documentAllocator
+        }
+      );
+
+    const mergedTasks =
+      mergeTasks(
+        currentTasks,
+        newTasks
+      );
+
+    const mergedDocuments =
+      mergeDocuments(
+        currentDocuments,
+        newDocuments
+      );
+
+    const tasksFile =
+      saveTasks(
+        mergedTasks,
+        outputDir
+      );
+
+    const documentsFile =
+      saveDocuments(
+        mergedDocuments,
+        outputDir
+      );
+
+    const contexts =
+      loadContexts(
+        outputDir
+      );
+
+    const contextId =
+      "CTX-" +
+      String(
+        contexts.length + 1
+      ).padStart(
+        3,
+        "0"
+      );
+
+    contexts.push({
+
+      id:
+        contextId,
+
+      title:
+        document.title,
+
+      description:
+        document.title,
+
+      type:
+        docType,
+
+      status:
+        "ACTIVE",
+
+      documentIds:
+        newDocuments.map(
+          d => d.id
+        ),
+
+      taskIds:
+        newTasks.map(
+          t => t.id
+        ),
+
+      issueIds: [],
+
+      qaIds: [],
+
+      createdAt:
+        new Date()
+          .toISOString(),
+
+      updatedAt:
+        new Date()
+          .toISOString()
+
+    });
+
+    saveContexts(
+      contexts,
       outputDir
     );
 
-  const currentDocuments =
-    loadDocuments(
-      outputDir
-    );
+    return {
 
-  const taskAllocator =
-    createIdAllocator(
-      "TSK",
-      currentTasks
-    );
-
-  const docType =
-    detectDocumentType(
-      document
-    );
-
-  const documentAllocator =
-    createIdAllocator(
-      docType,
-      currentDocuments
-    );
-
-  const newTasks =
-    extractTasks(
       document,
-      {
-        nextId:
-          taskAllocator
+
+      tasks:
+        mergedTasks,
+
+      documents:
+        mergedDocuments,
+
+      output: {
+
+        tasksFile,
+
+        documentsFile
+
+      },
+
+      summary: {
+
+        taskCount:
+          mergedTasks.length,
+
+        documentCount:
+          mergedDocuments.length
+
       }
-    );
 
-  const newDocuments =
-    extractDocuments(
-      document,
-      {
-        nextId:
-          documentAllocator
-      }
-    );
-
-  const mergedTasks =
-    mergeTasks(
-      currentTasks,
-      newTasks
-    );
-
-  const mergedDocuments =
-    mergeDocuments(
-      currentDocuments,
-      newDocuments
-    );
-
-  const tasksFile =
-    saveTasks(
-      mergedTasks,
-      outputDir
-    );
-
-  const documentsFile =
-    saveDocuments(
-      mergedDocuments,
-      outputDir
-    );
-
-  return {
-
-    document,
-
-    tasks:
-      mergedTasks,
-
-    documents:
-      mergedDocuments,
-
-    output: {
-
-      tasksFile,
-
-      documentsFile
-
-    },
-
-    summary: {
-
-      taskCount:
-        mergedTasks.length,
-
-      documentCount:
-        mergedDocuments.length
-
-    }
-
+    };
   };
-};

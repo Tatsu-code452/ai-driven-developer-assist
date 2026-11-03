@@ -15,6 +15,8 @@ import { DocumentListPage } from "./pages/DocumentListPage";
 import { TaskListPage } from "./pages/TaskListPage";
 
 import { screens } from "./config/screens";
+import { ContextDetailPage } from "./pages/ContextDetailPage";
+import { ContextListPage } from "./pages/ContextListPage";
 import { DocumentDetailPage } from "./pages/DocumentDetailPage";
 import { IssueListPage } from "./pages/IssueListPage";
 import { ProjectDetailPage } from "./pages/ProjectDetailPage";
@@ -39,6 +41,15 @@ export const App = () => {
                     <Route
                         path="/projects/detail"
                         element={<ProjectDetailPage />}
+                    />
+
+                    {/* SCR-004 */}
+                    <Route path="/contexts" element={<ContextListPage />} />
+
+                    {/* SCR-005 */}
+                    <Route
+                        path="/contexts/detail"
+                        element={<ContextDetailPage />}
                     />
 
                     {/* SCR-007 */}

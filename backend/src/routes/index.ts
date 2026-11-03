@@ -1,23 +1,18 @@
-import { Router }
-from "express";
+import { Router } from "express";
 
-import healthRoutes
-from "./healthRoutes";
+import healthRoutes from "./healthRoutes";
 
-import converterRoutes
-from "./converterRoutes";
+import converterRoutes from "./converterRoutes";
 
-import taskRoutes
-from "./taskRoutes";
+import taskRoutes from "./taskRoutes";
 
-import documentRoutes
-from "./documentRoutes";
+import documentRoutes from "./documentRoutes";
 
-import projectRoutes
-from "./projectRoutes";
+import projectRoutes from "./projectRoutes";
 
-import dashboardRoutes
-from "./dashboardRoutes";
+import dashboardRoutes from "./dashboardRoutes";
+
+import contextRoutes from "./contextRoutes";
 
 const router =
   Router();
@@ -45,6 +40,11 @@ router.use(
 router.use(
   "/projects",
   projectRoutes
+);
+
+router.use(
+  "/contexts",
+  contextRoutes
 );
 
 router.use(

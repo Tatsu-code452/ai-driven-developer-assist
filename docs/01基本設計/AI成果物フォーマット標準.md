@@ -6,7 +6,7 @@
 
 AIごとの出力差異や表示上の制約による成果物品質の低下を防止し、成果物の可搬性および再利用性を向上させる。
 
-本標準は、AI駆動型開発支援システムにおける成果物出力の共通規約として適用する。 
+本標準は、AI駆動型開発支援システムにおける成果物出力の共通規約として適用する。
 
 ---
 
@@ -93,7 +93,9 @@ Markdownを除去した場合でも内容が理解できること。
 ### AFO-006 AI成果物優先モード
 
 利用者から成果物出力を要求された場合、
+
 説明文は最小限とし、
+
 成果物本体を最優先で出力すること。
 
 ---
@@ -201,6 +203,165 @@ AIへ提示する際に不要な情報を含めないこと。
 
 成果物はテンプレートとして再利用可能な構造とすること。
 
+### AFD-006 差分成果物運用原則
+
+ソースコード規模が一定以上になった場合、AIとの連携には成果物全文ではなく差分成果物を利用すること。
+
+### AFD-007 ベースライン成果物
+
+AIへ共有するソースコードは以下をベースライン成果物とする。
+
+- backend.txt
+- frontend.txt
+
+ベースライン成果物は主開発ブランチの状態を表す。
+
+### AFD-008 差分成果物
+
+変更内容は以下の差分成果物として管理する。
+
+- backend.diff.txt
+- frontend.diff.txt
+
+差分成果物はベースライン成果物との差分のみを含む。
+
+### AFD-009 AIへの入力規約
+
+AIへ開発依頼を行う場合は以下を入力とする。
+
+#### 初回
+
+- backend.txt
+- frontend.txt
+
+#### 2回目以降
+
+- backend.txt
+- frontend.txt
+- backend.diff.txt
+- frontend.diff.txt
+
+AIはベースラインへ差分を適用した状態を現在状態として解釈する。
+
+### AFD-010 ブランチ単位管理
+
+差分成果物は1ブランチにつき1組作成する。
+
+例
+
+- feature-traceability.backend.diff.txt
+- feature-traceability.frontend.diff.txt
+
+- feature-prompt.backend.diff.txt
+- feature-prompt.frontend.diff.txt
+
+### AFD-011 レビュー対象
+
+レビュー対象は原則として差分成果物とする。
+
+非推奨
+
+- backend.txt全体レビュー
+- frontend.txt全体レビュー
+
+推奨
+
+- backend.diff.txtレビュー
+- frontend.diff.txtレビュー
+
+### AFD-012 export-source運用
+
+export-sourceは以下を生成する。
+
+#### 全体成果物
+
+- backend.txt
+- frontend.txt
+
+#### 差分成果物
+
+- backend.diff.txt
+- frontend.diff.txt
+
+#### ブランチ成果物
+
+- branch.txt
+
+出力例
+
+    feature/traceability
+
+### AFD-013 AI開発フロー
+
+main
+
+↓
+
+backend.txt
+
+frontend.txt
+
+↓
+
+featureブランチ作成
+
+↓
+
+実装
+
+↓
+
+backend.diff.txt
+
+frontend.diff.txt
+
+生成
+
+↓
+
+AIレビュー
+
+↓
+
+修正
+
+↓
+
+マージ
+
+↓
+
+backend.txt
+
+frontend.txt
+
+更新
+
+### AFD-014 差分レビュー原則
+
+AIへのレビュー依頼は差分成果物を優先する。
+
+優先順位
+
+1. backend.diff.txt
+2. frontend.diff.txt
+3. backend.txt
+4. frontend.txt
+
+### AFD-015 差分適用原則
+
+AIはベースライン成果物を基準とし、差分成果物を適用済みとして現在状態を解釈する。
+
+### AFD-016 ブランチ単位成果物
+
+以下を1セットとして管理する。
+
+- branch.txt
+- backend.diff.txt
+- frontend.diff.txt
+
+1機能 = 1成果物 として扱う。
+
 ---
 
 ## 8. ベストプラクティス
@@ -241,3 +402,35 @@ AIへ提示する際に不要な情報を含めないこと。
 「回答全体を1つのコードブロックで囲み、内部にはコードブロックを使用しない」
 
 ことを標準とする。
+
+---
+
+## 10. 採用理由
+
+現在のプロジェクトでは、
+
+- backend.txt
+- frontend.txt
+
+はベースライン成果物として利用される。
+
+また、
+
+- backend.diff.txt
+- frontend.diff.txt
+
+により、変更箇所のみをAIへ共有できる。
+
+これにより以下を実現する。
+
+- AIレビュー精度向上
+- トークン使用量削減
+- 開発速度向上
+- 1作業1ブランチ運用との整合
+- トレーサビリティ向上
+
+本システムでは、
+
+「ベースライン成果物 + 差分成果物」
+
+をAI連携の標準方式とする。

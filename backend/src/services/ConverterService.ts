@@ -33,6 +33,7 @@ import {
   loadContexts,
   saveContexts
 } from "@/repositories/ContextRepository";
+import { buildContext } from "@/services/contextBuilder/buildContext";
 
 export const convertMarkdown =
   (
@@ -125,55 +126,28 @@ export const convertMarkdown =
         outputDir
       );
 
-    const contextId =
-      "CTX-" +
-      String(
-        contexts.length + 1
-      ).padStart(
-        3,
-        "0"
+    const contextAllocator =
+      createIdAllocator(
+        "CTX",
+        contexts
       );
 
-    contexts.push({
-
-      id:
-        contextId,
-
-      title:
+    const context =
+      buildContext(
+        contextAllocator(),
         document.title,
-
-      description:
-        document.title,
-
-      type:
         docType,
-
-      status:
-        "ACTIVE",
-
-      documentIds:
-        newDocuments.map(
-          d => d.id
-        ),
-
-      taskIds:
         newTasks.map(
-          t => t.id
+          task => task.id
         ),
+        newDocuments.map(
+          doc => doc.id
+        )
+      );
 
-      issueIds: [],
-
-      qaIds: [],
-
-      createdAt:
-        new Date()
-          .toISOString(),
-
-      updatedAt:
-        new Date()
-          .toISOString()
-
-    });
+    contexts.push(
+      context
+    );
 
     saveContexts(
       contexts,

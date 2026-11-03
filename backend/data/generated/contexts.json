@@ -22,5 +22,29 @@
     "qaIds": [],
     "createdAt": "2026-11-03T07:03:12.854Z",
     "updatedAt": "2026-11-03T07:03:12.854Z"
+  },
+  {
+    "id": "CTX-002",
+    "title": "AI駆動型開発支援システム 要件定義書",
+    "description": "AI駆動型開発支援システム 要件定義書",
+    "type": "REQ",
+    "status": "ACTIVE",
+    "taskIds": [
+      "TSK-009",
+      "TSK-010",
+      "TSK-011",
+      "TSK-012",
+      "TSK-013",
+      "TSK-014",
+      "TSK-015",
+      "TSK-016"
+    ],
+    "documentIds": [
+      "REQ-002"
+    ],
+    "issueIds": [],
+    "qaIds": [],
+    "createdAt": "2026-11-03T07:19:08.590Z",
+    "updatedAt": "2026-11-03T07:19:08.590Z"
   }
 ]

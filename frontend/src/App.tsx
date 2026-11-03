@@ -15,6 +15,7 @@ import { DocumentListPage } from "./pages/DocumentListPage";
 import { TaskListPage } from "./pages/TaskListPage";
 
 import { screens } from "./config/screens";
+import { ContextCreatePage } from "./pages/ContextCreatePage";
 import { ContextDetailPage } from "./pages/ContextDetailPage";
 import { ContextListPage } from "./pages/ContextListPage";
 import { DocumentDetailPage } from "./pages/DocumentDetailPage";
@@ -22,6 +23,8 @@ import { IssueListPage } from "./pages/IssueListPage";
 import { ProjectDetailPage } from "./pages/ProjectDetailPage";
 import { QAListPage } from "./pages/QAListPage";
 import { TaskDetailPage } from "./pages/TaskDetailPage";
+import { TraceabilityMatrixPage } from "./pages/TraceabilityMatrixPage";
+import { TraceabilityPage } from "./pages/TraceabilityPage";
 
 export const App = () => {
     return (
@@ -52,6 +55,12 @@ export const App = () => {
                         element={<ContextDetailPage />}
                     />
 
+                    {/* SCR-006 */}
+                    <Route
+                        path="/contexts/create"
+                        element={<ContextCreatePage />}
+                    />
+
                     {/* SCR-007 */}
                     <Route path="/documents" element={<DocumentListPage />} />
 
@@ -59,6 +68,18 @@ export const App = () => {
                     <Route
                         path="/documents/detail"
                         element={<DocumentDetailPage />}
+                    />
+
+                    {/* SCR-015 */}
+                    <Route
+                        path="/traceability"
+                        element={<TraceabilityPage />}
+                    />
+
+                    {/* SCR-016 */}
+                    <Route
+                        path="/traceability/matrix"
+                        element={<TraceabilityMatrixPage />}
                     />
 
                     {/* SCR-017 */}
@@ -83,8 +104,13 @@ export const App = () => {
                             "SCR-001",
                             "SCR-002",
                             "SCR-003",
+                            "SCR-004",
+                            "SCR-005",
+                            "SCR-006",
                             "SCR-007",
                             "SCR-008",
+                            "SCR-015",
+                            "SCR-016",
                             "SCR-017",
                             "SCR-019",
                             "SCR-021",

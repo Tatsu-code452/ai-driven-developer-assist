@@ -1,11 +1,7 @@
 export type Context = {
-
   id: string;
-
   title: string;
-
   type: string;
-
   description: string;
 
   status:
@@ -13,15 +9,11 @@ export type Context = {
     | "ARCHIVED";
 
   documentIds: string[];
-
   taskIds: string[];
 
   issueIds: string[];
-
   qaIds: string[];
 
   createdAt: string;
-
   updatedAt: string;
-
 };

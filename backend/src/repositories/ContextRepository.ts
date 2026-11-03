@@ -38,7 +38,7 @@ export const loadContexts =
 
 export const saveContexts =
 (
-  contexts: Context[],
+  items: Context[],
   outputDir: string
 ) => {
 
@@ -58,7 +58,7 @@ export const saveContexts =
   fs.writeFileSync(
     filePath,
     JSON.stringify(
-      contexts,
+      items,
       null,
       2
     ),

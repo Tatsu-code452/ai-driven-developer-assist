@@ -13,7 +13,7 @@ export const getContexts =
   res: Response
 ) => {
 
-  const contexts =
+  const items =
     loadContexts(
       "data/generated"
     );
@@ -22,11 +22,10 @@ export const getContexts =
 
     success: true,
 
-    items:
-      contexts,
+    items,
 
     count:
-      contexts.length
+      items.length
 
   });
 
@@ -38,13 +37,13 @@ export const getContextDetail =
   res: Response
 ) => {
 
-  const contexts =
+  const items =
     loadContexts(
       "data/generated"
     );
 
   const item =
-    contexts.find(
+    items.find(
       context =>
         context.id ===
         req.params.id

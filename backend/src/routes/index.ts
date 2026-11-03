@@ -12,6 +12,8 @@ import projectRoutes from "./projectRoutes";
 
 import dashboardRoutes from "./dashboardRoutes";
 
+import matrixRoutes from "@/routes/matrixRoutes";
+import traceabilityRoutes from "@/routes/traceabilityRoutes";
 import contextRoutes from "./contextRoutes";
 
 const router =
@@ -50,6 +52,16 @@ router.use(
 router.use(
   "/dashboard",
   dashboardRoutes
+);
+
+router.use(
+  "/traceability",
+  traceabilityRoutes
+);
+
+router.use(
+  "/traceability/matrix",
+  matrixRoutes
 );
 
 export default router;

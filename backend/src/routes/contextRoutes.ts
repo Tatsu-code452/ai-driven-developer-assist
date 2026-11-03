@@ -6,7 +6,8 @@ import {
   getContextDetail
 } from "@/controllers/contextController";
 
-const router = Router();
+const router =
+  Router();
 
 router.get(
   "/",

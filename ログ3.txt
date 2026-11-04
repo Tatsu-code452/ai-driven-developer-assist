@@ -1,0 +1,960 @@
+まず指定されたルーター手順と要件定義書を確認し、出力先・形式の指示に沿って管理データを作成します。
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\.github\\agents\\router.agent.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\00要件\\要件定義書.md"
+}
+
+Ran terminal command: git status --short; Get-ChildItem -Force
+
+Read , lines 1 to 160
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\00要件\\要件定義書.md",
+  "view_range": [
+    1,
+    160
+  ]
+}
+
+Read , lines 161 to 320
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\00要件\\要件定義書.md",
+  "view_range": [
+    161,
+    320
+  ]
+}
+
+Ran terminal command: git rev-parse --show-toplevel; git branch --show-current; git status; git worktree list; Get-ChildItem -Recurse -File docs
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\00要件\\要件.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\成果物予定.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\WBS.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\next.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\方針.md"
+}
+
+Search for `(TSK|REQ|QA|BUG|ISS|TRC|課題|QA一覧|要件一覧|トレーサビリティマトリックス)`
+
+既存の管理記録と専門エージェントの担当範囲を確認しています。要件書に未決事項や採番表記の揺れがあるため、判断を捏造せずQAとして記録し、確定できる情報から管理成果物へ反映します。
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\.github\\agents\\project-manager.agent.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\.github\\agents\\requirement.agent.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\.github\\agents\\traceability.agent.md"
+}
+
+Search for `(TSK-[0-9]{3}|REQ-[0-9]{3}|QA[A]?-?[0-9]{3}|BUG-[0-9]{3}|TSK-xxx|TSK-XXX)`
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\01基本設計\\AI成果物フォーマット標準.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\01基本設計\\データモデル設計書.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\01基本設計\\ディレクトリ構成設計書.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\01基本設計\\成果物一覧.md"
+}
+
+Search for `(^(#{1,4}.*(管理|課題|QA|要件|タスク|トレーサビリティ)|\|.*(TSK|REQ|QA|BUG).*)|^\s*[-*] \[( |x...`
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\.github\\agents\\project-audit.agent.md"
+}
+
+委任されたタスク
+
+委任されたタスク
+
+Ran terminal command: Set-Location 'C:\Users\Owner\OneDrive\ai-driven-developer-assist'; git rev-parse --show-toplevel
+
+Ran terminal command: git -C 'C:\Users\Owner\OneDrive\ai-driven-developer-assist' rev-parse --show-toplevel
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\00要件\\要件定義書.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\00要件\\要件.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\01基本設計\\データモデル設計書.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\01基本設計\\ディレクトリ構成設計書.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\00要件\\要件定義書.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\WBS.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\方針.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\01基本設計\\データモデル設計書.md"
+}
+
+"読み取り" に失敗しました
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\WBS-001.md"
+}
+Tool execution failed: Path does not exist
+
+Read , lines 1 to 110
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\00要件\\要件定義書.md",
+  "view_range": [
+    1,
+    110
+  ]
+}
+
+Read , lines 111 to 240
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\00要件\\要件定義書.md",
+  "view_range": [
+    111,
+    240
+  ]
+}
+
+Read , lines 1 to 120
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\00要件\\要件定義書.md",
+  "view_range": [
+    1,
+    120
+  ]
+}
+
+Read , lines 121 to 260
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\00要件\\要件定義書.md",
+  "view_range": [
+    121,
+    260
+  ]
+}
+
+Read , lines 241 to 380
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\00要件\\要件定義書.md",
+  "view_range": [
+    241,
+    380
+  ]
+}
+
+Read , lines 261 to 360
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\00要件\\要件定義書.md",
+  "view_range": [
+    261,
+    360
+  ]
+}
+
+"読み取り" に失敗しました
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\requirements\\REQ-001.md"
+}
+Tool execution failed: Path does not exist
+
+Edit 
+
+Edit 
+
+Read , lines 1 to 80
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\WBS-001.md",
+  "view_range": [
+    1,
+    80
+  ]
+}
+
+Edit 
+
+Read , lines 16 to 38
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\WBS-001.md",
+  "view_range": [
+    16,
+    38
+  ]
+}
+
+Read , line 39 to the end
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\WBS-001.md",
+  "view_range": [
+    39,
+    -1
+  ]
+}
+
+Read , lines 1 to 35
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\requirements\\REQ-001.md",
+  "view_range": [
+    1,
+    35
+  ]
+}
+
+Edit 
+
+Edit 
+
+Edit 
+
+Read , lines 60 to 130
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\requirements\\REQ-001.md",
+  "view_range": [
+    60,
+    130
+  ]
+}
+
+Read , lines 98 to 170
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\requirements\\REQ-001.md",
+  "view_range": [
+    98,
+    170
+  ]
+}
+
+担当範囲の成果物が出そろいました。内容とIDを照合し、確定していない判断はQAとして分離したうえで、課題・QA記録を追加してからトレーサビリティを作成します。
+
+Read , lines 1 to 120
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\requirements\\REQ-001.md",
+  "view_range": [
+    1,
+    120
+  ]
+}
+
+Read , lines 1 to 220
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\WBS-001.md",
+  "view_range": [
+    1,
+    220
+  ]
+}
+
+Ran terminal command: Get-Content -LiteralPath 'docs\99管理\requirements\REQ-001.md' | Measure-Object -Line; Get-Content -LiteralPath 'docs\99管理\WBS-001.md' | Measure-Object -Line; git status --short; git diff --stat
+
+Read , lines 60 to 135
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\requirements\\REQ-001.md",
+  "view_range": [
+    60,
+    135
+  ]
+}
+
+Read , lines 26 to 60
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\WBS-001.md",
+  "view_range": [
+    26,
+    60
+  ]
+}
+
+Read , lines 220 to 298
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\00要件\\要件定義書.md",
+  "view_range": [
+    220,
+    298
+  ]
+}
+
+Read , lines 55 to 110
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\01基本設計\\データモデル設計書.md",
+  "view_range": [
+    55,
+    110
+  ]
+}
+
+Read , lines 95 to 160
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\requirements\\REQ-001.md",
+  "view_range": [
+    95,
+    160
+  ]
+}
+
+Read , lines 50 to 90
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\WBS-001.md",
+  "view_range": [
+    50,
+    90
+  ]
+}
+
+Read , lines 110 to 145
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\01基本設計\\データモデル設計書.md",
+  "view_range": [
+    110,
+    145
+  ]
+}
+
+Search for `\| REQ-0(6[1-9]|7[0-9])`
+
+課題として確認できるのは採番規則とQAサンプルの不整合1件で、その他の未決事項は解決済み課題ではなくQAとして記録します。以下の管理票ではPREFIXの判断を保留し、暫定IDであることを明記します。
+
+Edit , , , 
+
+課題・QA記録を追加しました。次に専門エージェントへ、要件・タスク・課題・QA・根拠資料間の対応だけを、未確認の関連を作らずにマトリックス化するよう依頼します。
+
+委任されたタスク
+
+Ran terminal command: Set-Location 'C:\Users\Owner\OneDrive\ai-driven-developer-assist'; git rev-parse --show-toplevel
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\requirements\\REQ-001.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\WBS-001.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\課題一覧.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\QA一覧.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\00要件\\要件定義書.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\01基本設計\\データモデル設計書.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\README.md"
+}
+
+Read , lines 1 to 220
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\requirements\\REQ-001.md",
+  "view_range": [
+    1,
+    220
+  ]
+}
+
+Read , lines 1 to 220
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\WBS-001.md",
+  "view_range": [
+    1,
+    220
+  ]
+}
+
+Read , lines 1 to 220
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\00要件\\要件定義書.md",
+  "view_range": [
+    1,
+    220
+  ]
+}
+
+Read , lines 55 to 180
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\requirements\\REQ-001.md",
+  "view_range": [
+    55,
+    180
+  ]
+}
+
+Read , lines 30 to 90
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\WBS-001.md",
+  "view_range": [
+    30,
+    90
+  ]
+}
+
+Read , lines 115 to 180
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\00要件\\要件定義書.md",
+  "view_range": [
+    115,
+    180
+  ]
+}
+
+Read , lines 30 to 65
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\requirements\\REQ-001.md",
+  "view_range": [
+    30,
+    65
+  ]
+}
+
+Read , lines 90 to 165
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\requirements\\REQ-001.md",
+  "view_range": [
+    90,
+    165
+  ]
+}
+
+Read , lines 155 to 230
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\00要件\\要件定義書.md",
+  "view_range": [
+    155,
+    230
+  ]
+}
+
+Read , lines 58 to 100
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\WBS-001.md",
+  "view_range": [
+    58,
+    100
+  ]
+}
+
+Read , lines 140 to 175
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\requirements\\REQ-001.md",
+  "view_range": [
+    140,
+    175
+  ]
+}
+
+Read , lines 200 to 250
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\00要件\\要件定義書.md",
+  "view_range": [
+    200,
+    250
+  ]
+}
+
+Read , lines 80 to 125
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\01基本設計\\データモデル設計書.md",
+  "view_range": [
+    80,
+    125
+  ]
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\README.md"
+}
+
+Edit 
+
+Read , lines 1 to 45
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\traceability\\TRC-001.md",
+  "view_range": [
+    1,
+    45
+  ]
+}
+
+Read , lines 40 to 100
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\traceability\\TRC-001.md",
+  "view_range": [
+    40,
+    100
+  ]
+}
+
+Read , lines 100 to 160
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\traceability\\TRC-001.md",
+  "view_range": [
+    100,
+    160
+  ]
+}
+
+Edit 
+
+Search for `^\| REQ-[0-9]{3} \|`
+
+Search for `maps issue|maps QA|maps Task|\[TSK-025\].*AI利用効率化|\| REQ-046 \|`
+
+Read , lines 125 to 160
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\traceability\\TRC-001.md",
+  "view_range": [
+    125,
+    160
+  ]
+}
+
+Read , lines 1 to 120
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\traceability\\TRC-001.md",
+  "view_range": [
+    1,
+    120
+  ]
+}
+
+Read , lines 121 to 260
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\traceability\\TRC-001.md",
+  "view_range": [
+    121,
+    260
+  ]
+}
+
+Ran terminal command: Get-ChildItem -LiteralPath 'docs\99管理' -Recurse -File | Select-Object FullName,Length; git status --short; Get-Content -LiteralPath 'docs\99管理\requirements\REQ-001.md' -Tail 8; Get-Content -LiteralPath 'docs\99管理\traceability\TRC-001.md' -Tail 15
+
+Read , lines 60 to 146
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\traceability\\TRC-001.md",
+  "view_range": [
+    60,
+    146
+  ]
+}
+
+Read , lines 1 to 12
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\requirements\\REQ-001.md",
+  "view_range": [
+    1,
+    12
+  ]
+}
+
+Read , lines 1 to 17
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\WBS-001.md",
+  "view_range": [
+    1,
+    17
+  ]
+}
+
+照合で、タスク登録簿の受入カテゴリが依頼の5種類と一致せず、TSK-001が不要なQA回答待ちになっている点も見つかりました。管理データ作成自体を完了として記録し、採番判断は独立した未着手タスクに残す形に整えます。
+
+Edit , , , 
+
+成果物間の識別子と状態を整えました。最終確認ではIDの連番・重複、マトリックスの網羅性、Markdown内リンクを検査します。
+
+Ran terminal command: @'
+from pathlib import Path
+import re, sys
+root = Path.cwd()
+base = root / 'docs' / '99管理'
+files = sorted(p for p in base.rglob('*.md'))
+errors = []
+for p in files:
+    text = p.read_text(encoding='utf-8')
+    for link in re.findall(r'\[[^\]]*\]\(([^)]+)\)', text):
+        target = link.split('#', 1)[0].split()[0]
+        if not target or re.match(r'^[a-zA-Z][a-zA-Z0-9+.-]*:', target):
+            continue
+        resolved = (p.parent / target).resolve()
+        if not resolved.exists():
+            errors.append(f'BROKEN LINK {p.relative_to(root)} -> {link}')
+req = (base / 'requirements' / 'REQ-001.md').read_text(encoding='utf-8')
+mat = (base / 'traceability' / 'TRC-001.md').read_text(encoding='utf-8')
+wbs = (base / 'WBS-001.md').read_text(encoding='utf-8')
+qa = (base / 'QA一覧.md').read_text(encoding='utf-8')
+issue = (base / '課題一覧.md').read_text(encoding='utf-8')
+extract = lambda text, prefix: re.findall(rf'\|\s*({prefix}-\d{{3}})\s*\|', text)
+for prefix, source, matrix, expected in [('REQ', req, mat, 77), ('TSK', wbs, mat, 30), ('QAA', qa, mat, 7), ('BUG', issue, mat, 1)]:
+    pattern = rf'\|\s*{prefix}-\d{{3}}\s*\|'
+    ids = re.findall(pattern, source)
+    if len(ids) != expected:
+        errors.append(f'{prefix} row count {len(ids)} != {expected}')
+    if prefix in ('REQ','TSK'):
+        for n in range(1, expected+1):
+            id_ = f'{prefix}-{n:03}'
+            if id_ not in source:
+                errors.append(f'{id_} missing in register')
+            if id_ not in matrix:
+                errors.append(f'{id_} missing in matrix')
+    elif prefix == 'QAA':
+        for n in range(1, expected+1):
+            id_ = f'QAA-{n:03}'
+            if id_ not in mat:
+                errors.append(f'{id_} missing in matrix')
+if '完了（QA PREFIXは暫定）' not in wbs:
+    errors.append('TSK-001 completion/provisional status missing')
+if '進行中' in mat:
+    errors.append('Matrix still reports in-progress status')
+print(f'Files checked: {len(files)}')
+print(f'REQ rows: {len(extract(req, "REQ"))}; TSK rows: {len(extract(wbs, "TSK"))}; QAA rows: {len(extract(qa, "QAA"))}; BUG rows: {len(extract(issue, "BUG"))}')
+print(f'Matrix requirement rows: {len(re.findall(r"^\| REQ-\d{3} \|", mat, re.M))}')
+if errors:
+    print('\n'.join(errors))
+    sys.exit(1)
+print('PASS: IDs/counts, matrix coverage, status, and relative Markdown links')
+'@ | python -
+Tool execution failed with exit code 1
+
+Search for ``(REQ-001（レジスター文書ID）|ID: `REQ-001`|TSK-001.*進行中|TSK-001.*TSK-002|QAA-00[1-7]|B...``
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\README.md"
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\QA一覧.md"
+}
+
+Ran terminal command: @'
+from pathlib import Path
+import re, sys
+root = Path.cwd()
+base = root / 'docs' / '99\u7ba1\u7406'
+files = sorted(base.rglob('*.md'))
+errors = []
+texts = {}
+for p in files:
+    text = p.read_text(encoding='utf-8')
+    texts[p] = text
+    for link in re.findall(r'\[[^\]]*\]\(([^)]+)\)', text):
+        target = link.split('#', 1)[0].split()[0]
+        if not target or re.match(r'^[a-zA-Z][a-zA-Z0-9+.-]*:', target):
+            continue
+        resolved = (p.parent / target).resolve()
+        if not resolved.exists():
+            errors.append(f'BROKEN LINK {p.relative_to(root)} -> {link}')
+req = next(text for p, text in texts.items() if p.name == 'REQ-001.md')
+mat = next(text for p, text in texts.items() if p.name == 'TRC-001.md')
+wbs = next(text for p, text in texts.items() if p.name == 'WBS-001.md')
+qa = next(text for p, text in texts.items() if 'QAA-001' in text and p.name != 'TRC-001.md')
+issue = next(text for p, text in texts.items() if 'BUG-001' in text and '課題一覧' in p.name)
+for prefix, source, expected in [('REQ', req, 77), ('TSK', wbs, 30), ('QAA', qa, 7), ('BUG', issue, 1)]:
+    ids = re.findall(rf'^\|\s*({prefix}-\d{{3}})\s*\|', source, re.M)
+    if len(ids) != expected or len(set(ids)) != expected:
+        errors.append(f'{prefix} row count/uniqueness: {len(ids)} / {len(set(ids))}, expected {expected}')
+    if prefix in ('REQ','TSK'):
+        for n in range(1, expected+1):
+            id_ = f'{prefix}-{n:03}'
+            if id_ not in source:
+                errors.append(f'{id_} missing in register')
+            if id_ not in mat:
+                errors.append(f'{id_} missing in matrix')
+    elif prefix == 'QAA':
+        for n in range(1, expected+1):
+            if f'QAA-{n:03}' not in mat:
+                errors.append(f'QAA-{n:03} missing in matrix')
+if '完了（QA PREFIXは暫定）' not in wbs:
+    errors.append('TSK-001 completion/provisional status missing')
+if '進行中' in mat:
+    errors.append('Matrix still reports in-progress status')
+print(f'Files checked: {len(files)}')
+print('Rows: ' + ', '.join(f'{p}={len(re.findall(rf"^\\|\\s*{p}-\\d{{3}}\\s*\\|", s, re.M))}' for p, s in [('REQ',req),('TSK',wbs),('QAA',qa),('BUG',issue)]))
+print(f'Matrix requirement rows: {len(re.findall(r"^\| REQ-\d{3} \|", mat, re.M))}')
+if errors:
+    print('\n'.join(errors))
+    sys.exit(1)
+print('PASS: ID counts, matrix coverage, status, and relative Markdown links')
+'@ | python -
+Tool execution failed with exit code 1
+
+Ran terminal command: @'
+from pathlib import Path
+import re, sys
+root = Path.cwd()
+base = root / 'docs' / '99\u7ba1\u7406'
+files = sorted(base.rglob('*.md'))
+errors = []
+texts = {}
+for p in files:
+    text = p.read_text(encoding='utf-8')
+    texts[p] = text
+    for link in re.findall(r'\[[^\]]*\]\(([^)]+)\)', text):
+        target = link.split('#', 1)[0].split()[0]
+        if not target or re.match(r'^[a-zA-Z][a-zA-Z0-9+.-]*:', target):
+            continue
+        if not (p.parent / target).resolve().exists():
+            errors.append(f'BROKEN LINK {p.relative_to(root)} -> {link}')
+req = next(text for p, text in texts.items() if p.name == 'REQ-001.md')
+mat = next(text for p, text in texts.items() if p.name == 'TRC-001.md')
+wbs = next(text for p, text in texts.items() if p.name == 'WBS-001.md')
+qa = next(text for p, text in texts.items() if p.parent == base and 'QAA-001' in text)
+issue = next(text for p, text in texts.items() if p.parent == base and 'BUG-001' in text)
+counts = {}
+for prefix, source, expected in [('REQ', req, 77), ('TSK', wbs, 30), ('QAA', qa, 7), ('BUG', issue, 1)]:
+    ids = re.findall(r'^\|\s*(' + prefix + r'-\d{3})\s*\|', source, re.M)
+    counts[prefix] = len(ids)
+    if len(ids) != expected or len(set(ids)) != expected:
+        errors.append(prefix + ' row count/uniqueness: ' + str(len(ids)) + '/' + str(len(set(ids))) + ', expected ' + str(expected))
+    if prefix in ('REQ','TSK'):
+        for n in range(1, expected+1):
+            id_ = prefix + '-' + format(n, '03')
+            if id_ not in source:
+                errors.append(id_ + ' missing in register')
+            if id_ not in mat:
+                errors.append(id_ + ' missing in matrix')
+    elif prefix == 'QAA':
+        for n in range(1, expected+1):
+            if 'QAA-' + format(n, '03') not in mat:
+                errors.append('QAA-' + format(n, '03') + ' missing in matrix')
+if '完了（QA PREFIXは暫定）' not in wbs:
+    errors.append('TSK-001 completion/provisional status missing')
+if '進行中' in mat:
+    errors.append('Matrix still reports in-progress status')
+print('Files checked:', len(files))
+print('Rows:', counts)
+print('Matrix requirement rows:', len(re.findall(r'^\| REQ-\d{3} \|', mat, re.M)))
+if errors:
+    print('\n'.join(errors))
+    sys.exit(1)
+print('PASS: ID counts, matrix coverage, status, and relative Markdown links')
+'@ | python -
+Tool execution failed with exit code 1
+
+検証でタスクTSK-013の対応がマトリックスに未反映で、TSK-001の状態更新もファイル上で確認できませんでした。該当記録を確認し、出典に基づくリンクと完了状態を再整合します。
+
+Read , lines 1 to 18
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\WBS-001.md",
+  "view_range": [
+    1,
+    18
+  ]
+}
+
+Read 
+Completed with input: {
+  "path": "C:\\Users\\Owner\\OneDrive\\ai-driven-developer-assist\\docs\\99管理\\課題一覧.md"
+}
+
+Search for `TSK-013|TSK-001|REQ-030|REQ-029|BUG-001|進行中|完了`
+
+確認結果に基づき、TSK-013（成果物の登録・参照）は要件§3.6の成果物識別に対応付けます。変更はタスクの根拠節とマトリックスの該当行に限定します。
+
+Edit , 
+
+Ran terminal command: @'
+from pathlib import Path
+import re, sys
+root = Path.cwd()
+base = root / 'docs' / '99\u7ba1\u7406'
+files = sorted(base.rglob('*.md'))
+errors = []
+texts = {}
+for p in files:
+    text = p.read_text(encoding='utf-8')
+    texts[p] = text
+    for link in re.findall(r'\[[^\]]*\]\(([^)]+)\)', text):
+        target = link.split('#', 1)[0].split()[0]
+        if not target or re.match(r'^[a-zA-Z][a-zA-Z0-9+.-]*:', target):
+            continue
+        if not (p.parent / target).resolve().exists():
+            errors.append(f'BROKEN LINK {p.relative_to(root)} -> {link}')
+req = next(text for p, text in texts.items() if p.name == 'REQ-001.md')
+mat = next(text for p, text in texts.items() if p.name == 'TRC-001.md')
+wbs = next(text for p, text in texts.items() if p.name == 'WBS-001.md')
+qa = next(text for p, text in texts.items() if p.parent == base and re.search(r'^\| QAA-001 \|', text, re.M))
+issue = next(text for p, text in texts.items() if p.parent == base and re.search(r'^\| BUG-001 \|', text, re.M))
+counts = {}
+for prefix, source, expected in [('REQ', req, 77), ('TSK', wbs, 30), ('QAA', qa, 7), ('BUG', issue, 1)]:
+    ids = re.findall(r'^\|\s*(' + prefix + r'-\d{3})\s*\|', source, re.M)
+    counts[prefix] = len(ids)
+    if len(ids) != expected or len(set(ids)) != expected:
+        errors.append(prefix + ' row count/uniqueness: ' + str(len(ids)) + '/' + str(len(set(ids))) + ', expected ' + str(expected))
+    if prefix in ('REQ','TSK'):
+        for n in range(1, expected+1):
+            id_ = prefix + '-' + format(n, '03')
+            if id_ not in source:
+                errors.append(id_ + ' missing in register')
+            if id_ not in mat:
+                errors.append(id_ + ' missing in matrix')
+    elif prefix == 'QAA':
+        for n in range(1, expected+1):
+            if 'QAA-' + format(n, '03') not in mat:
+                errors.append('QAA-' + format(n, '03') + ' missing in matrix')
+if '完了（QA PREFIXは暫定）' not in wbs:
+    errors.append('TSK-001 completion/provisional status missing')
+if '進行中' in mat:
+    errors.append('Matrix still reports in-progress status')
+mat_req_rows = re.findall(r'^\| REQ-\d{3} \|', mat, re.M)
+if len(mat_req_rows) != 77:
+    errors.append('Matrix requirement row count ' + str(len(mat_req_rows)) + ' != 77')
+print('Files checked:', len(files))
+print('Record rows:', counts)
+print('Matrix requirement rows:', len(mat_req_rows))
+if errors:
+    print('\n'.join(errors))
+    sys.exit(1)
+print('PASS: ID counts, matrix coverage, status, and relative Markdown links')
+'@ | python -
+Tool execution failed with exit code 1
+
+Ran terminal command: @'
+from pathlib import Path
+import re, sys
+root = Path.cwd()
+base = root / 'docs' / '99\u7ba1\u7406'
+files = sorted(base.rglob('*.md'))
+errors = []
+texts = {}
+for p in files:
+    text = p.read_text(encoding='utf-8')
+    texts[p] = text
+    for link in re.findall(r'\[[^\]]*\]\(([^)]+)\)', text):
+        target = link.split('#', 1)[0].split()[0]
+        if not target or re.match(r'^[a-zA-Z][a-zA-Z0-9+.-]*:', target):
+            continue
+        if not (p.parent / target).resolve().exists():
+            errors.append(f'BROKEN LINK {p.relative_to(root)} -> {link}')
+req = next(text for p, text in texts.items() if p.name == 'REQ-001.md')
+mat = next(text for p, text in texts.items() if p.name == 'TRC-001.md')
+wbs = next(text for p, text in texts.items() if p.name == 'WBS-001.md')
+qa = next(text for p, text in texts.items() if p.parent == base and re.search(r'^\| QAA-001 \|', text, re.M))
+issue = next(text for p, text in texts.items() if p.parent == base and re.search(r'^\| BUG-001 \|', text, re.M))
+counts = {}
+for prefix, source, expected in [('REQ', req, 77), ('TSK', wbs, 30), ('QAA', qa, 7), ('BUG', issue, 1)]:
+    ids = re.findall(r'^\|\s*(' + prefix + r'-\d{3})\s*\|', source, re.M)
+    counts[prefix] = len(ids)
+    if len(ids) != expected or len(set(ids)) != expected:
+        errors.append(prefix + ' row count/uniqueness: ' + str(len(ids)) + '/' + str(len(set(ids))) + ', expected ' + str(expected))
+    if prefix in ('REQ','TSK'):
+        for n in range(1, expected+1):
+            id_ = prefix + '-' + format(n, '03')
+            if id_ not in source:
+                errors.append(id_ + ' missing in register')
+            if id_ not in mat:
+                errors.append(id_ + ' missing in matrix')
+    elif prefix == 'QAA':
+        for n in range(1, expected+1):
+            if 'QAA-' + format(n, '03') not in mat:
+                errors.append('QAA-' + format(n, '03') + ' missing in matrix')
+tsk001 = next(line for line in wbs.splitlines() if line.startswith('| TSK-001 |'))
+status = tsk001.split('|')[5]
+if '\u5b8c\u4e86' not in status or '\u66ab\u5b9a' not in status:
+    errors.append('TSK-001 is not marked complete with provisional-ID caveat')
+if '\u9032\u884c\u4e2d' in mat:
+    errors.append('Matrix still reports in-progress status')
+mat_req_rows = re.findall(r'^\| REQ-\d{3} \|', mat, re.M)
+if len(mat_req_rows) != 77:
+    errors.append('Matrix requirement row count ' + str(len(mat_req_rows)) + ' != 77')
+print('Files checked:', len(files))
+print('Record rows:', counts)
+print('Matrix requirement rows:', len(mat_req_rows))
+if errors:
+    print('\n'.join(errors))
+    sys.exit(1)
+print('PASS: ID counts, matrix coverage, status, and relative Markdown links')
+'@ | python -
+
+ID件数・マトリックス網羅性・相対リンク検査は通過しました。最後に変更ファイル一覧を確認して完了します。
+
+Ran terminal command: git status --short; Get-ChildItem -LiteralPath 'docs\99管理' -Recurse -File | Select-Object -ExpandProperty FullName
+
+
+
+**タスクが完了済み:** router.agent.mdの手順に沿い、feature_ai上で課題・QA・要件・タスク・トレーサビリティマトリックスを作成しました。要件担当、プロジェクト管理担当、トレーサビリティ担当を起用し、未決事項は判断を補わず記録しています。
+
+成果物:
+- `管理データ一覧`
+- `課題一覧` — 仕様上の不整合 BUG-001
+- `QA一覧` — 未回答7件。QAA採番は暫定
+- `要件レジスター` — REQ-001〜REQ-077
+- `タスク登録簿` — TSK-001〜TSK-030
+- `トレーサビリティマトリックス` — 要件77件を出典へ対応付け
+
+ID件数・重複、要件のマトリックス網羅性、Markdown相対リンクを検査し、すべて通過しました。ドキュメントのみの変更のためビルド・テストは未実施です。QA PREFIX（QA/QAA）、ID重複の適用範囲などの未決事項は残してあります。

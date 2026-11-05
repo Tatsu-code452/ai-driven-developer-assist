@@ -340,6 +340,16 @@ Examples:
 
 These locations are valid when explicitly authorized by the Router.
 
+Requirements in the management register use one file per ID:
+
+    docs/99管理/requirements/REQ-xxx.md
+
+The register README is the source of truth for each requirement's status and transition history:
+
+    docs/99管理/requirements/README.md
+
+Link to the README for register-level status and workflow information, and link to the individual `REQ-xxx.md` file when referring to a specific requirement. Do not mark a requirement approved without recorded approval evidence.
+
 ---
 
 ### 14. Agent Invocation Rule

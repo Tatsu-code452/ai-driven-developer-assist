@@ -4,7 +4,7 @@
 
 - [課題一覧](課題一覧.md)
 - [QA一覧](QA一覧.md)
-- [要件レジスター](requirements/REQ-001.md)
+- [要件一覧・状態管理](requirements/README.md)
 - [タスク登録簿](WBS-001.md)
 - [ガントチャート](ガントチャート.md)
 - [トレーサビリティマトリックス](traceability/TRC-001.md)

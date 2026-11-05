@@ -6,6 +6,7 @@
 - [QA一覧](QA一覧.md)
 - [要件レジスター](requirements/REQ-001.md)
 - [タスク登録簿](WBS-001.md)
+- [ガントチャート](ガントチャート.md)
 - [トレーサビリティマトリックス](traceability/TRC-001.md)
 
 ## 出典

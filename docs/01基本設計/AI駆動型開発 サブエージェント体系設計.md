@@ -36,7 +36,7 @@ GitHub Copilot Agent Modeを利用したAI駆動型開発において、責務�
 
 - TSK-001
 - BUG-004
-- QA-012
+- QAA-012
 
 ごとに独立セッションを開始する。
 
@@ -53,7 +53,7 @@ GitHub Copilot Agent Modeを利用したAI駆動型開発において、責務�
 - requirements/REQ-001.md
 - design/DES-001.md
 - task/TSK-001.md
-- qa/QA-001.md
+- qa/QAA-001.md
 - issue/BUG-001.md
 
 ---

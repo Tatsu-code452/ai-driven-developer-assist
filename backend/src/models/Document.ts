@@ -8,6 +8,7 @@ export type DocumentType =
 
 export type Document = {
   id: string;
+  projectId?: string;
   title: string;
   type: DocumentType;
   path: string;

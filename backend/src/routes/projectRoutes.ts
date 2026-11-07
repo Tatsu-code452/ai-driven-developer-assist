@@ -2,7 +2,10 @@ import { Router }
 from "express";
 
 import {
-  getProjects
+  getProjectDetail,
+  getProjects,
+  postProject,
+  putProject,
 } from "@/controllers/projectController";
 
 const router =
@@ -11,6 +14,21 @@ const router =
 router.get(
   "/",
   getProjects
+);
+
+router.post(
+  "/",
+  postProject
+);
+
+router.get(
+  "/:id",
+  getProjectDetail
+);
+
+router.put(
+  "/:id",
+  putProject
 );
 
 export default router;

@@ -8,16 +8,28 @@ export type ItemResponse<T> = {
   item: T;
 };
 
+export type PagedItemsResponse<T> = {
+  success: boolean;
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
 export type Project = {
   id: string;
   name: string;
+  description: string;
   status: string;
   taskCount: number;
   documentCount: number;
 };
 
+export type ProjectInput = Pick<Project, "name" | "description" | "status">;
+
 export type Task = {
   id: string;
+  projectId?: string;
   title: string;
   description: string;
   status: string;
@@ -27,6 +39,7 @@ export type Task = {
 
 export type GeneratedDocument = {
   id: string;
+  projectId?: string;
   title: string;
   type: string;
   path: string;

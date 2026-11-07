@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 
 import { fetchMatrix } from "../services/matrixApi";
+import type { TraceabilityMatrixItem } from "../types/Api";
 
 export const TraceabilityMatrixPage = () => {
-    const [items, setItems] = useState<any[]>([]);
+    const [items, setItems] = useState<TraceabilityMatrixItem[]>([]);
 
     useEffect(() => {
         fetchMatrix().then((result) => setItems(result.items));

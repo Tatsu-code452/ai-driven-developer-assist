@@ -6,6 +6,7 @@ import {
 import {
   fetchDashboard
 } from "../services/dashboardApi";
+import type { DashboardData } from "../types/Api";
 
 export const DashboardPage =
 () => {
@@ -13,7 +14,7 @@ export const DashboardPage =
   const [
     data,
     setData
-  ] = useState<any>();
+  ] = useState<DashboardData | null>(null);
 
   useEffect(
     () => {
@@ -116,7 +117,7 @@ export const DashboardPage =
           {
             data?.latestTasks?.map(
               (
-                task: any
+                task
               ) => (
 
                 <div
@@ -156,7 +157,7 @@ export const DashboardPage =
           {
             data?.latestDocuments?.map(
               (
-                doc: any
+                doc
               ) => (
 
                 <div
@@ -185,7 +186,10 @@ export const DashboardPage =
 
 const Card =
 (
-  props: any
+  props: {
+    title: string;
+    value: number | string;
+  }
 ) => (
 
   <div

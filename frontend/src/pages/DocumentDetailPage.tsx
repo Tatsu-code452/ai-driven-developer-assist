@@ -11,6 +11,7 @@ import {
 import {
   fetchDocuments
 } from "../services/documentApi";
+import type { GeneratedDocument } from "../types/Api";
 
 export const DocumentDetailPage =
 () => {
@@ -25,7 +26,7 @@ export const DocumentDetailPage =
   const [
     documents,
     setDocuments
-  ] = useState<any[]>(
+  ] = useState<GeneratedDocument[]>(
     []
   );
 

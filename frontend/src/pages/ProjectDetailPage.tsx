@@ -2,13 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useSearchParams } from "react-router-dom";
 import { fetchProjects } from "../services/projectApi";
+import type { Project } from "../types/Api";
 
 export const ProjectDetailPage = () => {
     const [searchParams] = useSearchParams();
 
     const id = searchParams.get("id");
 
-    const [items, setItems] = useState<any[]>([]);
+    const [items, setItems] = useState<Project[]>([]);
 
     useEffect(() => {
         fetchProjects().then((result) => setItems(result.items));

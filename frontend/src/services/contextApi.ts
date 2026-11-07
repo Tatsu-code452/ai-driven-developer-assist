@@ -1,11 +1,12 @@
 import { api }
 from "./api";
+import type { Context, ItemResponse, ItemsResponse } from "../types/Api";
 
 export const fetchContexts =
 async () => {
 
   const response =
-    await api.get(
+    await api.get<ItemsResponse<Context>>(
       "/contexts"
     );
 
@@ -19,7 +20,7 @@ async (
 ) => {
 
   const response =
-    await api.get(
+    await api.get<ItemResponse<Context>>(
       "/contexts/" +
       id
     );

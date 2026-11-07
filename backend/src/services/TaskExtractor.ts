@@ -1,5 +1,6 @@
 import type { DocumentModel } from "../models/DocumentModel";
 import type { Task } from "../models/Task";
+import { createIdAllocator } from "./idGenerator/IdGenerator";
 
 type Options = {
   nextId?: () => string;
@@ -51,15 +52,19 @@ export const extractTasks = (
       tasks
     );
 
+  const nextId =
+    options?.nextId ??
+    createIdAllocator(
+      "TSK",
+      []
+    );
+
   return uniqueTasks.map(
     task => ({
 
       ...task,
 
-      id:
-        options?.nextId
-          ? options.nextId()
-          : "TSK-000"
+      id: nextId()
 
     })
   );

@@ -198,33 +198,142 @@ export const ProjectDetailPage = () => {
     }
 
     return (
-        <div
-            className="
-      bg-white
-      border
-      rounded
-      p-6
-      "
-        >
-            <h1
-                className="
-        text-3xl
-        font-bold
-        mb-4
-        "
-            >
-                SCR-003 プロジェクト詳細
-            </h1>
+        <section className="mx-auto max-w-3xl space-y-4">
+            <header className="flex items-center justify-between">
+                <h1 className="text-3xl font-bold">
+                    SCR-003 プロジェクト詳細
+                </h1>
+                {project && !editMode && (
+                    <button
+                        className="rounded border px-4 py-2 hover:bg-slate-50"
+                        onClick={() => {
+                            const next = new URLSearchParams(searchParams);
+                            next.set("mode", "edit");
+                            setSearchParams(next);
+                        }}
+                        type="button"
+                    >
+                        編集
+                    </button>
+                )}
+            </header>
 
-            <p>
-                <Link
-                    className="text-blue-700 underline"
-                    to={`/tasks?projectId=${encodeURIComponent(item.id)}`}
+            {(saveError || currentLoadError) && (
+                <p className="text-red-800" role="alert">
+                    {saveError || currentLoadError}
+                </p>
+            )}
+
+            {editMode ? (
+                <form
+                    className="space-y-4 rounded border bg-white p-6"
+                    onSubmit={save}
                 >
-                    関連タスク一覧へ ({item.taskCount}件)
-                </Link>
-            </p>
-            <pre>{JSON.stringify(item, null, 2)}</pre>
-        </div>
+                    {project && (
+                        <p>
+                            <span className="font-semibold">ID:</span>{" "}
+                            {project.id}
+                            <span className="ml-2 text-slate-600">
+                                （変更不可）
+                            </span>
+                        </p>
+                    )}
+                    <label className="block space-y-1">
+                        <span className="font-semibold">名称 *</span>
+                        <input
+                            autoFocus
+                            className="w-full rounded border px-3 py-2"
+                            disabled={saving}
+                            maxLength={200}
+                            onChange={(event) =>
+                                setForm((value) => ({
+                                    ...value,
+                                    name: event.target.value,
+                                }))
+                            }
+                            required
+                            value={form.name}
+                        />
+                    </label>
+                    <label className="block space-y-1">
+                        <span className="font-semibold">説明</span>
+                        <textarea
+                            className="min-h-32 w-full rounded border px-3 py-2"
+                            disabled={saving}
+                            onChange={(event) =>
+                                setForm((value) => ({
+                                    ...value,
+                                    description: event.target.value,
+                                }))
+                            }
+                            value={form.description}
+                        />
+                    </label>
+                    <label className="block space-y-1">
+                        <span className="font-semibold">状態</span>
+                        <input
+                            className="w-full rounded border px-3 py-2"
+                            disabled={saving}
+                            onChange={(event) =>
+                                setForm((value) => ({
+                                    ...value,
+                                    status: event.target.value,
+                                }))
+                            }
+                            value={form.status}
+                        />
+                    </label>
+                    <div className="flex gap-3">
+                        <button
+                            className="rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50"
+                            disabled={saving}
+                            type="submit"
+                        >
+                            {saving ? "保存中..." : "保存"}
+                        </button>
+                        <button
+                            className="rounded border px-4 py-2"
+                            disabled={saving}
+                            onClick={cancelEdit}
+                            type="button"
+                        >
+                            キャンセル
+                        </button>
+                    </div>
+                </form>
+            ) : project ? (
+                <div className="space-y-5 rounded border bg-white p-6">
+                    <dl className="grid gap-3 sm:grid-cols-[10rem_1fr]">
+                        <dt className="font-semibold">ID</dt>
+                        <dd>{project.id}</dd>
+                        <dt className="font-semibold">名称</dt>
+                        <dd>{project.name}</dd>
+                        <dt className="font-semibold">説明</dt>
+                        <dd className="whitespace-pre-wrap">
+                            {project.description || "—"}
+                        </dd>
+                        <dt className="font-semibold">状態</dt>
+                        <dd>{project.status || "—"}</dd>
+                        <dt className="font-semibold">関連タスク</dt>
+                        <dd>
+                            <Link
+                                className="text-blue-700 underline"
+                                to={`/tasks?projectId=${encodeURIComponent(project.id)}`}
+                            >
+                                {project.taskCount}件
+                            </Link>
+                        </dd>
+                        <dt className="font-semibold">関連成果物</dt>
+                        <dd>{project.documentCount}件</dd>
+                    </dl>
+                    <Link
+                        className="inline-block text-blue-700 underline"
+                        to={returnTo}
+                    >
+                        一覧へ戻る
+                    </Link>
+                </div>
+            ) : null}
+        </section>
     );
 };

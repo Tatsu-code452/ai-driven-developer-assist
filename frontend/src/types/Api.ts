@@ -29,7 +29,6 @@ export type ProjectInput = Pick<Project, "name" | "description" | "status">;
 
 export type Task = {
   id: string;
-  projectId?: string;
   title: string;
   description: string;
   status: TaskStatus;
@@ -63,7 +62,6 @@ export type TaskListFilters = {
 
 export type GeneratedDocument = {
   id: string;
-  projectId?: string;
   title: string;
   type: string;
   path: string;

@@ -102,7 +102,7 @@ export const TaskListPage = () => {
 
     useEffect(() => {
         let active = true;
-        fetchProjects()
+        fetchProjects({ q: "", status: "", page: 1 })
             .then((result) => {
                 if (active) {
                     setProjectState({

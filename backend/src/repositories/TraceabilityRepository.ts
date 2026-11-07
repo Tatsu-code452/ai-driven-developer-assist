@@ -11,7 +11,7 @@ const FILE_NAME =
 export const loadTraceability =
   (
     outputDir: string
-  ) => {
+  ): Traceability[] => {
 
     const filePath =
       path.join(

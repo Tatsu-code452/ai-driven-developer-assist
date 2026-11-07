@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 
 import { fetchTraceability } from "../services/traceabilityApi";
+import type { TraceabilityItem } from "../types/Api";
 
 export const TraceabilityPage = () => {
-    const [items, setItems] = useState<any[]>([]);
+    const [items, setItems] = useState<TraceabilityItem[]>([]);
 
     useEffect(() => {
         fetchTraceability().then((result) => setItems(result.items));

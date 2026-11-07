@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 
 import { Link } from "react-router-dom";
 import { fetchProjects } from "../services/projectApi";
+import type { Project } from "../types/Api";
 
 export const ProjectListPage = () => {
-    const [items, setItems] = useState<any[]>([]);
+    const [items, setItems] = useState<Project[]>([]);
 
     useEffect(() => {
         fetchProjects().then((result) => setItems(result.items));

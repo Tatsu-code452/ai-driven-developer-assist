@@ -20,9 +20,33 @@ export type Task = {
   id: string;
   title: string;
   description: string;
-  status: string;
-  priority: string;
+  status: TaskStatus;
+  priority: TaskPriority;
   source: string;
+  projectId?: string;
+};
+
+export type TaskStatus = "TODO" | "DOING" | "DONE";
+export type TaskPriority = "LOW" | "NORMAL" | "HIGH";
+export type TaskInput = Omit<Task, "id" | "source" | "projectId"> & {
+  projectId: string;
+};
+
+export type TaskListResponse = {
+  success: boolean;
+  items: Task[];
+  count: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
+export type TaskListFilters = {
+  q?: string;
+  projectId?: string;
+  status?: string;
+  priority?: string;
+  page?: number;
 };
 
 export type GeneratedDocument = {
@@ -31,6 +55,7 @@ export type GeneratedDocument = {
   type: string;
   path: string;
   source: string;
+  projectId?: string;
 };
 
 export type Context = {

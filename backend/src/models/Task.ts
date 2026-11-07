@@ -15,4 +15,13 @@ export type Task = {
   status: TaskStatus;
   priority: TaskPriority;
   source: string;
+  projectId?: string;
+};
+
+export type TaskInput = {
+  title: string;
+  description: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  projectId: string;
 };

@@ -2,7 +2,10 @@ import { Router }
 from "express";
 
 import {
-  getTasks
+  getTaskDetail,
+  getTasks,
+  postTask,
+  putTask,
 } from "@/controllers/taskController";
 
 const router =
@@ -11,6 +14,21 @@ const router =
 router.get(
   "/",
   getTasks
+);
+
+router.get(
+  "/:id",
+  getTaskDetail
+);
+
+router.post(
+  "/",
+  postTask
+);
+
+router.put(
+  "/:id",
+  putTask
 );
 
 export default router;

@@ -12,4 +12,5 @@ export type Document = {
   type: DocumentType;
   path: string;
   source: string;
+  projectId?: string;
 };

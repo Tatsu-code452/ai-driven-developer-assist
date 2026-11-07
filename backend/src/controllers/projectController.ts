@@ -42,10 +42,16 @@ export const getProjects =
           "AI駆動型開発支援システム",
 
         taskCount:
-          tasks.length,
+          tasks.filter(
+            task =>
+              task.projectId === "PRJ-001"
+          ).length,
 
         documentCount:
-          documents.length,
+          documents.filter(
+            document =>
+              document.projectId === "PRJ-001"
+          ).length,
 
         status:
           "進行中"
@@ -90,10 +96,16 @@ export const getProjectDetail =
         "進行中",
 
       taskCount:
-        tasks.length,
+        tasks.filter(
+          task =>
+            task.projectId === "PRJ-001"
+        ).length,
 
       documentCount:
-        documents.length
+        documents.filter(
+          document =>
+            document.projectId === "PRJ-001"
+        ).length
 
     }
 

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { fetchProjects } from "../services/projectApi";
 import type { Project } from "../types/Api";
 
@@ -54,6 +54,14 @@ export const ProjectDetailPage = () => {
                 SCR-003 プロジェクト詳細
             </h1>
 
+            <p>
+                <Link
+                    className="text-blue-700 underline"
+                    to={`/tasks?projectId=${encodeURIComponent(item.id)}`}
+                >
+                    関連タスク一覧へ ({item.taskCount}件)
+                </Link>
+            </p>
             <pre>{JSON.stringify(item, null, 2)}</pre>
         </div>
     );

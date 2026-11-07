@@ -41,6 +41,16 @@ At the start of each ticket, run and record the results of:
 
 Register the verified repository root as `WORKTREE_ROOT` and pass it to every specialist.
 
+Use the shared Agent Support Tools from `WORKTREE_ROOT` when checking repository state, discovering specialists, or preparing a dispatch:
+
+```text
+npm --prefix backend run agent-tools -- status
+npm --prefix backend run agent-tools -- agents <search words>
+npm --prefix backend run agent-tools -- plan <request>
+```
+
+Use the `status-json`, `agents-json`, or `plan-json` command variants for machine-readable output. The tools are also available through `GET /api/agent-tools/status`, `GET /api/agent-tools/agents?query=...`, and `POST /api/agent-tools/plan` with `{ "request": "..." }`. Agent plans are advisory and never invoke specialists.
+
 If:
 
 - the repository root cannot be verified

@@ -15,6 +15,7 @@ import dashboardRoutes from "./dashboardRoutes";
 import matrixRoutes from "@/routes/matrixRoutes";
 import traceabilityRoutes from "@/routes/traceabilityRoutes";
 import contextRoutes from "./contextRoutes";
+import agentToolsRoutes from "./agentToolsRoutes";
 
 const router =
   Router();
@@ -47,6 +48,11 @@ router.use(
 router.use(
   "/contexts",
   contextRoutes
+);
+
+router.use(
+  "/agent-tools",
+  agentToolsRoutes
 );
 
 router.use(

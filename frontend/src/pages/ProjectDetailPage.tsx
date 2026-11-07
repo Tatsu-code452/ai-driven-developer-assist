@@ -231,8 +231,11 @@ export const ProjectDetailPage = () => {
                 >
                     {project && (
                         <p>
-                            <span className="font-semibold">ID:</span> {project.id}
-                            <span className="ml-2 text-slate-600">（変更不可）</span>
+                            <span className="font-semibold">ID:</span>{" "}
+                            {project.id}
+                            <span className="ml-2 text-slate-600">
+                                （変更不可）
+                            </span>
                         </p>
                     )}
                     <label className="block space-y-1">
@@ -243,7 +246,10 @@ export const ProjectDetailPage = () => {
                             disabled={saving}
                             maxLength={200}
                             onChange={(event) =>
-                                setForm((value) => ({ ...value, name: event.target.value }))
+                                setForm((value) => ({
+                                    ...value,
+                                    name: event.target.value,
+                                }))
                             }
                             required
                             value={form.name}
@@ -269,7 +275,10 @@ export const ProjectDetailPage = () => {
                             className="w-full rounded border px-3 py-2"
                             disabled={saving}
                             onChange={(event) =>
-                                setForm((value) => ({ ...value, status: event.target.value }))
+                                setForm((value) => ({
+                                    ...value,
+                                    status: event.target.value,
+                                }))
                             }
                             value={form.status}
                         />
@@ -300,15 +309,27 @@ export const ProjectDetailPage = () => {
                         <dt className="font-semibold">名称</dt>
                         <dd>{project.name}</dd>
                         <dt className="font-semibold">説明</dt>
-                        <dd className="whitespace-pre-wrap">{project.description || "—"}</dd>
+                        <dd className="whitespace-pre-wrap">
+                            {project.description || "—"}
+                        </dd>
                         <dt className="font-semibold">状態</dt>
                         <dd>{project.status || "—"}</dd>
                         <dt className="font-semibold">関連タスク</dt>
-                        <dd>{project.taskCount}件</dd>
+                        <dd>
+                            <Link
+                                className="text-blue-700 underline"
+                                to={`/tasks?projectId=${encodeURIComponent(project.id)}`}
+                            >
+                                {project.taskCount}件
+                            </Link>
+                        </dd>
                         <dt className="font-semibold">関連成果物</dt>
                         <dd>{project.documentCount}件</dd>
                     </dl>
-                    <Link className="inline-block text-blue-700 underline" to={returnTo}>
+                    <Link
+                        className="inline-block text-blue-700 underline"
+                        to={returnTo}
+                    >
                         一覧へ戻る
                     </Link>
                 </div>

@@ -14,6 +14,7 @@ import {
 import {
   fetchTasks
 } from "../services/taskApi";
+import type { Task } from "../types/Api";
 
 export const TaskDetailPage =
 () => {
@@ -28,7 +29,7 @@ export const TaskDetailPage =
   const [
     tasks,
     setTasks
-  ] = useState<any[]>(
+  ] = useState<Task[]>(
     []
   );
 

@@ -13,8 +13,8 @@ import {
 
 export const getProjects =
 (
-  _req,
-  res
+  _req: Request,
+  res: Response
 ) => {
 
   const tasks =

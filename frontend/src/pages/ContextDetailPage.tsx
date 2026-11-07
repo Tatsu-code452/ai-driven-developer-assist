@@ -10,6 +10,7 @@ import {
 import {
   fetchContextDetail
 } from "../services/contextApi";
+import type { Context } from "../types/Api";
 
 export const ContextDetailPage =
 () => {
@@ -28,7 +29,7 @@ export const ContextDetailPage =
     item,
     setItem
   ] =
-  useState<any>();
+  useState<Context | null>(null);
 
   useEffect(
     () => {

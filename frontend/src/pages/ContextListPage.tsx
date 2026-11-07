@@ -10,6 +10,7 @@ import {
 import {
   fetchContexts
 } from "../services/contextApi";
+import type { Context } from "../types/Api";
 
 export const ContextListPage =
 () => {
@@ -17,7 +18,7 @@ export const ContextListPage =
   const [
     items,
     setItems
-  ] = useState<any[]>(
+  ] = useState<Context[]>(
     []
   );
 

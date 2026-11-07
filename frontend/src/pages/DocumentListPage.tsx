@@ -10,6 +10,7 @@ import {
 import {
   fetchDocuments
 } from "../services/documentApi";
+import type { GeneratedDocument } from "../types/Api";
 
 export const DocumentListPage =
 () => {
@@ -17,7 +18,7 @@ export const DocumentListPage =
   const [
     items,
     setItems
-  ] = useState<any[]>(
+  ] = useState<GeneratedDocument[]>(
     []
   );
 

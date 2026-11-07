@@ -5,8 +5,42 @@ import {
 } from "vitest";
 
 import {
+  mkdtempSync,
+  rmSync
+} from "node:fs";
+import path from "node:path";
+
+import {
   convertMarkdown
 } from "../ConverterService";
+
+const convertMarkdownInTemporaryDirectory = (
+  markdown: string
+) => {
+  const outputRoot =
+    mkdtempSync(
+      path.join(
+        process.cwd(),
+        "data",
+        ".converter-test-"
+      )
+    );
+
+  try {
+    return convertMarkdown(
+      markdown,
+      outputRoot
+    );
+  } finally {
+    rmSync(
+      outputRoot,
+      {
+        recursive: true,
+        force: true
+      }
+    );
+  }
+};
 
 describe(
   "ConverterService",
@@ -17,7 +51,7 @@ describe(
       () => {
 
         const result =
-          convertMarkdown(
+          convertMarkdownInTemporaryDirectory(
 `
 # 要件定義書
 
@@ -47,7 +81,7 @@ describe(
       () => {
 
         const result =
-          convertMarkdown(
+          convertMarkdownInTemporaryDirectory(
 `
 # WBS
 
@@ -71,7 +105,7 @@ describe(
       () => {
 
         const result =
-          convertMarkdown(
+          convertMarkdownInTemporaryDirectory(
 `
 # 要件定義書
 `

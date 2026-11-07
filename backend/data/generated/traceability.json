@@ -38,5 +38,25 @@
     "sourceId": "REQ-001",
     "targetId": "TSK-008",
     "relationType": "REQ-TSK"
+  },
+  {
+    "sourceId": "REQ-001",
+    "targetId": "TSK-009",
+    "relationType": "REQ-TSK"
+  },
+  {
+    "sourceId": "REQ-001",
+    "targetId": "TSK-010",
+    "relationType": "REQ-TSK"
+  },
+  {
+    "sourceId": "REQ-001",
+    "targetId": "TSK-011",
+    "relationType": "REQ-TSK"
+  },
+  {
+    "sourceId": "REQ-001",
+    "targetId": "TSK-012",
+    "relationType": "REQ-TSK"
   }
 ]

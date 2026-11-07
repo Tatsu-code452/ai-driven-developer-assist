@@ -13,14 +13,332 @@
       "TSK-005",
       "TSK-006",
       "TSK-007",
-      "TSK-008"
+      "TSK-008",
+      "TSK-009",
+      "TSK-010",
+      "TSK-011",
+      "TSK-012"
     ],
     "documentIds": [
       "REQ-001"
     ],
     "issueIds": [],
     "qaIds": [],
-    "createdAt": "2026-11-03T08:07:56.949Z",
-    "updatedAt": "2026-11-03T08:07:56.949Z"
+    "createdAt": "2026-11-07T07:05:18.866Z",
+    "updatedAt": "2026-11-07T07:05:18.866Z"
+  },
+  {
+    "id": "CTX-002",
+    "title": "タスク管理設計書",
+    "description": "タスク管理設計書",
+    "type": "DOC",
+    "status": "ACTIVE",
+    "taskIds": [
+      "TSK-013",
+      "TSK-014",
+      "TSK-015",
+      "TSK-016",
+      "TSK-017",
+      "TSK-018",
+      "TSK-019"
+    ],
+    "documentIds": [
+      "DOC-001"
+    ],
+    "issueIds": [],
+    "qaIds": [],
+    "createdAt": "2026-11-07T07:05:57.787Z",
+    "updatedAt": "2026-11-07T07:05:57.787Z"
+  },
+  {
+    "id": "CTX-003",
+    "title": "データモデル設計書",
+    "description": "データモデル設計書",
+    "type": "DOC",
+    "status": "ACTIVE",
+    "taskIds": [],
+    "documentIds": [
+      "DOC-002"
+    ],
+    "issueIds": [],
+    "qaIds": [],
+    "createdAt": "2026-11-07T07:06:08.761Z",
+    "updatedAt": "2026-11-07T07:06:08.761Z"
+  },
+  {
+    "id": "CTX-004",
+    "title": "プロジェクト管理設計書",
+    "description": "プロジェクト管理設計書",
+    "type": "DOC",
+    "status": "ACTIVE",
+    "taskIds": [
+      "TSK-020",
+      "TSK-021",
+      "TSK-022",
+      "TSK-023",
+      "TSK-024",
+      "TSK-025",
+      "TSK-026"
+    ],
+    "documentIds": [
+      "DOC-003"
+    ],
+    "issueIds": [],
+    "qaIds": [],
+    "createdAt": "2026-11-07T07:06:17.702Z",
+    "updatedAt": "2026-11-07T07:06:17.702Z"
+  },
+  {
+    "id": "CTX-005",
+    "title": "管理基盤の画面遷移図",
+    "description": "管理基盤の画面遷移図",
+    "type": "DOC",
+    "status": "ACTIVE",
+    "taskIds": [
+      "TSK-027",
+      "TSK-028",
+      "TSK-029",
+      "TSK-030",
+      "TSK-031",
+      "TSK-032",
+      "TSK-033",
+      "TSK-034",
+      "TSK-035",
+      "TSK-036",
+      "TSK-037",
+      "TSK-038"
+    ],
+    "documentIds": [
+      "DOC-004"
+    ],
+    "issueIds": [],
+    "qaIds": [],
+    "createdAt": "2026-11-07T07:06:27.831Z",
+    "updatedAt": "2026-11-07T07:06:27.831Z"
+  },
+  {
+    "id": "CTX-006",
+    "title": "開発環境構築手順書",
+    "description": "開発環境構築手順書",
+    "type": "DOC",
+    "status": "ACTIVE",
+    "taskIds": [],
+    "documentIds": [
+      "DOC-005"
+    ],
+    "issueIds": [],
+    "qaIds": [],
+    "createdAt": "2026-11-07T07:06:37.422Z",
+    "updatedAt": "2026-11-07T07:06:37.422Z"
+  },
+  {
+    "id": "CTX-007",
+    "title": "Git運用標準",
+    "description": "Git運用標準",
+    "type": "OPS",
+    "status": "ACTIVE",
+    "taskIds": [
+      "TSK-039",
+      "TSK-040",
+      "TSK-041",
+      "TSK-042",
+      "TSK-043",
+      "TSK-044",
+      "TSK-045",
+      "TSK-046",
+      "TSK-047",
+      "TSK-048"
+    ],
+    "documentIds": [
+      "OPS-001"
+    ],
+    "issueIds": [],
+    "qaIds": [],
+    "createdAt": "2026-11-07T07:06:52.490Z",
+    "updatedAt": "2026-11-07T07:06:52.490Z"
+  },
+  {
+    "id": "CTX-008",
+    "title": "npm安全運用標準",
+    "description": "npm安全運用標準",
+    "type": "OPS",
+    "status": "ACTIVE",
+    "taskIds": [
+      "TSK-049",
+      "TSK-050",
+      "TSK-051",
+      "TSK-052",
+      "TSK-053",
+      "TSK-054",
+      "TSK-055",
+      "TSK-056"
+    ],
+    "documentIds": [
+      "OPS-002"
+    ],
+    "issueIds": [],
+    "qaIds": [],
+    "createdAt": "2026-11-07T07:07:00.284Z",
+    "updatedAt": "2026-11-07T07:07:00.284Z"
+  },
+  {
+    "id": "CTX-009",
+    "title": "AI成果物フォーマット標準",
+    "description": "AI成果物フォーマット標準",
+    "type": "DOC",
+    "status": "ACTIVE",
+    "taskIds": [
+      "TSK-057"
+    ],
+    "documentIds": [
+      "DOC-006"
+    ],
+    "issueIds": [],
+    "qaIds": [],
+    "createdAt": "2026-11-07T07:07:16.110Z",
+    "updatedAt": "2026-11-07T07:07:16.110Z"
+  },
+  {
+    "id": "CTX-010",
+    "title": "技術スタック設計書",
+    "description": "技術スタック設計書",
+    "type": "DOC",
+    "status": "ACTIVE",
+    "taskIds": [
+      "TSK-058",
+      "TSK-059"
+    ],
+    "documentIds": [
+      "DOC-007"
+    ],
+    "issueIds": [],
+    "qaIds": [],
+    "createdAt": "2026-11-07T07:07:31.188Z",
+    "updatedAt": "2026-11-07T07:07:31.188Z"
+  },
+  {
+    "id": "CTX-011",
+    "title": "画面一覧",
+    "description": "画面一覧",
+    "type": "DOC",
+    "status": "ACTIVE",
+    "taskIds": [
+      "TSK-060",
+      "TSK-061",
+      "TSK-062",
+      "TSK-063"
+    ],
+    "documentIds": [
+      "DOC-008"
+    ],
+    "issueIds": [],
+    "qaIds": [],
+    "createdAt": "2026-11-07T07:07:41.656Z",
+    "updatedAt": "2026-11-07T07:07:41.656Z"
+  },
+  {
+    "id": "CTX-012",
+    "title": "ディレクトリ構成設計書",
+    "description": "ディレクトリ構成設計書",
+    "type": "DOC",
+    "status": "ACTIVE",
+    "taskIds": [],
+    "documentIds": [
+      "DOC-009"
+    ],
+    "issueIds": [],
+    "qaIds": [],
+    "createdAt": "2026-11-07T07:07:58.038Z",
+    "updatedAt": "2026-11-07T07:07:58.038Z"
+  },
+  {
+    "id": "CTX-013",
+    "title": "コンテキスト管理設計書",
+    "description": "コンテキスト管理設計書",
+    "type": "DOC",
+    "status": "ACTIVE",
+    "taskIds": [],
+    "documentIds": [
+      "DOC-010"
+    ],
+    "issueIds": [],
+    "qaIds": [],
+    "createdAt": "2026-11-07T07:08:06.052Z",
+    "updatedAt": "2026-11-07T07:08:06.052Z"
+  },
+  {
+    "id": "CTX-014",
+    "title": "機能一覧（レベル1）",
+    "description": "機能一覧（レベル1）",
+    "type": "DOC",
+    "status": "ACTIVE",
+    "taskIds": [],
+    "documentIds": [
+      "DOC-011"
+    ],
+    "issueIds": [],
+    "qaIds": [],
+    "createdAt": "2026-11-07T07:08:13.386Z",
+    "updatedAt": "2026-11-07T07:08:13.386Z"
+  },
+  {
+    "id": "CTX-015",
+    "title": "システム構成図（論理構成）",
+    "description": "システム構成図（論理構成）",
+    "type": "DOC",
+    "status": "ACTIVE",
+    "taskIds": [],
+    "documentIds": [
+      "DOC-012"
+    ],
+    "issueIds": [],
+    "qaIds": [],
+    "createdAt": "2026-11-07T07:08:25.058Z",
+    "updatedAt": "2026-11-07T07:08:25.058Z"
+  },
+  {
+    "id": "CTX-016",
+    "title": "システムアーキテクチャ設計書（ドラフト）",
+    "description": "システムアーキテクチャ設計書（ドラフト）",
+    "type": "DES",
+    "status": "ACTIVE",
+    "taskIds": [],
+    "documentIds": [
+      "DES-001"
+    ],
+    "issueIds": [],
+    "qaIds": [],
+    "createdAt": "2026-11-07T07:08:40.544Z",
+    "updatedAt": "2026-11-07T07:08:40.544Z"
+  },
+  {
+    "id": "CTX-017",
+    "title": "システム基本設計書",
+    "description": "システム基本設計書",
+    "type": "DES",
+    "status": "ACTIVE",
+    "taskIds": [],
+    "documentIds": [
+      "DES-002"
+    ],
+    "issueIds": [],
+    "qaIds": [],
+    "createdAt": "2026-11-07T07:08:52.714Z",
+    "updatedAt": "2026-11-07T07:08:52.714Z"
+  },
+  {
+    "id": "CTX-018",
+    "title": "基本設計成果物一覧",
+    "description": "基本設計成果物一覧",
+    "type": "DES",
+    "status": "ACTIVE",
+    "taskIds": [],
+    "documentIds": [
+      "DES-003"
+    ],
+    "issueIds": [],
+    "qaIds": [],
+    "createdAt": "2026-11-07T07:09:03.220Z",
+    "updatedAt": "2026-11-07T07:09:03.220Z"
   }
 ]

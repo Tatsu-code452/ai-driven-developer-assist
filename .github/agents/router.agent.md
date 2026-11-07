@@ -344,7 +344,7 @@ Examples:
 
     docs/99管理/要件一覧.md
     docs/99管理/QA一覧.md
-    docs/99管理/課題一覧.md
+    docs/99管理/issue/README.md
     docs/99管理/タスク一覧.md
     docs/99管理/トレーサビリティマトリクス.md
 
@@ -407,7 +407,7 @@ Examples:
 
     要件一覧.md
     QA一覧.md
-    課題一覧.md
+    issue/README.md
     タスク一覧.md
     トレーサビリティマトリクス.md
 

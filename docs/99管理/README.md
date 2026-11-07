@@ -2,7 +2,7 @@
 
 ## 管理データ一覧
 
-- [課題一覧](課題一覧.md)
+- [課題一覧・状態管理](issue/README.md)
 - [QA一覧](QA一覧.md)
 - [要件一覧・状態管理](requirements/README.md)
 - [タスク登録簿](WBS-001.md)

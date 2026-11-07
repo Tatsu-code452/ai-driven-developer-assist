@@ -7,10 +7,10 @@ import { getNextId } from "@/services/idGenerator/IdGenerator";
 const FILE_NAME = "projects.json";
 
 const INITIAL_PROJECT: ProjectRecord = {
-  id: "PRJ-001",
-  name: "AI駆動型開発支援システム",
+  id: "",
+  name: "",
   description: "",
-  status: "進行中",
+  status: "",
 };
 
 const isProjectRecord = (value: unknown): value is ProjectRecord =>

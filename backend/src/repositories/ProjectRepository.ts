@@ -3,6 +3,8 @@ import path from "path";
 
 import type { ProjectInput, ProjectRecord } from "@/models/Project";
 import { getNextId } from "@/services/idGenerator/IdGenerator";
+import { isStringProperty } from "@/utils/propUtils";
+import { isObject } from "@/utils/typeUtils";
 
 const FILE_NAME = "projects.json";
 
@@ -11,19 +13,17 @@ const INITIAL_PROJECT: ProjectRecord = {
   name: "",
   description: "",
   status: "",
+  rootPath: "",
 };
 
 const isProjectRecord = (value: unknown): value is ProjectRecord =>
-  typeof value === "object" &&
-  value !== null &&
-  "id" in value &&
-  typeof value.id === "string" &&
-  "name" in value &&
-  typeof value.name === "string" &&
-  "description" in value &&
-  typeof value.description === "string" &&
-  "status" in value &&
-  typeof value.status === "string";
+  isObject(value) &&
+  isStringProperty(value, "id") &&
+  isStringProperty(value, "name") &&
+  isStringProperty(value, "description") &&
+  isStringProperty(value, "status") &&
+  isStringProperty(value, "rootPath");
+
 
 export const loadProjects = (outputDir: string): ProjectRecord[] => {
   const filePath = path.join(outputDir, FILE_NAME);
@@ -38,6 +38,14 @@ export const loadProjects = (outputDir: string): ProjectRecord[] => {
   }
 
   return parsed as ProjectRecord[];
+};
+
+export const loadProjectById = (
+  id: string,
+  outputDir: string,
+): ProjectRecord | undefined => {
+  const projects = loadProjects(outputDir);
+  return projects.find((project) => project.id === id);
 };
 
 export const saveProjects = (

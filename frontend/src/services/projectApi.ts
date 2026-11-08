@@ -1,10 +1,10 @@
-import { api } from "./api";
 import type {
     ItemResponse,
     PagedItemsResponse,
     Project,
     ProjectInput,
 } from "../types/Api";
+import { api } from "./api";
 
 export type ProjectListQuery = {
     q: string;

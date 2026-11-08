@@ -13,6 +13,7 @@ const emptyProject: ProjectInput = {
     name: "",
     description: "",
     status: "",
+    rootPath: "",
 };
 
 const listLocationFrom = (value: string | null) =>
@@ -38,14 +39,11 @@ export const ProjectDetailPage = () => {
     const [saving, setSaving] = useState(false);
     const [retry, setRetry] = useState(0);
     const project = loadedProject?.id === id ? loadedProject.value : undefined;
-    const requestKey = `${createMode ? "create" : id ?? "missing"}:${retry}`;
+    const requestKey = `${createMode ? "create" : (id ?? "missing")}:${retry}`;
     const currentLoadError =
         loadError?.key === requestKey ? loadError.message : "";
     const loading =
-        !createMode &&
-        !!id &&
-        loadedProject?.id !== id &&
-        !currentLoadError;
+        !createMode && !!id && loadedProject?.id !== id && !currentLoadError;
 
     useEffect(() => {
         let active = true;
@@ -63,6 +61,7 @@ export const ProjectDetailPage = () => {
                     name: result.name,
                     description: result.description,
                     status: result.status,
+                    rootPath: result.rootPath,
                 });
             })
             .catch((cause: unknown) => {
@@ -125,6 +124,7 @@ export const ProjectDetailPage = () => {
             name: form.name.trim(),
             description: form.description,
             status: form.status,
+            rootPath: form.rootPath,
         };
 
         try {
@@ -142,6 +142,7 @@ export const ProjectDetailPage = () => {
                 name: saved.name,
                 description: saved.description,
                 status: saved.status,
+                rootPath: saved.rootPath,
             });
 
             if (createMode) {
@@ -182,7 +183,9 @@ export const ProjectDetailPage = () => {
         return (
             <section className="space-y-4 rounded border bg-white p-6">
                 <h1 className="text-3xl font-bold">SCR-003 プロジェクト詳細</h1>
-                <p className="text-red-800" role="alert">{currentLoadError}</p>
+                <p className="text-red-800" role="alert">
+                    {currentLoadError}
+                </p>
                 <button
                     className="text-blue-700 underline"
                     onClick={() => setRetry((value) => value + 1)}
@@ -200,9 +203,7 @@ export const ProjectDetailPage = () => {
     return (
         <section className="mx-auto max-w-3xl space-y-4">
             <header className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold">
-                    SCR-003 プロジェクト詳細
-                </h1>
+                <h1 className="text-3xl font-bold">SCR-003 プロジェクト詳細</h1>
                 {project && !editMode && (
                     <button
                         className="rounded border px-4 py-2 hover:bg-slate-50"
@@ -283,6 +284,37 @@ export const ProjectDetailPage = () => {
                             value={form.status}
                         />
                     </label>
+                    <label
+                        className="
+  block
+  space-y-1
+  "
+                    >
+                        <span
+                            className="
+    font-semibold
+    "
+                        >
+                            管理データパス
+                        </span>
+
+                        <input
+                            className="
+    w-full
+    rounded
+    border
+    px-3
+    py-2
+    "
+                            value={form.rootPath}
+                            onChange={(event) =>
+                                setForm((value) => ({
+                                    ...value,
+                                    rootPath: event.target.value,
+                                }))
+                            }
+                        />
+                    </label>
                     <div className="flex gap-3">
                         <button
                             className="rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50"
@@ -314,6 +346,14 @@ export const ProjectDetailPage = () => {
                         </dd>
                         <dt className="font-semibold">状態</dt>
                         <dd>{project.status || "—"}</dd>
+                        <dt
+                            className="
+  font-semibold
+  "
+                        >
+                            管理データパス
+                        </dt>
+                        <dd>{project.rootPath}</dd>
                         <dt className="font-semibold">関連タスク</dt>
                         <dd>
                             <Link

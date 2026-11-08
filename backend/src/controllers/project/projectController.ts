@@ -11,11 +11,13 @@ import {
   validateProjectInput,
   type ValidationContext
 } from "@/controllers/project/projectValidator";
+import { loadManagementDataIndex } from "@/repositories/ManagementDataRepository";
 import {
   createProject,
   loadProjectById,
   updateProject
 } from "@/repositories/ProjectRepository";
+import { createNotFoundResponse, createSuccessResponse } from "@/utils/responseUtils";
 import { trimAndtoLowerCase } from "@/utils/stringUtils";
 
 export const getProjects: ApiMethod = (
@@ -58,6 +60,34 @@ export const getProjectDetail: ApiMethod = (
   const project = loadProjectById(context.id, DATA_DIRECTORY);
 
   return createProjectResponseOrNotFound(res, project);
+};
+
+export const getProjectManagementData: ApiMethod = (
+  req: Request,
+  res: Response,
+) => {
+  const context: ValidationContext = {};
+
+  const result = validate(req, res, context, [validateProjectId]);
+
+  if (result) {
+    return result;
+  }
+
+  if (!hasProjectId(context)) {
+    throw new Error("ValidationContext.id missing");
+  }
+
+  const project = loadProjectById(context.id, DATA_DIRECTORY);
+
+  if (!project) {
+    return createNotFoundResponse(res, "プロジェクトが見つかりません");
+  }
+
+  return createSuccessResponse(
+    res,
+    loadManagementDataIndex(project.rootPath),
+  );
 };
 
 export const postProject: ApiMethod = (

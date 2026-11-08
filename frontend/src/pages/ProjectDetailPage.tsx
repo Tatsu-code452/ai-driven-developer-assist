@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
+import { ManagementDataList } from "../components/project/ManagementDataList";
 import { apiErrorMessage } from "../services/api";
 import {
     createProject,
@@ -87,6 +88,7 @@ export const ProjectDetailPage = () => {
                       name: project.name,
                       description: project.description,
                       status: project.status,
+                      rootPath: project.rootPath,
                   }
                 : emptyProject,
         [project],
@@ -366,6 +368,10 @@ export const ProjectDetailPage = () => {
                         <dt className="font-semibold">関連成果物</dt>
                         <dd>{project.documentCount}件</dd>
                     </dl>
+                    <ManagementDataList
+                        projectId={project.id}
+                        rootPath={project.rootPath}
+                    />
                     <Link
                         className="inline-block text-blue-700 underline"
                         to={returnTo}

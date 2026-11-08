@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { ManagementDataList } from "../components/project/ManagementDataList";
+import { useProject } from "../contexts/ProjectContext";
 import { apiErrorMessage } from "../services/api";
 import {
     createProject,
@@ -21,6 +22,7 @@ const listLocationFrom = (value: string | null) =>
     value && /^\/projects(?:\?|$)/.test(value) ? value : "/projects";
 
 export const ProjectDetailPage = () => {
+    const { setProject } = useProject();
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     const id = searchParams.get("id");
@@ -58,6 +60,7 @@ export const ProjectDetailPage = () => {
             .then((result) => {
                 if (!active) return;
                 setLoadedProject({ id, value: result });
+                setProject(result);
                 setForm({
                     name: result.name,
                     description: result.description,
@@ -140,6 +143,7 @@ export const ProjectDetailPage = () => {
             }
 
             setLoadedProject({ id: saved.id, value: saved });
+            setProject(saved);
             setForm({
                 name: saved.name,
                 description: saved.description,

@@ -25,9 +25,11 @@ import { QAListPage } from "./pages/QAListPage";
 import { TaskDetailPage } from "./pages/TaskDetailPage";
 import { TraceabilityMatrixPage } from "./pages/TraceabilityMatrixPage";
 import { TraceabilityPage } from "./pages/TraceabilityPage";
+import { ProjectProvider } from "./contexts/ProjectContext";
 
 export const App = () => {
     return (
+        <ProjectProvider>
         <BrowserRouter>
             <Routes>
                 <Route element={<AppLayout />}>
@@ -138,5 +140,6 @@ export const App = () => {
                 </Route>
             </Routes>
         </BrowserRouter>
+        </ProjectProvider>
     );
 };

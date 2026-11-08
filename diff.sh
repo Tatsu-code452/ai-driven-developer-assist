@@ -1,2 +1,2 @@
-git diff backend > backend.diff.txt
-git diff frontend > frontend.diff.txt
+git diff backend.txt > backend.diff.txt
+git diff frontend.txt > frontend.diff.txt

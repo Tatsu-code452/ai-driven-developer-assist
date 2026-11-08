@@ -1,8 +1,8 @@
 import fs from "fs";
 import path from "path";
 
-import { getNextId } from "@/services/idGenerator/IdGenerator";
 import type { Task, TaskInput } from "@/models/Task";
+import { getNextId } from "@/services/idGenerator/IdGenerator";
 
 const FILE_NAME =
   "tasks.json";
@@ -76,6 +76,26 @@ export const loadTasks = (
   }
 
   return parsed;
+};
+
+export const loadTasksGrouped = (
+  outputDir: string
+): Map<string, Task[]> => {
+  const tasks = loadTasks(outputDir);
+  return tasks.reduce(
+    (acc, task) => {
+      if (!task.projectId) {
+        return acc;
+      }
+
+      const projectTasks = acc.get(task.projectId) ?? [];
+      projectTasks.push(task);
+      acc.set(task.projectId, projectTasks);
+
+      return acc;
+    },
+    new Map<string, Task[]>()
+  );
 };
 
 export const saveTasks = (

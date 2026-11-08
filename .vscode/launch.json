@@ -1,0 +1,39 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Server",
+            "runtimeArgs": [
+                "--import",
+                "tsx",
+                "--watch",
+                "src/index.ts"
+            ],
+            "cwd": "${workspaceFolder}/backend",
+            "env": {
+                "NODE_ENV": "development"
+            },
+            "sourceMaps": true
+        },
+        {
+            "type": "pwa-chrome",
+            "request": "launch",
+            "name": "Client",
+            "url": "http://localhost:5173",
+            "webRoot": "${workspaceFolder}/frontend",
+            "preLaunchTask": "npm: dev (frontend)"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Full Stack",
+            "configurations": [
+                "Server",
+                "Client"
+            ],
+            "stopAll": true
+        }
+    ]
+}

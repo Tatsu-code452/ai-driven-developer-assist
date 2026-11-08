@@ -21,11 +21,12 @@ export type Project = {
   name: string;
   description: string;
   status: string;
+  rootPath: string;
   taskCount: number;
   documentCount: number;
 };
 
-export type ProjectInput = Pick<Project, "name" | "description" | "status">;
+export type ProjectInput = Pick<Project, "name" | "description" | "status" | "rootPath">;
 
 export type Task = {
   id: string;

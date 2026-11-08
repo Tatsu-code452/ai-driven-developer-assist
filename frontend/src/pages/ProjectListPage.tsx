@@ -11,16 +11,20 @@ export const ProjectListPage = () => {
     const [total, setTotal] = useState(0);
     const [pageSize, setPageSize] = useState(20);
     const [loadedKey, setLoadedKey] = useState("");
-    const [loadError, setLoadError] = useState<{ key: string; message: string }>();
+    const [loadError, setLoadError] = useState<{
+        key: string;
+        message: string;
+    }>();
     const [retry, setRetry] = useState(0);
 
     const currentQuery = searchParams.toString();
     const pageValue = Number(searchParams.get("page") ?? "1");
-    const page = Number.isSafeInteger(pageValue) && pageValue > 0 ? pageValue : 1;
+    const page =
+        Number.isSafeInteger(pageValue) && pageValue > 0 ? pageValue : 1;
     const requestKey = `${currentQuery}:${retry}`;
     const loading = loadedKey !== requestKey && loadError?.key !== requestKey;
     const error = loadError?.key === requestKey ? loadError.message : "";
-    const visibleItems = loadedKey === requestKey ? items : [];
+    const visibleItems = loadedKey === requestKey ? (items ?? []) : [];
 
     useEffect(() => {
         let active = true;
@@ -32,12 +36,13 @@ export const ProjectListPage = () => {
         })
             .then((result) => {
                 if (!active) return;
-                setItems(result.items);
-                setTotal(result.total);
-                setPageSize(result.pageSize);
+                const fetchedItems = result.items ?? [];
+                setItems(fetchedItems);
+                setTotal(result.total ?? 0);
+                setPageSize(result.pageSize ?? 20);
                 setLoadedKey(requestKey);
                 setLoadError(undefined);
-                if (result.page !== page) {
+                if (typeof result.page === "number" && result.page !== page) {
                     const next = new URLSearchParams(currentQuery);
                     if (result.page === 1) next.delete("page");
                     else next.set("page", String(result.page));
@@ -149,6 +154,7 @@ export const ProjectListPage = () => {
                             <th className="p-3">ID</th>
                             <th className="p-3">名称</th>
                             <th className="p-3">状態</th>
+                            <th className="p-3">管理データパス</th>
                             <th className="p-3">関連タスク</th>
                             <th className="p-3">関連成果物</th>
                         </tr>
@@ -156,34 +162,67 @@ export const ProjectListPage = () => {
                     <tbody>
                         {loading && (
                             <tr>
-                                <td className="p-4" colSpan={5}>読み込み中...</td>
+                                <td className="p-4" colSpan={6}>
+                                    読み込み中...
+                                </td>
                             </tr>
                         )}
-                        {!loading && !error && visibleItems.map((item) => {
-                            const detailUrl =
-                                `/projects/detail?id=${encodeURIComponent(item.id)}` +
-                                `&returnTo=${encodeURIComponent(returnTo)}`;
-                            return (
-                                <tr className="border-b last:border-0" key={item.id}>
-                                    <td className="p-3">
-                                        <Link className="text-blue-700 underline" to={detailUrl}>
-                                            {item.id}
-                                        </Link>
-                                    </td>
-                                    <td className="p-3">
-                                        <Link className="text-blue-700 underline" to={detailUrl}>
-                                            {item.name}
-                                        </Link>
-                                    </td>
-                                    <td className="p-3">{item.status || "—"}</td>
-                                    <td className="p-3">{item.taskCount}</td>
-                                    <td className="p-3">{item.documentCount}</td>
-                                </tr>
-                            );
-                        })}
+                        {!loading &&
+                            !error &&
+                            visibleItems.map((item) => {
+                                const detailUrl =
+                                    `/projects/detail?id=${encodeURIComponent(item.id)}` +
+                                    `&returnTo=${encodeURIComponent(returnTo)}`;
+                                return (
+                                    <tr
+                                        className="border-b last:border-0"
+                                        key={item.id}
+                                    >
+                                        <td className="p-3">
+                                            <Link
+                                                className="text-blue-700 underline"
+                                                to={detailUrl}
+                                            >
+                                                {item.id}
+                                            </Link>
+                                        </td>
+                                        <td className="p-3">
+                                            <Link
+                                                className="text-blue-700 underline"
+                                                to={detailUrl}
+                                            >
+                                                {item.name}
+                                            </Link>
+                                        </td>
+                                        <td className="p-3">
+                                            {item.status || "—"}
+                                        </td>
+                                        <td
+                                            className="
+  p-3
+  "
+                                        >
+                                            <div
+                                                className="
+    truncate
+    max-w-[400px]
+    "
+                                            >
+                                                {item.rootPath || "—"}
+                                            </div>
+                                        </td>
+                                        <td className="p-3">
+                                            {item.taskCount}
+                                        </td>
+                                        <td className="p-3">
+                                            {item.documentCount}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         {!loading && !error && visibleItems.length === 0 && (
                             <tr>
-                                <td className="p-4 text-slate-600" colSpan={5}>
+                                <td className="p-4 text-slate-600" colSpan={6}>
                                     該当するプロジェクトがありません。
                                 </td>
                             </tr>
@@ -192,8 +231,13 @@ export const ProjectListPage = () => {
                 </table>
             </div>
 
-            <nav aria-label="ページ送り" className="flex items-center justify-end gap-3">
-                <span>{total}件 / {page} / {pageCount}ページ</span>
+            <nav
+                aria-label="ページ送り"
+                className="flex items-center justify-end gap-3"
+            >
+                <span>
+                    {total}件 / {page} / {pageCount}ページ
+                </span>
                 <button
                     className="rounded border px-3 py-1 disabled:opacity-50"
                     disabled={page <= 1 || loading}

@@ -10,10 +10,21 @@ import {
 import {
   fetchContexts
 } from "../services/contextApi";
-import type { Context } from "../types/Api";
+
+import {
+  useProject
+} from "../contexts/ProjectContext";
+
+import type {
+  Context
+} from "../types/Api";
 
 export const ContextListPage =
 () => {
+
+  const {
+    project
+  } = useProject();
 
   const [
     items,
@@ -25,7 +36,18 @@ export const ContextListPage =
   useEffect(
     () => {
 
-      fetchContexts()
+      if (
+        !project
+      ) {
+
+        setItems(
+          []
+        );
+
+        return;
+      }
+
+      fetchContexts(project.id)
         .then(
           result =>
             setItems(
@@ -34,23 +56,89 @@ export const ContextListPage =
         );
 
     },
-    []
+    [
+      project
+    ]
   );
+
+  if (
+    !project
+  ) {
+
+    return (
+
+      <section
+        className="
+        space-y-4
+        rounded
+        border
+        bg-white
+        p-6
+        "
+      >
+
+        <h1
+          className="
+          text-3xl
+          font-bold
+          "
+        >
+          SCR-004
+          コンテキスト一覧
+        </h1>
+
+        <p>
+          プロジェクトが選択されていません。
+        </p>
+
+        <Link
+          className="
+          text-blue-700
+          underline
+          "
+          to="/projects"
+        >
+          プロジェクト一覧へ
+        </Link>
+
+      </section>
+
+    );
+
+  }
 
   return (
 
     <div>
 
-      <h1
+      <div
         className="
-        text-3xl
-        font-bold
         mb-4
         "
       >
-        SCR-004
-        コンテキスト一覧
-      </h1>
+
+        <h1
+          className="
+          text-3xl
+          font-bold
+          "
+        >
+          SCR-004
+          コンテキスト一覧
+        </h1>
+
+        <div
+          className="
+          text-sm
+          text-slate-500
+          "
+        >
+          Project :
+          {" "}
+          {project.name}
+        </div>
+
+      </div>
 
       <table
         className="

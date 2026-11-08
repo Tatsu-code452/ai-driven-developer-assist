@@ -1,11 +1,13 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
+import { useProject } from "../contexts/ProjectContext";
 import { apiErrorMessage } from "../services/api";
 import { fetchProjects } from "../services/projectApi";
 import type { Project } from "../types/Api";
 
 export const ProjectListPage = () => {
+    const { setProject } = useProject();
     const [searchParams, setSearchParams] = useSearchParams();
     const [items, setItems] = useState<Project[]>([]);
     const [total, setTotal] = useState(0);
@@ -87,7 +89,9 @@ export const ProjectListPage = () => {
     };
 
     const pageCount = Math.max(1, Math.ceil(total / pageSize));
-    const returnTo = `/projects?${currentQuery}`;
+    const returnTo = currentQuery
+        ? `/projects?${currentQuery}`
+        : "/projects";
     const createUrl = `/projects/detail?mode=create&returnTo=${encodeURIComponent(returnTo)}`;
 
     return (
@@ -173,6 +177,9 @@ export const ProjectListPage = () => {
                                 const detailUrl =
                                     `/projects/detail?id=${encodeURIComponent(item.id)}` +
                                     `&returnTo=${encodeURIComponent(returnTo)}`;
+                                const openDetail = () => {
+                                    setProject(item);
+                                };
                                 return (
                                     <tr
                                         className="border-b last:border-0"
@@ -180,8 +187,8 @@ export const ProjectListPage = () => {
                                     >
                                         <td className="p-3">
                                             <Link
-                                                className="text-blue-700 underline"
                                                 to={detailUrl}
+                                                onClick={openDetail}
                                             >
                                                 {item.id}
                                             </Link>
@@ -190,6 +197,7 @@ export const ProjectListPage = () => {
                                             <Link
                                                 className="text-blue-700 underline"
                                                 to={detailUrl}
+                                                onClick={openDetail}
                                             >
                                                 {item.name}
                                             </Link>

@@ -68,6 +68,26 @@ describe("AgentToolsService", () => {
     expect(findAgentCandidates("OWASP 脆弱性レビュー", root)[0]?.id).toBe("security");
   });
 
+  it("prioritizes .agents/agents definitions when present", () => {
+    const root = createRepository();
+    fs.mkdirSync(path.join(root, ".agents", "agents"), { recursive: true });
+    fs.writeFileSync(
+      path.join(root, ".agents", "agents", "backend.md"),
+      `---
+name: backend
+displayName: "Backend Agent (AGT-BE)"
+description: "Implement backend APIs and server-side behavior for Antigravity."
+---
+`
+    );
+
+    const agents = listAgents(root);
+    expect(agents).toHaveLength(1);
+    expect(agents[0].id).toBe("backend");
+    expect(agents[0].name).toBe("Backend Agent (AGT-BE)");
+    expect(agents[0].file).toBe(".agents/agents/backend.md");
+  });
+
   it("creates an advisory plan with the repository snapshot", () => {
     const root = createRepository();
     const plan = createAgentPlan("backend API", root);

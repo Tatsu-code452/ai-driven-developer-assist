@@ -34,6 +34,7 @@ describe("ProjectRepository", () => {
         name: "AI駆動型開発支援システム",
         description: "",
         status: "進行中",
+        rootPath: "",
       },
     ]);
   });
@@ -44,6 +45,7 @@ describe("ProjectRepository", () => {
       name: "新規プロジェクト",
       description: "説明",
       status: "",
+      rootPath: "",
     };
 
     const created = createProject(input, outputDir);
@@ -56,7 +58,7 @@ describe("ProjectRepository", () => {
     const outputDir = createOutputDir();
     const updated = updateProject(
       "PRJ-001",
-      { name: "更新名", description: "説明", status: "計画中" },
+      { name: "更新名", description: "説明", status: "計画中", rootPath: "" },
       outputDir,
     );
 
@@ -65,6 +67,7 @@ describe("ProjectRepository", () => {
       name: "更新名",
       description: "説明",
       status: "計画中",
+      rootPath: "",
     });
     expect(loadProjects(outputDir)).toContainEqual(updated);
   });
@@ -75,7 +78,7 @@ describe("ProjectRepository", () => {
     expect(
       updateProject(
         "PRJ-999",
-        { name: "更新名", description: "", status: "" },
+        { name: "更新名", description: "", status: "", rootPath: "" },
         outputDir,
       ),
     ).toBeUndefined();

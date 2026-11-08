@@ -10,6 +10,7 @@ import {
 import { loadTasksGrouped } from "@/repositories/TaskRepository";
 import {
   createNotFoundResponse,
+  createPagedResponse,
   createSuccessResponse
 } from "@/utils/responseUtils";
 
@@ -41,7 +42,7 @@ export const createProjectPageResponse = (
       ),
     );
 
-  return createSuccessResponse(
+  return createPagedResponse(
     res,
     {
       items,

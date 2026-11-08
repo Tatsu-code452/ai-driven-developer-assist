@@ -13,11 +13,18 @@ export type ProjectListQuery = {
 };
 
 export const fetchProjects = async (query: ProjectListQuery) => {
-    const response = await api.get<PagedItemsResponse<Project>>("/projects", {
+    const response = await api.get<
+        PagedItemsResponse<Project> | { success: boolean; item: PagedItemsResponse<Project> }
+    >("/projects", {
         params: query,
     });
 
-    return response.data;
+    const data = response.data;
+    if ("item" in data && data.item && typeof data.item === "object" && "items" in data.item) {
+        return data.item as PagedItemsResponse<Project>;
+    }
+
+    return data as PagedItemsResponse<Project>;
 };
 
 export const fetchProject = async (id: string) => {

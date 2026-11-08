@@ -19,6 +19,21 @@ export const createSuccessResponse = (res: Response, item?: unknown) => {
     return res.json(createResponse(true, undefined, item));
 }
 
+export const createPagedResponse = <T>(
+    res: Response,
+    paged: {
+        items: T[];
+        total: number;
+        page: number;
+        pageSize: number;
+    },
+) => {
+    return res.json({
+        success: true,
+        ...paged,
+    });
+};
+
 export const createCreatedResponse = (res: Response, item?: unknown) => {
     return res.status(CREATED).json(createResponse(true, undefined, item));
 }

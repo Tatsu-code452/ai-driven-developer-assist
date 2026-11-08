@@ -9,10 +9,10 @@ import { isObject } from "@/utils/typeUtils";
 const FILE_NAME = "projects.json";
 
 const INITIAL_PROJECT: ProjectRecord = {
-  id: "",
-  name: "",
+  id: "PRJ-001",
+  name: "AI駆動型開発支援システム",
   description: "",
-  status: "",
+  status: "進行中",
   rootPath: "",
 };
 

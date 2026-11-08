@@ -24,7 +24,7 @@ export const ProjectListPage = () => {
     const requestKey = `${currentQuery}:${retry}`;
     const loading = loadedKey !== requestKey && loadError?.key !== requestKey;
     const error = loadError?.key === requestKey ? loadError.message : "";
-    const visibleItems = loadedKey === requestKey ? items : [];
+    const visibleItems = loadedKey === requestKey ? (items ?? []) : [];
 
     useEffect(() => {
         let active = true;
@@ -36,12 +36,13 @@ export const ProjectListPage = () => {
         })
             .then((result) => {
                 if (!active) return;
-                setItems(result.items);
-                setTotal(result.total);
-                setPageSize(result.pageSize);
+                const fetchedItems = result.items ?? [];
+                setItems(fetchedItems);
+                setTotal(result.total ?? 0);
+                setPageSize(result.pageSize ?? 20);
                 setLoadedKey(requestKey);
                 setLoadError(undefined);
-                if (result.page !== page) {
+                if (typeof result.page === "number" && result.page !== page) {
                     const next = new URLSearchParams(currentQuery);
                     if (result.page === 1) next.delete("page");
                     else next.set("page", String(result.page));
@@ -161,7 +162,7 @@ export const ProjectListPage = () => {
                     <tbody>
                         {loading && (
                             <tr>
-                                <td className="p-4" colSpan={5}>
+                                <td className="p-4" colSpan={6}>
                                     読み込み中...
                                 </td>
                             </tr>
@@ -221,7 +222,7 @@ export const ProjectListPage = () => {
                             })}
                         {!loading && !error && visibleItems.length === 0 && (
                             <tr>
-                                <td className="p-4 text-slate-600" colSpan={5}>
+                                <td className="p-4 text-slate-600" colSpan={6}>
                                     該当するプロジェクトがありません。
                                 </td>
                             </tr>

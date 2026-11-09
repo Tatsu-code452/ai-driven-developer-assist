@@ -1,13 +1,10 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
+import { useProject } from "../contexts/ProjectContext";
 import { apiErrorMessage } from "../services/api";
-import {
-    createTask,
-    fetchTask,
-    updateTask,
-} from "../services/taskApi";
 import { fetchProjects } from "../services/projectApi";
+import { createTask, fetchTask, updateTask } from "../services/taskApi";
 import type {
     Project,
     Task,
@@ -46,6 +43,7 @@ const formFromTask = (task: Task): TaskInput => ({
 });
 
 export const TaskDetailPage = () => {
+    const { project } = useProject();
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     const id = searchParams.get("id");
@@ -61,8 +59,7 @@ export const TaskDetailPage = () => {
         key: string;
         value: TaskInput;
     }>({ key: "", value: emptyTask });
-    const form =
-        formState.key === formKey ? formState.value : emptyTask;
+    const form = formState.key === formKey ? formState.value : emptyTask;
     const [retry, setRetry] = useState(0);
     const [projectRetry, setProjectRetry] = useState(0);
     const [projectState, setProjectState] = useState<{
@@ -148,8 +145,7 @@ export const TaskDetailPage = () => {
 
     const originalForm = task ? formFromTask(task) : emptyTask;
     const dirty =
-        editMode &&
-        JSON.stringify(form) !== JSON.stringify(originalForm);
+        editMode && JSON.stringify(form) !== JSON.stringify(originalForm);
 
     useEffect(() => {
         if (!dirty) return;
@@ -396,7 +392,7 @@ export const TaskDetailPage = () => {
                             <option value="">選択してください</option>
                             {projects.map((project) => (
                                 <option key={project.id} value={project.id}>
-                                    {project.name} ({project.id})
+                                    {project?.name} ({project.id})
                                 </option>
                             ))}
                         </select>

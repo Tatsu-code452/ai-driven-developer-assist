@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
+import { useProject } from "../contexts/ProjectContext";
 import { apiErrorMessage } from "../services/api";
 import { fetchProjects } from "../services/projectApi";
 import { fetchTasks } from "../services/taskApi";
@@ -25,11 +26,20 @@ const parsePage = (value: string | null) => {
 };
 
 export const TaskListPage = () => {
+    const { project } = useProject();
+
+    if (!project) {
+        return (
+            <div className="bg-white border rounded p-6">
+                プロジェクトが選択されていません
+            </div>
+        );
+    }
     const [searchParams, setSearchParams] = useSearchParams();
     const searchKey = searchParams.toString();
     const filters = useMemo<TaskListFilters>(() => {
         const params = new URLSearchParams(searchKey);
-        const projectId = params.get("projectId") || undefined;
+        const projectId = params.get("projectId") || project?.id || undefined;
         return {
             q: params.get("q") || "",
             projectId,
@@ -42,8 +52,7 @@ export const TaskListPage = () => {
         key: string;
         value: TaskListFilters;
     }>({ key: "", value: filters });
-    const draft =
-        draftState.key === searchKey ? draftState.value : filters;
+    const draft = draftState.key === searchKey ? draftState.value : filters;
     const setDraft = (updates: Partial<TaskListFilters>) => {
         setDraftState({
             key: searchKey,
@@ -304,95 +313,100 @@ export const TaskListPage = () => {
 
             {loading ? (
                 <p role="status">タスク一覧を読み込み中...</p>
-            ) : !listError && (
-                <>
-                    <p aria-live="polite">
-                        {count}件 / {page} / {totalPages}ページ
-                    </p>
-                    {items.length === 0 ? (
-                        <p className="rounded border bg-white p-6">
-                            該当するデータがありません。
+            ) : (
+                !listError && (
+                    <>
+                        <p aria-live="polite">
+                            {count}件 / {page} / {totalPages}ページ
                         </p>
-                    ) : (
-                        <div className="overflow-x-auto rounded border bg-white">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="border-b bg-slate-50">
-                                        <th className="p-3">ID</th>
-                                        <th className="p-3">タイトル</th>
-                                        <th className="p-3">プロジェクト</th>
-                                        <th className="p-3">状態</th>
-                                        <th className="p-3">優先度</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {items.map((item) => {
-                                        const detailParams =
-                                            new URLSearchParams({
-                                                id: item.id,
-                                                returnTo,
-                                            });
-                                        return (
-                                            <tr
-                                                className="border-b last:border-0"
-                                                key={item.id}
-                                            >
-                                                <td className="p-3">
-                                                    <Link
-                                                        className="text-blue-700 underline"
-                                                        to={`/tasks/detail?${detailParams.toString()}`}
-                                                    >
-                                                        {item.id}
-                                                    </Link>
-                                                </td>
-                                                <td className="p-3">
-                                                    {item.title}
-                                                </td>
-                                                <td className="p-3">
-                                                    {item.projectId
-                                                        ? projectNames.get(
-                                                              item.projectId,
-                                                          ) || item.projectId
-                                                        : "プロジェクト未設定"}
-                                                </td>
-                                                <td className="p-3">
-                                                    {item.status}
-                                                </td>
-                                                <td className="p-3">
-                                                    {item.priority}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                    <nav
-                        aria-label="ページ送り"
-                        className="flex items-center justify-center gap-4"
-                    >
-                        <button
-                            className="rounded border px-3 py-2 disabled:opacity-50"
-                            disabled={page <= 1}
-                            onClick={() => changePage(page - 1)}
-                            type="button"
+                        {items.length === 0 ? (
+                            <p className="rounded border bg-white p-6">
+                                該当するデータがありません。
+                            </p>
+                        ) : (
+                            <div className="overflow-x-auto rounded border bg-white">
+                                <table className="w-full text-left">
+                                    <thead>
+                                        <tr className="border-b bg-slate-50">
+                                            <th className="p-3">ID</th>
+                                            <th className="p-3">タイトル</th>
+                                            <th className="p-3">
+                                                プロジェクト
+                                            </th>
+                                            <th className="p-3">状態</th>
+                                            <th className="p-3">優先度</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {items.map((item) => {
+                                            const detailParams =
+                                                new URLSearchParams({
+                                                    id: item.id,
+                                                    returnTo,
+                                                });
+                                            return (
+                                                <tr
+                                                    className="border-b last:border-0"
+                                                    key={item.id}
+                                                >
+                                                    <td className="p-3">
+                                                        <Link
+                                                            className="text-blue-700 underline"
+                                                            to={`/tasks/detail?${detailParams.toString()}`}
+                                                        >
+                                                            {item.id}
+                                                        </Link>
+                                                    </td>
+                                                    <td className="p-3">
+                                                        {item.title}
+                                                    </td>
+                                                    <td className="p-3">
+                                                        {item.projectId
+                                                            ? projectNames.get(
+                                                                  item.projectId,
+                                                              ) ||
+                                                              item.projectId
+                                                            : "プロジェクト未設定"}
+                                                    </td>
+                                                    <td className="p-3">
+                                                        {item.status}
+                                                    </td>
+                                                    <td className="p-3">
+                                                        {item.priority}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                        <nav
+                            aria-label="ページ送り"
+                            className="flex items-center justify-center gap-4"
                         >
-                            前へ
-                        </button>
-                        <span>
-                            {page} / {totalPages}
-                        </span>
-                        <button
-                            className="rounded border px-3 py-2 disabled:opacity-50"
-                            disabled={page >= totalPages}
-                            onClick={() => changePage(page + 1)}
-                            type="button"
-                        >
-                            次へ
-                        </button>
-                    </nav>
-                </>
+                            <button
+                                className="rounded border px-3 py-2 disabled:opacity-50"
+                                disabled={page <= 1}
+                                onClick={() => changePage(page - 1)}
+                                type="button"
+                            >
+                                前へ
+                            </button>
+                            <span>
+                                {page} / {totalPages}
+                            </span>
+                            <button
+                                className="rounded border px-3 py-2 disabled:opacity-50"
+                                disabled={page >= totalPages}
+                                onClick={() => changePage(page + 1)}
+                                type="button"
+                            >
+                                次へ
+                            </button>
+                        </nav>
+                    </>
+                )
             )}
         </section>
     );

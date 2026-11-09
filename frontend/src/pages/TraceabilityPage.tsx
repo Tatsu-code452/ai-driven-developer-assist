@@ -1,42 +1,185 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
-import { fetchTraceability } from "../services/traceabilityApi";
-import type { TraceabilityItem } from "../types/Api";
+import {
+  useProject
+} from "../contexts/ProjectContext";
+
+import {
+  fetchTraceability
+} from "../services/traceabilityApi";
+
+import type {
+  TraceabilityItem
+} from "../types/Api";
 
 export const TraceabilityPage = () => {
-    const [items, setItems] = useState<TraceabilityItem[]>([]);
 
-    useEffect(() => {
-        fetchTraceability().then((result) => setItems(result.items));
-    }, []);
+  const {
+    project
+  } = useProject();
+
+  const [
+    items,
+    setItems
+  ] =
+  useState<
+    TraceabilityItem[]
+  >([]);
+
+  useEffect(
+    () => {
+
+      if (
+        !project
+      ) {
+
+        setItems([]);
+
+        return;
+
+      }
+
+      fetchTraceability()
+        .then(
+          result =>
+            setItems(
+              result.items
+            )
+        );
+
+    },
+    [
+      project
+    ]
+  );
+
+  if (!project) {
 
     return (
-        <div>
-            <h1>SCR-015 トレーサビリティ管理</h1>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>Source</th>
+      <section
+        className="
+        bg-white
+        border
+        rounded
+        p-6
+        "
+      >
 
-                        <th>Target</th>
+        <h1>
+          SCR-015
+          トレーサビリティ管理
+        </h1>
 
-                        <th>Relation</th>
-                    </tr>
-                </thead>
+        <p>
+          プロジェクトが選択されていません。
+        </p>
 
-                <tbody>
-                    {items.map((item) => (
-                        <tr key={item.sourceId + item.targetId}>
-                            <td>{item.sourceId}</td>
+        <Link
+          className="
+          text-blue-700
+          underline
+          "
+          to="/projects"
+        >
+          プロジェクト一覧へ
+        </Link>
 
-                            <td>{item.targetId}</td>
+      </section>
 
-                            <td>{item.relationType}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
     );
+
+  }
+
+  return (
+
+    <div>
+
+      <div
+        className="
+        mb-4
+        "
+      >
+
+        <h1>
+          SCR-015
+          トレーサビリティ管理
+        </h1>
+
+        <div
+          className="
+          text-sm
+          text-slate-500
+          "
+        >
+          Project :
+          {project.name}
+        </div>
+
+      </div>
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>
+              Source
+            </th>
+
+            <th>
+              Target
+            </th>
+
+            <th>
+              Relation
+            </th>
+
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          {
+
+            items.map(
+              item => (
+
+                <tr
+                  key={
+                    item.sourceId +
+                    item.targetId
+                  }
+                >
+
+                  <td>
+                    {item.sourceId}
+                  </td>
+
+                  <td>
+                    {item.targetId}
+                  </td>
+
+                  <td>
+                    {item.relationType}
+                  </td>
+
+                </tr>
+
+              )
+            )
+
+          }
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  );
+
 };

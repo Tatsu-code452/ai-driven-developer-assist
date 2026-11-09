@@ -31,15 +31,22 @@ async (
 
 export const fetchContextDetail =
 async (
-  id: string
+  id: string,
+  projectId?: string
 ) => {
+
+  const query =
+    projectId
+      ? `?projectId=${encodeURIComponent(projectId)}`
+      : "";
 
   const response =
     await api.get<
       ItemResponse<Context>
     >(
       "/contexts/" +
-      id
+      id +
+      query
     );
 
   return response.data;

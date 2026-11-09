@@ -8,12 +8,23 @@ import {
 } from "react-router-dom";
 
 import {
+  useProject
+} from "../contexts/ProjectContext";
+
+import {
   fetchContextDetail
 } from "../services/contextApi";
-import type { Context } from "../types/Api";
+
+import type {
+  Context
+} from "../types/Api";
 
 export const ContextDetailPage =
 () => {
+
+  const {
+    project
+  } = useProject();
 
   const [
     searchParams
@@ -34,12 +45,18 @@ export const ContextDetailPage =
   useEffect(
     () => {
 
-      if (!id) {
+      if (
+        !id ||
+        !project
+      ) {
+
         return;
+
       }
 
       fetchContextDetail(
-        id
+        id,
+        project.id
       ).then(
         result =>
           setItem(
@@ -48,8 +65,23 @@ export const ContextDetailPage =
       );
 
     },
-    [id]
+    [
+      id,
+      project
+    ]
   );
+
+  if (
+    !project
+  ) {
+
+    return (
+      <p>
+        プロジェクトが選択されていません
+      </p>
+    );
+
+  }
 
   return (
 
@@ -65,6 +97,18 @@ export const ContextDetailPage =
         SCR-005
         コンテキスト詳細
       </h1>
+
+      <div
+        className="
+        text-sm
+        text-slate-500
+        mb-2
+        "
+      >
+        Project :
+        {" "}
+        {project.name}
+      </div>
 
       <pre
         className="

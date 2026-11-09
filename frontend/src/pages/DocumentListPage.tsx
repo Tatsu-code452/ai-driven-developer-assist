@@ -8,24 +8,47 @@ import {
 } from "react";
 
 import {
+  useProject
+} from "../contexts/ProjectContext";
+
+import {
   fetchDocuments
 } from "../services/documentApi";
-import type { GeneratedDocument } from "../types/Api";
+
+import type {
+  GeneratedDocument
+} from "../types/Api";
 
 export const DocumentListPage =
 () => {
 
+  const {
+    project
+  } = useProject();
+
   const [
     items,
     setItems
-  ] = useState<GeneratedDocument[]>(
-    []
-  );
+  ] = useState<
+    GeneratedDocument[]
+  >([]);
 
   useEffect(
     () => {
 
-      fetchDocuments()
+      if (
+        !project
+      ) {
+
+        setItems([]);
+
+        return;
+
+      }
+
+      fetchDocuments(
+        project.id
+      )
         .then(
           result =>
             setItems(
@@ -34,23 +57,89 @@ export const DocumentListPage =
         );
 
     },
-    []
+    [
+      project
+    ]
   );
+
+  if (
+    !project
+  ) {
+
+    return (
+
+      <section
+        className="
+        bg-white
+        border
+        rounded
+        p-6
+        "
+      >
+
+        <h1
+          className="
+          text-3xl
+          font-bold
+          mb-4
+          "
+        >
+          SCR-007
+          ドキュメント一覧
+        </h1>
+
+        <p>
+          プロジェクトが選択されていません。
+        </p>
+
+        <Link
+          className="
+          text-blue-700
+          underline
+          "
+          to="/projects"
+        >
+          プロジェクト一覧へ
+        </Link>
+
+      </section>
+
+    );
+
+  }
 
   return (
 
     <div>
 
-      <h1
+      <div
         className="
-        text-3xl
-        font-bold
         mb-4
         "
       >
-        SCR-007
-        ドキュメント一覧
-      </h1>
+
+        <h1
+          className="
+          text-3xl
+          font-bold
+          "
+        >
+          SCR-007
+          ドキュメント一覧
+        </h1>
+
+        <div
+          className="
+          text-sm
+          text-slate-500
+          "
+        >
+          Project :
+          {" "}
+          {project.name}
+        </div>
+
+      </div>
 
       <table
         className="
@@ -64,7 +153,9 @@ export const DocumentListPage =
           <tr>
 
             <th>ID</th>
+
             <th>タイトル</th>
+
             <th>種別</th>
 
           </tr>

@@ -1,128 +1,88 @@
-import {
-  Link
-} from "react-router-dom";
+import { Link } from "react-router-dom";
 
-import {
-  useProject
-} from "../contexts/ProjectContext";
+import { useProject } from "../contexts/ProjectContext";
 
-export const IssueListPage =
-() => {
+export const IssueListPage = () => {
+    const { project } = useProject();
 
-  const {
-    project
-  } = useProject();
-
-  if (
-    !project
-  ) {
-
-    return (
-
-      <section
-        className="
+    if (!project) {
+        return (
+            <section
+                className="
         bg-white
         border
         rounded
         p-6
         "
-      >
-
-        <h1
-          className="
+            >
+                <h1
+                    className="
           text-3xl
           font-bold
           mb-4
           "
-        >
-          SCR-017
-          課題一覧
-        </h1>
+                >
+                    SCR-017 課題一覧
+                </h1>
 
-        <p>
-          プロジェクトが選択されていません。
-        </p>
+                <p>プロジェクトが選択されていません。</p>
 
-        <Link
-          className="
+                <Link
+                    className="
           text-blue-700
           underline
           "
-          to="/projects"
-        >
-          プロジェクト一覧へ
-        </Link>
+                    to="/projects"
+                >
+                    プロジェクト一覧へ
+                </Link>
+            </section>
+        );
+    }
 
-      </section>
-
-    );
-
-  }
-
-  return (
-
-    <div>
-
-      <div
-        className="
+    return (
+        <div>
+            <div
+                className="
         mb-4
         "
-      >
-
-        <h1
-          className="
+            >
+                <h1
+                    className="
           text-3xl
           font-bold
           "
-        >
-          SCR-017
-          課題一覧
-        </h1>
+                >
+                    SCR-017 課題一覧
+                </h1>
 
-        <div
-          className="
-          text-sm
-          text-slate-500
-          "
-        >
-          Project :
-          {" "}
-          {project.name}
-        </div>
+                <div
+                    className="
+  text-sm
+  text-slate-500
+  mb-4
+  "
+                >
+                    Project :{project?.name}
+                </div>
+            </div>
 
-      </div>
-
-      <table
-        className="
+            <table
+                className="
         w-full
         bg-white
         "
-      >
+            >
+                <tbody>
+                    <tr>
+                        <td>BUG-001</td>
 
-        <tbody>
+                        <td>採番重複対応</td>
 
-          <tr>
-
-            <td>
-              BUG-001
-            </td>
-
-            <td>
-              採番重複対応
-            </td>
-
-            <td>
-              OPEN
-            </td>
-
-          </tr>
-
-        </tbody>
-
-      </table>
-
-    </div>
-
-  );
-
+                        <td>OPEN</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    );
 };

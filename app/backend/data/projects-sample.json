@@ -1,0 +1,13 @@
+
+[
+  {
+    "id":"PRJ-001",
+    "name":"AI駆動開発支援",
+    "description":"sample",
+    "status":"ACTIVE",
+    "rootPath":"/project/sample",
+    "createdAt":"2025-01-01",
+    "updatedAt":"2025-01-01"
+  }
+]
+

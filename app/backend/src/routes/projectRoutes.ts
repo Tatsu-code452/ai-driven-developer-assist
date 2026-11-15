@@ -1,19 +1,45 @@
-import { Router } from "express";
+import {
+  Router
+} from "express";
 
 import {
-  getProjectDetail,
-  getProjectManagementData,
-  getProjects,
-  postProject,
-  putProject,
-} from "@/controllers/project/projectController";
+  ProjectController
+} from "../controllers/ProjectController.js";
 
-const router = Router();
+const router =
+  Router();
 
-router.get("/", getProjects);
-router.post("/", postProject);
-router.get("/:id", getProjectDetail);
-router.get("/:id/management-data", getProjectManagementData);
-router.put("/:id", putProject);
+const controller =
+  new ProjectController();
+
+router.get(
+  "/projects",
+  controller.getAll
+);
+
+router.get(
+  "/projects/:id",
+  controller.getById
+);
+
+router.post(
+  "/projects",
+  controller.create
+);
+
+router.put(
+  "/projects/:id",
+  controller.update
+);
+
+router.delete(
+  "/projects/:id",
+  controller.delete
+);
+
+router.put(
+  "/projects/:id/current",
+  controller.setCurrentProject
+);
 
 export default router;

@@ -1,119 +1,1606 @@
-diff --git a/backend/data/generated/contexts.json b/backend/data/generated/contexts.json
-index 8932102..0bce889 100644
---- a/backend/data/generated/contexts.json
-+++ b/backend/data/generated/contexts.json
-@@ -5,46 +5,22 @@
-     "description": "AI駆動型開発支援システム 要件定義書",
-     "type": "REQ",
-     "status": "ACTIVE",
--    "documentIds": [
--      "REQ-002"
--    ],
--    "taskIds": [
--      "TSK-009",
--      "TSK-010",
--      "TSK-011",
--      "TSK-012",
--      "TSK-013",
--      "TSK-014",
--      "TSK-015",
--      "TSK-016"
--    ],
--    "issueIds": [],
--    "qaIds": [],
--    "createdAt": "2026-11-03T07:03:12.854Z",
--    "updatedAt": "2026-11-03T07:03:12.854Z"
--  },
--  {
--    "id": "CTX-002",
--    "title": "AI駆動型開発支援システム 要件定義書",
--    "description": "AI駆動型開発支援システム 要件定義書",
--    "type": "REQ",
--    "status": "ACTIVE",
-     "taskIds": [
--      "TSK-009",
--      "TSK-010",
--      "TSK-011",
--      "TSK-012",
--      "TSK-013",
--      "TSK-014",
--      "TSK-015",
--      "TSK-016"
-+      "TSK-001",
-+      "TSK-002",
-+      "TSK-003",
-+      "TSK-004",
-+      "TSK-005",
-+      "TSK-006",
-+      "TSK-007",
-+      "TSK-008"
-     ],
-     "documentIds": [
--      "REQ-002"
-+      "REQ-001"
-     ],
-     "issueIds": [],
-     "qaIds": [],
--    "createdAt": "2026-11-03T07:19:08.590Z",
--    "updatedAt": "2026-11-03T07:19:08.590Z"
-+    "createdAt": "2026-11-03T08:07:56.949Z",
-+    "updatedAt": "2026-11-03T08:07:56.949Z"
-   }
- ]
-\ No newline at end of file
-diff --git a/backend/data/generated/documents.json b/backend/data/generated/documents.json
-index 2fe61d9..ff71653 100644
---- a/backend/data/generated/documents.json
-+++ b/backend/data/generated/documents.json
-@@ -1,30 +1,9 @@
- [
--  {
--    "id": "DOC-001",
--    "title": "タスクDOC",
--    "type": "DOC",
--    "path": "",
--    "source": "タスクDOC"
--  },
-   {
-     "id": "REQ-001",
-     "title": "AI駆動型開発支援システム 要件定義書",
-     "type": "REQ",
-     "path": "",
-     "source": "AI駆動型開発支援システム 要件定義書"
--  },
--  {
--    "id": "DOC-002",
--    "title": "",
--    "type": "DOC",
--    "path": "",
--    "source": ""
--  },
--  {
--    "id": "DOC-003",
--    "title": "ISSUE",
--    "type": "DOC",
--    "path": "",
--    "source": "ISSUE"
-   }
- ]
-\ No newline at end of file
-diff --git a/backend/src/repositories/TraceabilityRepository.ts b/backend/src/repositories/TraceabilityRepository.ts
-index 4050553..5f6ee76 100644
---- a/backend/src/repositories/TraceabilityRepository.ts
-+++ b/backend/src/repositories/TraceabilityRepository.ts
-@@ -9,62 +9,107 @@ const FILE_NAME =
-   "traceability.json";
+diff --git a/backend.txt b/backend.txt
+index 8e3a73f..8be8b26 100644
+--- a/backend.txt
++++ b/backend.txt
+@@ -57,6 +57,57 @@ export const env = {
  
- export const loadTraceability =
+ 
+ 
++================================================================================
++FILE: src\controllers\agentToolsController.ts
++================================================================================
++
++import { Request, Response } from "express";
++import {
++  createAgentPlan,
++  findAgentCandidates,
++  getRepositoryState,
++  listAgents
++} from "@/services/AgentToolsService";
++
++export const getAgentToolStatus = (_req: Request, res: Response) => {
++  res.json({
++    success: true,
++    repository: getRepositoryState()
++  });
++};
++
++export const getAgentCatalog = (req: Request, res: Response) => {
++  const query = typeof req.query.query === "string" ? req.query.query : "";
++  const agents = query
++    ? findAgentCandidates(query)
++    : listAgents();
++
++  res.json({
++    success: true,
++    agents,
++    count: agents.length
++  });
++};
++
++export const postAgentPlan = (req: Request, res: Response) => {
++  const request = req.body?.request;
++
++  if (typeof request !== "string" || !request.trim()) {
++    res.status(400).json({
++      success: false,
++      message: '"request" must be a non-empty string.'
++    });
++    return;
++  }
++
++  res.json({
++    success: true,
++    plan: createAgentPlan(request)
++  });
++};
++
++
++
+ ================================================================================
+ FILE: src\controllers\contextController.ts
+ ================================================================================
+@@ -70,15 +121,62 @@ import {
+   loadContexts
+ } from "@/repositories/ContextRepository";
+ 
++import {
++  loadProjectById
++} from "@/repositories/ProjectRepository";
++
++import {
++  DATA_DIRECTORY
++} from "@/controllers/project/projectTypes";
++
++const resolveRootPath =
++(
++  req: Request
++) => {
++
++  const projectId =
++    String(
++      req.query.projectId ??
++      ""
++    );
++
++  if (
++    !projectId
++  ) {
++
++    return "data/generated";
++
++  }
++
++  const project =
++    loadProjectById(
++      projectId,
++      DATA_DIRECTORY,
++    );
++
++  if (
++    !project?.rootPath
++  ) {
++
++    return "data/generated";
++
++  }
++
++  return project.rootPath;
++
++};
++
+ export const getContexts =
+ (
+-  _req: Request,
++  req: Request,
+   res: Response
+ ) => {
+ 
+   const items =
+     loadContexts(
+-      "data/generated"
++      resolveRootPath(
++        req
++      )
+     );
+ 
+   res.json({
+@@ -102,7 +200,9 @@ export const getContextDetail =
+ 
+   const items =
+     loadContexts(
+-      "data/generated"
++      resolveRootPath(
++        req
++      )
+     );
+ 
+   const item =
+@@ -112,7 +212,9 @@ export const getContextDetail =
+         req.params.id
+     );
+ 
+-  if (!item) {
++  if (
++    !item
++  ) {
+ 
+     return res
+       .status(404)
+@@ -367,14 +469,19 @@ export const getIssues =
+ FILE: src\controllers\matrixController.ts
+ ================================================================================
+ 
++import {
++  Request,
++  Response
++} from "express";
++
+ import {
+   loadTraceability
+ } from "@/repositories/TraceabilityRepository";
+ 
+ export const getMatrix =
+ (
+-  _req,
+-  res
++  _req: Request,
++  res: Response
+ ) => {
+ 
+   const items =
+@@ -412,221 +519,1148 @@ export const getMatrix =
+ 
+ 
+ ================================================================================
+-FILE: src\controllers\projectController.ts
++FILE: src\controllers\project\projectController.ts
+ ================================================================================
+ 
+-import {
+-  Request,
+-  Response
+-} from "express";
++import type { Request, Response } from "express";
+ 
++import { createProjectPageResponse, createProjectResponseOrNotFound, getFilteredProjects } from "@/controllers/project/projectControllerHelper";
++import { ApiMethod, DATA_DIRECTORY } from "@/controllers/project/projectTypes";
+ import {
+-  loadTasks
+-} from "@/repositories/TaskRepository";
+-
++  hasProjectId,
++  hasProjectInput,
++  validate,
++  validatePageQueryParam,
++  validateProjectId,
++  validateProjectInput,
++  type ValidationContext
++} from "@/controllers/project/projectValidator";
++import { loadManagementDataIndex } from "@/repositories/ManagementDataRepository";
+ import {
+-  loadDocuments
+-} from "@/repositories/DocumentRepository";
+-
+-export const getProjects =
 -(
--  outputDir: string
+-  _req,
+-  res
++  createProject,
++  loadProjectById,
++  updateProject
++} from "@/repositories/ProjectRepository";
++import { createNotFoundResponse, createSuccessResponse } from "@/utils/responseUtils";
++import { trimAndtoLowerCase } from "@/utils/stringUtils";
++
++export const getProjects: ApiMethod = (
++  req: Request,
++  res: Response,
+ ) => {
++  const context: ValidationContext = {};
++  const result = validate(req, res, context, [validatePageQueryParam]);
++  if (result) {
++    return result;
++  }
+ 
+-  const tasks =
+-    loadTasks(
+-      "data/generated"
+-    );
++  const keyword = trimAndtoLowerCase(context.query?.q ?? "");
++  const statusFilter = trimAndtoLowerCase(context.query?.status ?? "");
++  const projects = getFilteredProjects(keyword, statusFilter);
+ 
+-  const documents =
+-    loadDocuments(
+-      "data/generated"
+-    );
++  return createProjectPageResponse(
++    res,
++    context.requestedPage ?? 1,
++    projects,
++  );
++}
+ 
+-  res.json({
++export const getProjectDetail: ApiMethod = (
++  req: Request,
++  res: Response,
++) => {
++  const context: ValidationContext = {};
+ 
+-    success: true,
++  const result = validate(req, res, context, [validateProjectId]);
+ 
+-    items: [
++  if (result) {
++    return result;
++  }
+ 
+-      {
++  if (!hasProjectId(context)) {
++    throw new Error("ValidationContext.id missing");
++  }
+ 
+-        id:
+-          "PRJ-001",
++  const project = loadProjectById(context.id, DATA_DIRECTORY);
+ 
+-        name:
+-          "AI駆動型開発支援システム",
++  return createProjectResponseOrNotFound(res, project);
++};
+ 
+-        taskCount:
+-          tasks.length,
++export const getProjectManagementData: ApiMethod = (
++  req: Request,
++  res: Response,
++) => {
++  const context: ValidationContext = {};
+ 
+-        documentCount:
+-          documents.length,
++  const result = validate(req, res, context, [validateProjectId]);
+ 
+-        status:
+-          "進行中"
++  if (result) {
++    return result;
++  }
+ 
+-      }
++  if (!hasProjectId(context)) {
++    throw new Error("ValidationContext.id missing");
++  }
+ 
+-    ]
++  const project = loadProjectById(context.id, DATA_DIRECTORY);
+ 
+-  });
++  if (!project) {
++    return createNotFoundResponse(res, "プロジェクトが見つかりません");
++  }
+ 
++  return createSuccessResponse(
++    res,
++    loadManagementDataIndex(project.rootPath),
++  );
+ };
+ 
+-export const getProjectDetail =
+-(
+-  _req: Request,
+-  res: Response
++export const postProject: ApiMethod = (
++  req: Request,
++  res: Response,
+ ) => {
++  const context: ValidationContext = {};
+ 
+-  const tasks =
+-    loadTasks(
+-      "data/generated"
+-    );
+-
+-  const documents =
+-    loadDocuments(
+-      "data/generated"
+-    );
+-
+-  res.json({
+-
+-    success: true,
++  const result = validate(req, res, context, [validateProjectInput]);
+ 
+-    item: {
++  if (result) {
++    return result;
++  }
+ 
+-      id:
+-        "PRJ-001",
++  if (!hasProjectInput(context)) {
++    throw new Error(
++      "ValidationContext.input missing",
++    );
++  }
+ 
+-      name:
+-        "AI駆動型開発支援システム",
++  const project =
++    createProject(
++      context.input,
++      DATA_DIRECTORY,
++    );
+ 
+-      status:
+-        "進行中",
++  return createProjectResponseOrNotFound(res, project);
++};
+ 
+-      taskCount:
+-        tasks.length,
++export const putProject: ApiMethod = (
++  req: Request,
++  res: Response,
++) => {
++  const context: ValidationContext = {};
+ 
+-      documentCount:
+-        documents.length
++  const result = validate(req, res, context, [validateProjectId, validateProjectInput]);
++  if (result) {
++    return result;
++  }
+ 
+-    }
++  if (
++    !hasProjectId(context) ||
++    !hasProjectInput(context)
++  ) {
++    throw new Error(
++      "ValidationContext invalid",
++    );
++  }
+ 
+-  });
++  const project =
++    updateProject(
++      context.id,
++      context.input,
++      DATA_DIRECTORY,
++    );
+ 
++  return createProjectResponseOrNotFound(res, project);
+ };
+ 
+ 
+ 
++
+ ================================================================================
+-FILE: src\controllers\qaController.ts
++FILE: src\controllers\project\projectControllerHelper.ts
+ ================================================================================
+ 
++import type { Response } from "express";
++
++import { toProjectResponse } from "@/controllers/project/projectMapper";
++import { DATA_DIRECTORY, PAGE_SIZE } from "@/controllers/project/projectTypes";
++import { ProjectRecord } from "@/models/Project";
++import { loadDocumentsGrouped } from "@/repositories/DocumentRepository";
+ import {
+-  Request,
+-  Response
+-} from "express";
++  loadProjects
++} from "@/repositories/ProjectRepository";
++import { loadTasksGrouped } from "@/repositories/TaskRepository";
++import {
++  createNotFoundResponse,
++  createPagedResponse,
++  createSuccessResponse
++} from "@/utils/responseUtils";
+ 
+-export const getQAs =
+-(
+-  _req: Request,
+-  res: Response
 -) => {
+ 
+-  res.json({
++export const loadProjectRelations = () => ({
++  tasks: loadTasksGrouped(DATA_DIRECTORY),
++  documents: loadDocumentsGrouped(DATA_DIRECTORY),
++});
+ 
+-    success: true,
++export const createProjectPageResponse = (
++  res: Response,
++  requestedPage: number,
++  projects: ProjectRecord[]
++) => {
++  const relations = loadProjectRelations();
+ 
+-    items: [
++  const { page, start } = getPageInfo(projects.length, PAGE_SIZE, requestedPage);
+ 
+-      {
++  const items = projects
++    .slice(
++      start,
++      start + PAGE_SIZE,
++    )
++    .map(project =>
++      toProjectResponse(
++        project,
++        relations.tasks,
++        relations.documents,
++      ),
++    );
+ 
+-        id:
+-          "QAA-001",
++  return createPagedResponse(
++    res,
++    {
++      items,
++      total: projects.length,
++      page,
++      pageSize: PAGE_SIZE,
++    },
++  );
++};
+ 
+-        question:
+-          "採番方式検討",
++export const createProjectResponse = (
++  res: Response,
++  project: ProjectRecord
++) => {
++  const relations =
++    loadProjectRelations();
++
++  return createSuccessResponse(
++    res,
++    toProjectResponse(
++      project,
++      relations.tasks,
++      relations.documents,
++    ),
++  );
++};
+ 
+-        status:
+-          "OPEN"
++export const createProjectResponseOrNotFound = (
++  res: Response,
++  project: ProjectRecord | undefined,
++) => {
++  if (!project) {
++    return createNotFoundResponse(
++      res,
++      "プロジェクトが見つかりません",
++    );
++  }
+ 
+-      }
++  return createProjectResponse(res, project);
++};
+ 
+-    ]
++export const getFilteredProjects = (keyword: string, statusFilter: string) => {
++  const projects =
++    loadProjects(DATA_DIRECTORY)
++      .filter(project => {
++
++        const matchesKeyword =
++          !keyword ||
++          project.id
++            .toLowerCase()
++            .includes(keyword) ||
++          project.name
++            .toLowerCase()
++            .includes(keyword);
++
++        const matchesStatus =
++          !statusFilter ||
++          project.status
++            .toLowerCase()
++            .includes(statusFilter);
++
++        return (
++          matchesKeyword &&
++          matchesStatus
++        );
++      })
++      .sort(
++        (left, right) =>
++          left.name.localeCompare(right.name) ||
++          left.id.localeCompare(right.id),
++      );
+ 
+-  });
++  return projects;
++};
+ 
++
++export const getPageInfo = (totalItems: number, pageSize: number, requestedPage: number) => {
++  const pageCount = Math.ceil(totalItems / pageSize);
++  const page = pageCount === 0 ? 1 : Math.min(requestedPage, pageCount);
++  const start = (page - 1) * pageSize;
++  return { page, pageCount, start };
+ };
+ 
+ 
+ 
+ ================================================================================
+-FILE: src\controllers\taskController.ts
++FILE: src\controllers\project\projectMapper.ts
+ ================================================================================
+ 
+-import { Request, Response } from "express";
+-
+-import {
+-  loadTasks
+-} from "@/repositories/TaskRepository";
+-
+-export const getTasks =
+-(
+-  _req: Request,
+-  res: Response
+-) => {
+-
+-  const tasks =
+-    loadTasks(
+-      "data/generated"
++import type { Document } from "@/models/Document";
++import type {
++    ProjectInput,
++    ProjectRecord,
++} from "@/models/Project";
++import type { Task } from "@/models/Task";
++import { isStringProperty } from "@/utils/propUtils";
++import { isObject } from "@/utils/typeUtils";
++
++export const isProjectInput = (
++    value: unknown,
++): value is ProjectInput =>
++    isObject(value) &&
++    isStringProperty(value, "name") &&
++    (
++        value.description === undefined ||
++        isStringProperty(value, "description")
++    ) &&
++    (
++        value.status === undefined ||
++        isStringProperty(value, "status")
++    ) &&
++    (
++        value.rootPath === undefined ||
++        isStringProperty(value, "rootPath")
+     );
+ 
+-  return res.json({
+-
+-    success: true,
+-
+-    items: tasks,
++export const projectInputFrom = (
++    body: unknown,
++): ProjectInput | undefined => {
++    if (!isProjectInput(body)) {
++        return undefined;
++    }
+ 
+-    count:
+-      tasks.length
++    const name = body.name.trim();
+ 
+-  });
++    if (!name) {
++        return undefined;
++    }
+ 
++    return {
++        name,
++        description: body.description ?? "",
++        status: body.status ?? "",
++        rootPath: body.rootPath ?? "",
++    };
+ };
+ 
++export const toProjectResponse = (
++    project: ProjectRecord,
++    taskMap: Map<string, Task[]>,
++    documentMap: Map<string, Document[]>,
++) => ({
++    ...project,
++    taskCount:
++        taskMap.get(project.id)?.length ?? 0,
++    documentCount:
++        documentMap.get(project.id)?.length ?? 0,
++});
+ 
+ 
+ ================================================================================
+-FILE: src\controllers\traceabilityController.ts
++FILE: src\controllers\project\projectTypes.ts
+ ================================================================================
+ 
+-import {
+-  loadTraceability
+-} from "@/repositories/TraceabilityRepository";
++import type { Request, Response } from "express";
+ 
+-export const getTraceability =
+-(
+-  _req,
+-  res
+-) => {
++export type ApiMethod = (
++    req: Request,
++    res: Response,
++) => Response | undefined;
+ 
+-  const items =
+-    loadTraceability(
+-      "data/generated"
+-    );
++export const DATA_DIRECTORY = "data/generated";
++export const PAGE_SIZE = 20;
+ 
+-  res.json({
+ 
+-    success: true,
+ 
+-    items
++================================================================================
++FILE: src\controllers\project\projectValidator.ts
++================================================================================
+ 
+-  });
++import type { Request, Response } from "express";
+ 
++import { projectInputFrom } from "@/controllers/project/projectMapper";
++import type { ProjectInput } from "@/models/Project";
++import { convertToPositiveIntegerOrDefault } from "@/utils/numberUtils";
++import { createBadRequestResponse } from "@/utils/responseUtils";
++import { isString } from "@/utils/typeUtils";
++
++type QueryParams = {
++    q?: string;
++    status?: string;
+ };
+ 
++export type ValidationContext = {
++    id?: string;
++    input?: ProjectInput;
++    query?: QueryParams;
++    requestedPage?: number;
++};
++
++export type Validator = (
++    req: Request,
++    res: Response,
++    context: ValidationContext,
++) => Response | undefined;
++
++export const validate = (
++    req: Request,
++    res: Response,
++    context: ValidationContext,
++    validators: Validator[],
++): Response | undefined => {
++    for (const validator of validators) {
++        const result = validator(
++            req,
++            res,
++            context,
++        );
++
++        if (result) {
++            return result;
++        }
++    }
++
++    return undefined;
++};
++
++export const validateProjectId: Validator = (
++    req,
++    res,
++    context,
++) => {
++    const id = req.params.id;
++
++    if (!isString(id)) {
++        return createBadRequestResponse(
++            res,
++            "プロジェクトIDを指定してください",
++        );
++    }
++
++    context.id = id;
++};
++
++export const validateProjectInput: Validator = (
++    req,
++    res,
++    context,
++) => {
++    const input =
++        projectInputFrom(req.body);
++
++    if (!input) {
++        return createBadRequestResponse(
++            res,
++            "名称は必須です。説明と状態は文字列で指定してください",
++        );
++    }
++
++    context.input = input;
++};
++
++export const hasProjectId = (
++    context: ValidationContext,
++): context is ValidationContext & {
++    id: string;
++} =>
++    context.id !== undefined;
++
++export const hasProjectInput = (
++    context: ValidationContext,
++): context is ValidationContext & {
++    input: ProjectInput;
++} =>
++    context.input !== undefined;
++
++export const validatePageQueryParam: Validator = (
++    req: Request,
++    res: Response,
++    context: ValidationContext,
++) => {
++    const requestedPage = convertToPositiveIntegerOrDefault(req.query.page, 1);
++    if (requestedPage === undefined) {
++        return createBadRequestResponse(
++            res,
++            "ページ番号は正の整数で指定してください",
++        );
++    }
++
++    context.requestedPage = requestedPage;
++
++    if (
++        (req.query.q !== undefined &&
++            !isString(req.query.q)) ||
++        (req.query.status !== undefined &&
++            !isString(req.query.status))
++    ) {
++        return createBadRequestResponse(
++            res,
++            "検索条件は文字列で指定してください",
++        );
++    }
++
++    context.query = {
++        q: req.query.q ?? "",
++        status: req.query.status ?? ""
++    };
++}
++
++
++================================================================================
++FILE: src\controllers\qaController.ts
++================================================================================
++
++import {
++  Request,
++  Response
++} from "express";
++
++export const getQAs =
++(
++  _req: Request,
++  res: Response
++) => {
++
++  res.json({
++
++    success: true,
++
++    items: [
++
++      {
++
++        id:
++          "QAA-001",
++
++        question:
++          "採番方式検討",
++
++        status:
++          "OPEN"
++
++      }
++
++    ]
++
++  });
++
++};
++
++
++
++================================================================================
++FILE: src\controllers\taskController.ts
++================================================================================
++
++import { Request, Response } from "express";
++
++import type {
++  TaskInput,
++  TaskPriority,
++  TaskStatus,
++} from "@/models/Task";
++import {
++  createTask,
++  findTask,
++  loadTasks,
++  listTasks,
++  updateTask,
++} from "@/repositories/TaskRepository";
++
++const DATA_DIR = "data/generated";
++const PROJECT_ID_PATTERN = /^PRJ-\d{3}$/;
++const TASK_STATUSES: TaskStatus[] = ["TODO", "DOING", "DONE"];
++const TASK_PRIORITIES: TaskPriority[] = ["LOW", "NORMAL", "HIGH"];
++const ALLOWED_TRANSITIONS: Record<TaskStatus, TaskStatus[]> = {
++  TODO: ["TODO", "DOING"],
++  DOING: ["DOING", "DONE"],
++  DONE: ["DONE", "DOING"],
++};
++
++const isString = (value: unknown): value is string =>
++  typeof value === "string";
++
++const isOneOf = <T extends string>(
++  value: unknown,
++  allowed: T[],
++): value is T =>
++  isString(value) && allowed.some((item) => item === value);
++
++const errorResponse = (
++  res: Response,
++  status: number,
++  message: string,
++) =>
++  res.status(status).json({
++    success: false,
++    message,
++  });
++
++const parseTaskInput = (
++  body: unknown,
++): TaskInput | string => {
++  if (!body || typeof body !== "object" || Array.isArray(body)) {
++    return "入力内容が不正です。";
++  }
++
++  const input = body as Record<string, unknown>;
++  const title = isString(input.title) ? input.title.trim() : "";
++  const description =
++    input.description === undefined
++      ? ""
++      : isString(input.description)
++        ? input.description
++        : undefined;
++  if (!title) return "タイトルを入力してください。";
++  if (title.length > 200) return "タイトルは200文字以内で入力してください。";
++  if (description === undefined) return "説明は文字列で入力してください。";
++  if (!isOneOf(input.status, TASK_STATUSES)) {
++    return "状態が不正です。";
++  }
++  if (!isOneOf(input.priority, TASK_PRIORITIES)) {
++    return "優先度が不正です。";
++  }
++  if (
++    !isString(input.projectId) ||
++    !PROJECT_ID_PATTERN.test(input.projectId)
++  ) {
++    return "プロジェクトを選択してください。";
++  }
++
++  return {
++    title,
++    description,
++    status: input.status,
++    priority: input.priority,
++    projectId: input.projectId,
++  };
++};
++
++export const getTasks = (
++  req: Request,
++  res: Response,
++) => {
++  const { q = "", projectId, status, priority, page = "1" } = req.query;
++  if (
++    !isString(q) ||
++    (projectId !== undefined && !isString(projectId)) ||
++    (status !== undefined && !isString(status)) ||
++    (priority !== undefined && !isString(priority)) ||
++    !isString(page) ||
++    !/^[1-9]\d*$/.test(page)
++  ) {
++    return errorResponse(res, 400, "検索条件が不正です。");
++  }
++  if (
++    projectId !== undefined &&
++    projectId !== "unassigned" &&
++    !PROJECT_ID_PATTERN.test(projectId)
++  ) {
++    return errorResponse(res, 400, "プロジェクトIDが不正です。");
++  }
++  if (status !== undefined && !isOneOf(status, TASK_STATUSES)) {
++    return errorResponse(res, 400, "状態が不正です。");
++  }
++  if (priority !== undefined && !isOneOf(priority, TASK_PRIORITIES)) {
++    return errorResponse(res, 400, "優先度が不正です。");
++  }
++
++  const result = listTasks(loadTasks(DATA_DIR), {
++    q,
++    projectId,
++    status,
++    priority,
++    page: Number(page),
++  });
++  return res.json({
++    success: true,
++    ...result,
++  });
++};
++
++export const getTaskDetail = (
++  req: Request,
++  res: Response,
++) => {
++  const id = req.params.id;
++  if (!isString(id)) return errorResponse(res, 400, "タスクIDが不正です。");
++  const task = findTask(id, DATA_DIR);
++  if (!task) return errorResponse(res, 404, "タスクが見つかりません。");
++  return res.json({ success: true, item: task });
++};
++
++export const postTask = (
++  req: Request,
++  res: Response,
++) => {
++  const input = parseTaskInput(req.body);
++  if (typeof input === "string") {
++    return errorResponse(res, 400, input);
++  }
++  if (input.status !== "TODO") {
++    return errorResponse(res, 400, "新規タスクの状態はTODOで登録してください。");
++  }
++
++  const task = createTask(input, DATA_DIR);
++  return res.status(201).json({ success: true, item: task });
++};
++
++export const putTask = (
++  req: Request,
++  res: Response,
++) => {
++  const id = req.params.id;
++  if (!isString(id)) return errorResponse(res, 400, "タスクIDが不正です。");
++
++  const current = findTask(id, DATA_DIR);
++  if (!current) return errorResponse(res, 404, "タスクが見つかりません。");
++
++  const input = parseTaskInput(req.body);
++  if (typeof input === "string") {
++    return errorResponse(res, 400, input);
++  }
++  if (!ALLOWED_TRANSITIONS[current.status]?.includes(input.status)) {
++    return errorResponse(res, 400, "許可されていない状態遷移です。");
++  }
++
++  const task = updateTask(id, input, DATA_DIR);
++  if (!task) return errorResponse(res, 404, "タスクが見つかりません。");
++  return res.json({ success: true, item: task });
++};
++
++
++
++================================================================================
++FILE: src\controllers\traceabilityController.ts
++================================================================================
++
++import {
++  Request,
++  Response
++} from "express";
++
++import {
++  loadTraceability
++} from "@/repositories/TraceabilityRepository";
++
++export const getTraceability =
++(
++  _req: Request,
++  res: Response
++) => {
++
++  const items =
++    loadTraceability(
++      "data/generated"
++    );
++
++  res.json({
++
++    success: true,
++
++    items
++
++  });
++
++};
++
++
++
++================================================================================
++FILE: src\controllers\__tests__\taskApi.integration.test.ts
++================================================================================
++
++import fs from "fs";
++import http from "http";
++import os from "os";
++import path from "path";
++
++import { afterEach, describe, expect, it } from "vitest";
++
++import type { Task } from "@/models/Task";
++import { createApp } from "@/app";
++
++describe("task API integration", () => {
++  const originalWorkingDirectory = process.cwd();
++  let temporaryDirectory: string | undefined;
++  let server: http.Server | undefined;
++
++  afterEach(async () => {
++    if (server?.listening) {
++      await new Promise<void>((resolve, reject) => {
++        server?.close((error) => {
++          if (error) reject(error);
++          else resolve();
++        });
++      });
++    }
++    server = undefined;
++
++    process.chdir(originalWorkingDirectory);
++    if (temporaryDirectory) {
++      fs.rmSync(temporaryDirectory, { recursive: true, force: true });
++      temporaryDirectory = undefined;
++    }
++  });
++
++  it("supports task filtering, CRUD, state transitions, and project counts", async () => {
++    temporaryDirectory = fs.mkdtempSync(
++      path.join(os.tmpdir(), "task-api-integration-"),
++    );
++    const dataDirectory = path.join(temporaryDirectory, "data", "generated");
++    fs.mkdirSync(dataDirectory, { recursive: true });
++    const seedTask: Task = {
++      id: "TSK-001",
++      title: "Unassigned task",
++      description: "",
++      status: "TODO",
++      priority: "NORMAL",
++      source: "seed",
++    };
++    fs.writeFileSync(
++      path.join(dataDirectory, "tasks.json"),
++      JSON.stringify([seedTask]),
++      "utf-8",
++    );
++    fs.writeFileSync(
++      path.join(dataDirectory, "documents.json"),
++      JSON.stringify([
++        {
++          id: "DOC-001",
++          title: "Assigned document",
++          type: "DES",
++          path: "docs/assigned.md",
++          source: "seed",
++          projectId: "PRJ-001",
++        },
++        {
++          id: "DOC-002",
++          title: "Unassigned document",
++          type: "DES",
++          path: "docs/unassigned.md",
++          source: "seed",
++        },
++      ]),
++      "utf-8",
++    );
++    process.chdir(temporaryDirectory);
++
++    server = http.createServer(createApp());
++    await new Promise<void>((resolve, reject) => {
++      server?.once("error", reject);
++      server?.listen(0, "127.0.0.1", resolve);
++    });
++
++    const address = server.address();
++    if (!address || typeof address === "string") {
++      throw new Error("The integration server did not start");
++    }
++    const baseUrl = `http://127.0.0.1:${address.port}/api`;
++
++    const unassignedResponse = await fetch(
++      `${baseUrl}/tasks?projectId=unassigned&page=1`,
++    );
++    expect(unassignedResponse.status).toBe(200);
++    const unassigned = await unassignedResponse.json();
++    expect(unassigned).toMatchObject({
++      count: 1,
++      items: [{ id: "TSK-001" }],
++    });
++
++    const invalidFilterResponse = await fetch(
++      `${baseUrl}/tasks?status=INVALID`,
++    );
++    expect(invalidFilterResponse.status).toBe(400);
++
++    const createResponse = await fetch(`${baseUrl}/tasks`, {
++      method: "POST",
++      headers: { "content-type": "application/json" },
++      body: JSON.stringify({
++        title: "New task",
++        description: "Created through the API",
++        status: "TODO",
++        priority: "HIGH",
++        projectId: "PRJ-001",
++      }),
++    });
++    expect(createResponse.status).toBe(201);
++    const created = (await createResponse.json()) as { item: Task };
++    expect(created.item).toMatchObject({
++      id: "TSK-031",
++      title: "New task",
++      status: "TODO",
++      priority: "HIGH",
++      projectId: "PRJ-001",
++      source: "手動登録",
++    });
++
++    const detailResponse = await fetch(`${baseUrl}/tasks/TSK-031`);
++    expect(detailResponse.status).toBe(200);
++    const detail = (await detailResponse.json()) as { item: Task };
++    expect(detail.item.id).toBe("TSK-031");
++
++    const updateResponse = await fetch(`${baseUrl}/tasks/TSK-031`, {
++      method: "PUT",
++      headers: { "content-type": "application/json" },
++      body: JSON.stringify({
++        title: "Updated task",
++        description: "Updated description",
++        status: "DOING",
++        priority: "LOW",
++        projectId: "PRJ-001",
++      }),
++    });
++    expect(updateResponse.status).toBe(200);
++    const updated = (await updateResponse.json()) as { item: Task };
++    expect(updated.item).toMatchObject({
++      id: "TSK-031",
++      title: "Updated task",
++      status: "DOING",
++      source: "手動登録",
++    });
++
++    const invalidTransitionResponse = await fetch(
++      `${baseUrl}/tasks/TSK-031`,
++      {
++        method: "PUT",
++        headers: { "content-type": "application/json" },
++        body: JSON.stringify({
++          title: "Updated task",
++          description: "Updated description",
++          status: "TODO",
++          priority: "LOW",
++          projectId: "PRJ-001",
++        }),
++      },
++    );
++    expect(invalidTransitionResponse.status).toBe(400);
++
++    const missingResponse = await fetch(`${baseUrl}/tasks/TSK-999`);
++    expect(missingResponse.status).toBe(404);
++
++    const projectResponse = await fetch(`${baseUrl}/projects`);
++    expect(projectResponse.status).toBe(200);
++    const projects = (await projectResponse.json()) as {
++      items: Array<{ taskCount: number; documentCount: number }>;
++    };
++    expect(projects.items[0]).toMatchObject({
++      taskCount: 1,
++      documentCount: 1,
++    });
++  });
++});
++
++
++
++================================================================================
++FILE: src\controllers\__tests__\taskController.test.ts
++================================================================================
++
++import type { Request, Response } from "express";
++import { beforeEach, describe, expect, it, vi } from "vitest";
++
++import type { Task } from "@/models/Task";
++import * as taskRepository from "@/repositories/TaskRepository";
++import {
++  getTaskDetail,
++  getTasks,
++  postTask,
++  putTask,
++} from "@/controllers/taskController";
++
++vi.mock("@/repositories/TaskRepository", () => ({
++  createTask: vi.fn(),
++  findTask: vi.fn(),
++  loadTasks: vi.fn(),
++  listTasks: vi.fn(),
++  updateTask: vi.fn(),
++}));
++
++const task: Task = {
++  id: "TSK-031",
++  title: "Test task",
++  description: "",
++  status: "TODO",
++  priority: "NORMAL",
++  source: "手動登録",
++  projectId: "PRJ-001",
++};
++
++const makeResponse = () => {
++  const response = {
++    status: vi.fn(),
++    json: vi.fn(),
++  };
++  response.status.mockReturnValue(response);
++  return response as unknown as Response;
++};
++
++const makeRequest = (
++  values: Partial<Pick<Request, "body" | "query" | "params">>,
++) => values as Request;
++
++describe("taskController", () => {
++  beforeEach(() => {
++    vi.clearAllMocks();
++  });
++
++  it("applies validated filters and returns the paged list", () => {
++    const response = makeResponse();
++    const result = {
++      items: [task],
++      count: 1,
++      page: 1,
++      pageSize: 20,
++      totalPages: 1,
++    };
++    vi.mocked(taskRepository.loadTasks).mockReturnValue([task]);
++    vi.mocked(taskRepository.listTasks).mockReturnValue(result);
++
++    getTasks(
++      makeRequest({
++        query: {
++          q: "test",
++          projectId: "PRJ-001",
++          status: "TODO",
++          priority: "NORMAL",
++          page: "1",
++        },
++      }),
++      response,
++    );
++
++    expect(taskRepository.listTasks).toHaveBeenCalledWith(
++      [task],
++      {
++        q: "test",
++        projectId: "PRJ-001",
++        status: "TODO",
++        priority: "NORMAL",
++        page: 1,
++      },
++    );
++    expect(response.json).toHaveBeenCalledWith({
++      success: true,
++      ...result,
++    });
++  });
++
++  it("rejects invalid pagination input", () => {
++    const response = makeResponse();
++
++    getTasks(makeRequest({ query: { page: "0" } }), response);
++
++    expect(response.status).toHaveBeenCalledWith(400);
++    expect(taskRepository.loadTasks).not.toHaveBeenCalled();
++  });
++
++  it("returns 404 for an unknown task ID", () => {
++    const response = makeResponse();
++    vi.mocked(taskRepository.findTask).mockReturnValue(undefined);
++
++    getTaskDetail(makeRequest({ params: { id: "TSK-999" } }), response);
++
++    expect(response.status).toHaveBeenCalledWith(404);
++  });
++
++  it("requires a project and title when creating a task", () => {
++    const response = makeResponse();
++
++    postTask(makeRequest({ body: { title: "New task" } }), response);
++
++    expect(response.status).toHaveBeenCalledWith(400);
++    expect(taskRepository.createTask).not.toHaveBeenCalled();
++  });
++
++  it("creates a task in TODO state", () => {
++    const response = makeResponse();
++    vi.mocked(taskRepository.createTask).mockReturnValue(task);
++
++    postTask(
++      makeRequest({
++        body: {
++          ...task,
++          status: "TODO",
++        },
++      }),
++      response,
++    );
++
++    expect(taskRepository.createTask).toHaveBeenCalledWith(
++      {
++        title: task.title,
++        description: task.description,
++        status: "TODO",
++        priority: task.priority,
++        projectId: task.projectId,
++      },
++      "data/generated",
++    );
++    expect(response.status).toHaveBeenCalledWith(201);
++  });
++
++  it("rejects a state transition that skips DOING", () => {
++    const response = makeResponse();
++    vi.mocked(taskRepository.findTask).mockReturnValue(task);
++
++    putTask(
++      makeRequest({
++        params: { id: task.id },
++        body: { ...task, status: "DONE" },
++      }),
++      response,
++    );
++
++    expect(response.status).toHaveBeenCalledWith(400);
++    expect(taskRepository.updateTask).not.toHaveBeenCalled();
++  });
++
++  it("allows reopening a completed task to DOING", () => {
++    const response = makeResponse();
++    const completedTask: Task = { ...task, status: "DONE" };
++    vi.mocked(taskRepository.findTask).mockReturnValue(completedTask);
++    vi.mocked(taskRepository.updateTask).mockReturnValue({
++      ...completedTask,
++      status: "DOING",
++    });
++
++    putTask(
++      makeRequest({
++        params: { id: task.id },
++        body: { ...task, status: "DOING" },
++      }),
++      response,
++    );
++
++    expect(taskRepository.updateTask).toHaveBeenCalledWith(
++      task.id,
++      expect.objectContaining({ status: "DOING" }),
++      "data/generated",
++    );
++    expect(response.json).toHaveBeenCalledWith({
++      success: true,
++      item: { ...completedTask, status: "DOING" },
++    });
++  });
++});
++
+ 
+ 
+ ================================================================================
+@@ -719,6 +1753,7 @@ export type Document = {
+   type: DocumentType;
+   path: string;
+   source: string;
++  projectId?: string;
+ };
+ 
+ 
+@@ -754,6 +1789,33 @@ export type Heading = {
+ 
+ 
+ 
++================================================================================
++FILE: src\models\ManagementData.ts
++================================================================================
++
++export type ManagementDataItem = {
++  title: string;
++  /** 管理データパス(rootPath)からの相対パス。区切りは`/`。 */
++  path: string;
++  exists: boolean;
++};
++
++export type ManagementDataIndexStatus =
++  | "ok"
++  | "root-path-not-set"
++  | "root-path-not-found"
++  | "readme-not-found"
++  | "section-not-found";
++
++export type ManagementDataIndex = {
++  status: ManagementDataIndexStatus;
++  message: string;
++  rootPath: string;
++  items: ManagementDataItem[];
++};
++
++
++
+ ================================================================================
+ FILE: src\models\MarkdownList.ts
+ ================================================================================
+@@ -777,6 +1839,22 @@ export type MarkdownTable = {
+ 
+ 
+ 
++================================================================================
++FILE: src\models\Project.ts
++================================================================================
++
++export type ProjectRecord = {
++  id: string;
++  name: string;
++  description: string;
++  status: string;
++  rootPath: string;
++};
++
++export type ProjectInput = Omit<ProjectRecord, "id">;
++
++
++
+ ================================================================================
+ FILE: src\models\Task.ts
+ ================================================================================
+@@ -798,6 +1876,15 @@ export type Task = {
+   status: TaskStatus;
+   priority: TaskPriority;
+   source: string;
++  projectId?: string;
++};
++
++export type TaskInput = {
++  title: string;
++  description: string;
++  status: TaskStatus;
++  priority: TaskPriority;
++  projectId: string;
+ };
+ 
+ 
+@@ -851,7 +1938,228 @@ export const loadContexts =
+       filePath
+     )
+   ) {
+-    return [];
++    return [];
++  }
++
++  return JSON.parse(
++    fs.readFileSync(
++      filePath,
++      "utf-8"
++    )
++  );
++
++};
++
++export const saveContexts =
++(
++  items: Context[],
++  outputDir: string
++) => {
++
++  fs.mkdirSync(
++    outputDir,
++    {
++      recursive: true
++    }
++  );
++
++  const filePath =
++    path.join(
++      outputDir,
++      FILE_NAME
++    );
++
++  fs.writeFileSync(
++    filePath,
++    JSON.stringify(
++      items,
++      null,
++      2
++    ),
++    "utf-8"
++  );
++
++  return filePath;
++
++};
++
++
++
++================================================================================
++FILE: src\repositories\DocumentRepository.ts
++================================================================================
++
++import fs from "fs";
++import path from "path";
++
++import type { Document } from "@/models/Document";
++
++const FILE_NAME =
++  "documents.json";
++
++export const loadDocuments =
 +  (
 +    outputDir: string
-+  ) => {
- 
--  const filePath =
--    path.join(
++  ): Document[] => {
++
 +    const filePath =
 +      path.join(
 +        outputDir,
@@ -137,56 +1624,154 @@ index 4050553..5f6ee76 100644
 +
 +  };
 +
-+export const saveTraceability =
++export const loadDocumentsGrouped =
 +  (
-+    items:
-+      Traceability[],
++    outputDir: string
++  ): Map<string, Document[]> => {
++
++    const documents =
++      loadDocuments(
++        outputDir
++      );
++
++    return documents.reduce(
++      (
++        acc,
++        document
++      ) => {
++        if (!document.projectId) {
++          return acc;
++        }
++
++        const projectDocuments = acc.get(document.projectId) ?? [];
++        projectDocuments.push(document);
++        acc.set(document.projectId, projectDocuments);
++
++        return acc;
++      },
++      new Map<string, Document[]>()
++    );
++  }
++
++export const saveDocuments =
++  (
++    documents: Document[],
 +    outputDir: string
 +  ) => {
 +
 +    fs.mkdirSync(
-       outputDir,
--      FILE_NAME
++      outputDir,
 +      {
 +        recursive: true
 +      }
-     );
- 
--  if (
--    !fs.existsSync(
--      filePath
--    )
--  ) {
--    return [];
--  }
--
--  return JSON.parse(
--    fs.readFileSync(
--      filePath,
-+    fs.writeFileSync(
++    );
 +
++    const filePath =
 +      path.join(
 +        outputDir,
 +        FILE_NAME
-+      ),
++      );
 +
++    fs.writeFileSync(
++      filePath,
 +      JSON.stringify(
-+        items,
++        documents,
 +        null,
 +        2
 +      ),
-+
-       "utf-8"
--    )
--  );
- 
--};
++      "utf-8"
 +    );
++
++    return filePath;
++  };
++
++export const mergeDocuments =
++  (
++    current: Document[],
++    incoming: Document[]
++  ): Document[] => {
++
++    const map =
++      new Map<
++        string,
++        Document
++      >();
++
++    current.forEach(
++      document =>
++
++        map.set(
++          document.id,
++          document
++        )
++
++    );
++
++    incoming.forEach(
++      document => {
++
++        const exists =
++          [...map.values()]
++            .find(
++              item =>
++                item.title ===
++                document.title
++            );
++
++        if (
++          exists
++        ) {
++          return;
++        }
++
++        map.set(
++          document.id,
++          document
++        );
++
++      }
++    );
++
++    return [
++      ...map.values()
++    ];
++
++  };
++
++
++
++================================================================================
++FILE: src\repositories\FileRepository.ts
++================================================================================
++
++import fs from "fs";
++
++export const readJson =
++(
++  filePath: string
++) => {
++
++  if (
++    !fs.existsSync(
++      filePath
++    )
++  ) {
++
++    return null;
++
+   }
  
--export const saveTraceability =
+   return JSON.parse(
+@@ -860,201 +2168,233 @@ export const loadContexts =
+       "utf-8"
+     )
+   );
+-
+-};
+-
+-export const saveContexts =
 -(
--  items:
--    Traceability[],
+-  items: Context[],
 -  outputDir: string
 -) => {
 -
@@ -196,112 +1781,2024 @@ index 4050553..5f6ee76 100644
 -      recursive: true
 -    }
 -  );
-+  };
- 
--  fs.writeFileSync(
-+export const mergeTraceability =
-+  (
-+    current:
-+      Traceability[],
- 
+-
+-  const filePath =
 -    path.join(
 -      outputDir,
 -      FILE_NAME
--    ),
-+    incoming:
-+      Traceability[]
-+
-+  ): Traceability[] => {
-+
-+    const map =
-+      new Map<
-+        string,
-+        Traceability
-+      >();
-+
-+    [
-+      ...current,
-+      ...incoming
-+    ]
-+      .forEach(
-+        item => {
-+
-+          const key =
-+
-+            item.sourceId
-+            + "|"
-+            + item.targetId
-+            + "|"
-+            + item.relationType;
- 
+-    );
+-
+-  fs.writeFileSync(
+-    filePath,
 -    JSON.stringify(
 -      items,
 -      null,
 -      2
 -    ),
-+          map.set(
-+            key,
-+            item
-+          );
- 
 -    "utf-8"
-+        }
-+      );
+-  );
+-
+-  return filePath;
+-
+ };
+ 
+ 
+ 
+ ================================================================================
+-FILE: src\repositories\DocumentRepository.ts
++FILE: src\repositories\ManagementDataRepository.ts
+ ================================================================================
+ 
+ import fs from "fs";
+ import path from "path";
+ 
+-import type { Document }
+-from "@/models/Document";
++import type {
++  ManagementDataIndex,
++  ManagementDataIndexStatus,
++  ManagementDataItem,
++} from "@/models/ManagementData";
++import {
++  MANAGEMENT_DATA_SECTION_TITLE,
++  parseManagementDataLinks,
++} from "@/services/managementDataIndex/parseManagementDataIndex";
++
++const README_FILE_NAME = "README.md";
++const EXTERNAL_LINK_PATTERN = /^[a-z][a-z0-9+.-]*:/i;
+ 
+-const FILE_NAME =
+-  "documents.json";
++const isDirectory = (target: string): boolean =>
++  fs.existsSync(target) && fs.statSync(target).isDirectory();
+ 
+-export const loadDocuments =
+-(
+-  outputDir: string
+-): Document[] => {
++const isFile = (target: string): boolean =>
++  fs.existsSync(target) && fs.statSync(target).isFile();
+ 
+-  const filePath =
+-    path.join(
+-      outputDir,
+-      FILE_NAME
+-    );
++const createIndex = (
++  status: ManagementDataIndexStatus,
++  message: string,
++  rootPath: string,
++  items: ManagementDataItem[] = [],
++): ManagementDataIndex => ({ status, message, rootPath, items });
++
++/**
++ * リンク先を管理データパス配下に限定して解決する。
++ * 外部URL・絶対パス・配下の外へ出る相対パスは対象外(undefined)とする。
++ */
++const resolveInsideRoot = (
++  root: string,
++  href: string,
++): { absolute: string; relative: string } | undefined => {
++  if (EXTERNAL_LINK_PATTERN.test(href) || path.isAbsolute(href)) {
++    return undefined;
++  }
++
++  const absolute = path.resolve(root, href);
++  const relative = path.relative(root, absolute);
+ 
+   if (
+-    !fs.existsSync(
+-      filePath
+-    )
++    !relative ||
++    relative.startsWith("..") ||
++    path.isAbsolute(relative)
+   ) {
+-    return [];
++    return undefined;
+   }
+ 
+-  return JSON.parse(
+-    fs.readFileSync(
+-      filePath,
+-      "utf-8"
+-    )
+-  );
+-
++  return { absolute, relative: relative.split(path.sep).join("/") };
+ };
+ 
+-export const saveDocuments =
+-(
+-  documents: Document[],
+-  outputDir: string
+-) => {
++export const loadManagementDataIndex = (
++  rootPath: string,
++): ManagementDataIndex => {
++  const configuredPath = rootPath.trim();
+ 
+-  fs.mkdirSync(
+-    outputDir,
+-    {
+-      recursive:true
+-    }
+-  );
++  if (!configuredPath) {
++    return createIndex(
++      "root-path-not-set",
++      "プロジェクトに管理データパスが設定されていません。",
++      rootPath,
++    );
++  }
+ 
+-  const filePath =
+-    path.join(
+-      outputDir,
+-      FILE_NAME
++  const root = path.resolve(configuredPath);
++
++  if (!isDirectory(root)) {
++    return createIndex(
++      "root-path-not-found",
++      "管理データパスのフォルダーが見つかりません。パスとバックエンドの実行環境を確認してください。",
++      rootPath,
+     );
++  }
+ 
+-  fs.writeFileSync(
+-    filePath,
+-    JSON.stringify(
+-      documents,
+-      null,
+-      2
+-    ),
+-    "utf-8"
+-  );
++  const readmePath = path.join(root, README_FILE_NAME);
+ 
+-  return filePath;
+-};
++  if (!isFile(readmePath)) {
++    return createIndex(
++      "readme-not-found",
++      `管理データパス直下に${README_FILE_NAME}がありません。`,
++      rootPath,
++    );
++  }
+ 
+-export const mergeDocuments =
+-(
+-  current: Document[],
+-  incoming: Document[]
+-): Document[] => {
++  const links = parseManagementDataLinks(fs.readFileSync(readmePath, "utf-8"));
+ 
+-  const map =
+-    new Map<
+-      string,
+-      Document
+-    >();
++  if (!links) {
++    return createIndex(
++      "section-not-found",
++      `${README_FILE_NAME}に「${MANAGEMENT_DATA_SECTION_TITLE}」の見出しがありません。`,
++      rootPath,
++    );
++  }
+ 
+-  current.forEach(
+-    document =>
++  const items = links.flatMap((link): ManagementDataItem[] => {
++    const target = resolveInsideRoot(root, link.href);
+ 
+-      map.set(
+-        document.id,
+-        document
+-      )
++    return target
++      ? [{
++          title: link.title,
++          path: target.relative,
++          exists: fs.existsSync(target.absolute),
++        }]
++      : [];
++  });
  
 -  );
-+    return [
-+      ...map.values()
-+    ];
++  return createIndex("ok", "", rootPath, items);
++};
  
--};
+-  incoming.forEach(
+-    document => {
+ 
+-      const exists =
+-        [...map.values()]
+-          .find(
+-            item =>
+-              item.title ===
+-              document.title
+-          );
+ 
+-      if (
+-        exists
+-      ) {
+-        return;
+-      }
++================================================================================
++FILE: src\repositories\ProjectRepository.ts
++================================================================================
+ 
+-      map.set(
+-        document.id,
+-        document
+-      );
++import fs from "fs";
++import path from "path";
+ 
+-    }
+-  );
++import type { ProjectInput, ProjectRecord } from "@/models/Project";
++import { getNextId } from "@/services/idGenerator/IdGenerator";
++import { isStringProperty } from "@/utils/propUtils";
++import { isObject } from "@/utils/typeUtils";
+ 
+-  return [
+-    ...map.values()
+-  ];
++const FILE_NAME = "projects.json";
+ 
++const INITIAL_PROJECT: ProjectRecord = {
++  id: "PRJ-001",
++  name: "AI駆動型開発支援システム",
++  description: "",
++  status: "進行中",
++  rootPath: "",
+ };
+ 
++const isProjectRecord = (value: unknown): value is ProjectRecord =>
++  isObject(value) &&
++  isStringProperty(value, "id") &&
++  isStringProperty(value, "name") &&
++  isStringProperty(value, "description") &&
++  isStringProperty(value, "status") &&
++  isStringProperty(value, "rootPath");
+ 
+ 
+-================================================================================
+-FILE: src\repositories\FileRepository.ts
+-================================================================================
++export const loadProjects = (outputDir: string): ProjectRecord[] => {
++  const filePath = path.join(outputDir, FILE_NAME);
+ 
+-import fs from "fs";
++  if (!fs.existsSync(filePath)) {
++    return [{ ...INITIAL_PROJECT }];
++  }
+ 
+-export const readJson =
+-(
+-  filePath: string
+-) => {
++  const parsed: unknown = JSON.parse(fs.readFileSync(filePath, "utf-8"));
++  if (!Array.isArray(parsed) || !parsed.every(isProjectRecord)) {
++    throw new Error("プロジェクトデータの形式が不正です");
++  }
+ 
+-  if (
+-    !fs.existsSync(
+-      filePath
+-    )
+-  ) {
++  return parsed as ProjectRecord[];
++};
+ 
+-    return null;
++export const loadProjectById = (
++  id: string,
++  outputDir: string,
++): ProjectRecord | undefined => {
++  const projects = loadProjects(outputDir);
++  return projects.find((project) => project.id === id);
++};
++
++export const saveProjects = (
++  projects: ProjectRecord[],
++  outputDir: string,
++): string => {
++  fs.mkdirSync(outputDir, { recursive: true });
++
++  const filePath = path.join(outputDir, FILE_NAME);
++  const temporaryPath = `${filePath}.tmp`;
++  fs.writeFileSync(temporaryPath, JSON.stringify(projects, null, 2), "utf-8");
++  fs.renameSync(temporaryPath, filePath);
++
++  return filePath;
++};
++
++export const createProject = (
++  input: ProjectInput,
++  outputDir: string,
++): ProjectRecord => {
++  const projects = loadProjects(outputDir);
++  const project: ProjectRecord = {
++    ...input,
++    id: getNextId("PRJ", projects),
 +  };
-diff --git a/backend/src/services/ConverterService.ts b/backend/src/services/ConverterService.ts
-index 7a0cec8..12c65db 100644
---- a/backend/src/services/ConverterService.ts
-+++ b/backend/src/services/ConverterService.ts
-@@ -35,6 +35,16 @@ import {
- } from "@/repositories/ContextRepository";
- import { buildContext } from "@/services/contextBuilder/buildContext";
  
-+import {
-+  buildTraceability
-+} from "@/services/traceabilityBuilder/buildTraceability";
++  if (projects.some((item) => item.id === project.id)) {
++    throw new Error(`プロジェクトIDが重複しています: ${project.id}`);
+   }
+ 
+-  return JSON.parse(
+-    fs.readFileSync(
+-      filePath,
+-      "utf-8"
+-    )
+-  );
++  saveProjects([...projects, project], outputDir);
++  return project;
+ };
+ 
++export const updateProject = (
++  id: string,
++  input: ProjectInput,
++  outputDir: string,
++): ProjectRecord | undefined => {
++  const projects = loadProjects(outputDir);
++  const index = projects.findIndex((project) => project.id === id);
 +
-+import {
-+  loadTraceability,
-+  mergeTraceability,
-+  saveTraceability
-+} from "@/repositories/TraceabilityRepository";
++  if (index === -1) {
++    return undefined;
++  }
 +
- export const convertMarkdown =
++  const updated: ProjectRecord = { ...input, id };
++  projects[index] = updated;
++  saveProjects(projects, outputDir);
++
++  return updated;
++};
+ 
+ 
+ ================================================================================
+@@ -1064,10 +2404,48 @@ FILE: src\repositories\TaskRepository.ts
+ import fs from "fs";
+ import path from "path";
+ 
+-import type { Task } from "@/models/Task";
++import type { Task, TaskInput } from "@/models/Task";
++import { getNextId } from "@/services/idGenerator/IdGenerator";
+ 
+ const FILE_NAME =
+   "tasks.json";
++const PAGE_SIZE = 20;
++const RESERVED_TASK_ID = "TSK-030";
++const taskStatuses: Task["status"][] = ["TODO", "DOING", "DONE"];
++const taskPriorities: Task["priority"][] = ["LOW", "NORMAL", "HIGH"];
++
++export type TaskListFilters = {
++  q: string;
++  projectId?: string;
++  status?: Task["status"];
++  priority?: Task["priority"];
++  page: number;
++};
++
++export type TaskListResult = {
++  items: Task[];
++  count: number;
++  page: number;
++  pageSize: number;
++  totalPages: number;
++};
++
++const isTask = (value: unknown): value is Task => {
++  if (!value || typeof value !== "object" || Array.isArray(value)) {
++    return false;
++  }
++
++  const task = value as Record<string, unknown>;
++  return (
++    typeof task.id === "string" &&
++    typeof task.title === "string" &&
++    typeof task.description === "string" &&
++    taskStatuses.some((status) => status === task.status) &&
++    taskPriorities.some((priority) => priority === task.priority) &&
++    typeof task.source === "string" &&
++    (task.projectId === undefined || typeof task.projectId === "string")
++  );
++};
+ 
+ export const loadTasks = (
+   outputDir: string
+@@ -1087,12 +2465,40 @@ export const loadTasks = (
+     return [];
+   }
+ 
+-  return JSON.parse(
++  const parsed: unknown = JSON.parse(
+     fs.readFileSync(
+       filePath,
+       "utf-8"
+     )
+   );
++
++  if (!Array.isArray(parsed) || !parsed.every(isTask)) {
++    throw new Error(
++      `Invalid task data in ${filePath}`
++    );
++  }
++
++  return parsed;
++};
++
++export const loadTasksGrouped = (
++  outputDir: string
++): Map<string, Task[]> => {
++  const tasks = loadTasks(outputDir);
++  return tasks.reduce(
++    (acc, task) => {
++      if (!task.projectId) {
++        return acc;
++      }
++
++      const projectTasks = acc.get(task.projectId) ?? [];
++      projectTasks.push(task);
++      acc.set(task.projectId, projectTasks);
++
++      return acc;
++    },
++    new Map<string, Task[]>()
++  );
+ };
+ 
+ export const saveTasks = (
+@@ -1156,23 +2562,132 @@ export const mergeTasks = (
+               task.title
+           );
+ 
+-      if (
+-        exists
+-      ) {
+-        return;
+-      }
++      if (
++        exists
++      ) {
++        return;
++      }
++
++      map.set(
++        task.id,
++        task
++      );
++
++    }
++  );
++
++  return [
++    ...map.values()
++  ];
++};
++
++export const listTasks = (
++  tasks: Task[],
++  filters: TaskListFilters
++): TaskListResult => {
++  const query = filters.q.trim().toLocaleLowerCase();
++  const filtered = tasks
++    .filter((task) => {
++      if (
++        filters.projectId === "unassigned" &&
++        task.projectId
++      ) {
++        return false;
++      }
++
++      if (
++        filters.projectId &&
++        filters.projectId !== "unassigned" &&
++        task.projectId !== filters.projectId
++      ) {
++        return false;
++      }
++
++      if (
++        filters.status &&
++        task.status !== filters.status
++      ) {
++        return false;
++      }
++
++      if (
++        filters.priority &&
++        task.priority !== filters.priority
++      ) {
++        return false;
++      }
++
++      if (
++        query &&
++        !`${task.id} ${task.title}`
++          .toLocaleLowerCase()
++          .includes(query)
++      ) {
++        return false;
++      }
++
++      return true;
++    })
++    .sort((left, right) => left.id.localeCompare(right.id));
++
++  const totalPages = Math.max(
++    1,
++    Math.ceil(filtered.length / PAGE_SIZE)
++  );
++  const page = Math.min(filters.page, totalPages);
++  const start = (page - 1) * PAGE_SIZE;
++
++  return {
++    items: filtered.slice(start, start + PAGE_SIZE),
++    count: filtered.length,
++    page,
++    pageSize: PAGE_SIZE,
++    totalPages,
++  };
++};
++
++export const createTask = (
++  input: TaskInput,
++  outputDir: string
++): Task => {
++  const tasks = loadTasks(outputDir);
++  const id = getNextId("TSK", [
++    ...tasks,
++    { id: RESERVED_TASK_ID },
++  ]);
++  const task: Task = {
++    ...input,
++    id,
++    source: "手動登録",
++  };
+ 
+-      map.set(
+-        task.id,
+-        task
+-      );
++  saveTasks([...tasks, task], outputDir);
++  return task;
++};
+ 
+-    }
+-  );
++export const findTask = (
++  id: string,
++  outputDir: string
++): Task | undefined =>
++  loadTasks(outputDir).find((task) => task.id === id);
+ 
+-  return [
+-    ...map.values()
+-  ];
++export const updateTask = (
++  id: string,
++  input: TaskInput,
++  outputDir: string
++): Task | undefined => {
++  const tasks = loadTasks(outputDir);
++  const index = tasks.findIndex((task) => task.id === id);
++  if (index < 0) return undefined;
++
++  const updated: Task = {
++    ...tasks[index],
++    ...input,
++    id,
++  };
++  tasks[index] = updated;
++  saveTasks(tasks, outputDir);
++  return updated;
+ };
+ 
+ 
+@@ -1194,7 +2709,7 @@ const FILE_NAME =
+ export const loadTraceability =
    (
-     markdown: string,
-@@ -154,6 +164,28 @@ export const convertMarkdown =
-       outputDir
-     );
+     outputDir: string
+-  ) => {
++  ): Traceability[] => {
  
-+    const currentTraceability =
-+      loadTraceability(
-+        outputDir
-+      );
+     const filePath =
+       path.join(
+@@ -1299,6 +2814,360 @@ export const mergeTraceability =
+ 
+ 
+ 
++================================================================================
++FILE: src\repositories\__tests__\ManagementDataRepository.test.ts
++================================================================================
 +
-+    const generatedTraceability =
-+      buildTraceability(
-+        newDocuments,
-+        newTasks
-+      );
++import fs from "fs";
++import os from "os";
++import path from "path";
 +
-+    const mergedTraceability =
-+      mergeTraceability(
-+        currentTraceability,
-+        generatedTraceability
-+      );
++import { afterEach, describe, expect, it } from "vitest";
 +
-+    saveTraceability(
-+      mergedTraceability,
-+      outputDir
++import { loadManagementDataIndex } from "@/repositories/ManagementDataRepository";
++
++const directories: string[] = [];
++
++const createRoot = (readme?: string) => {
++  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "management-data-"));
++  directories.push(directory);
++
++  if (readme !== undefined) {
++    fs.writeFileSync(path.join(directory, "README.md"), readme, "utf-8");
++  }
++
++  return directory;
++};
++
++afterEach(() => {
++  for (const directory of directories.splice(0)) {
++    fs.rmSync(directory, { recursive: true, force: true });
++  }
++});
++
++describe("loadManagementDataIndex", () => {
++  it("reports an unset path without throwing", () => {
++    expect(loadManagementDataIndex("  ").status).toBe("root-path-not-set");
++  });
++
++  it("reports a missing folder", () => {
++    const missing = path.join(os.tmpdir(), "management-data-does-not-exist");
++
++    expect(loadManagementDataIndex(missing).status).toBe("root-path-not-found");
++  });
++
++  it("reports a missing README.md", () => {
++    expect(loadManagementDataIndex(createRoot()).status).toBe("readme-not-found");
++  });
++
++  it("reports a README.md without the 管理データ一覧 section", () => {
++    expect(loadManagementDataIndex(createRoot("# 管理データ\n")).status).toBe(
++      "section-not-found",
++    );
++  });
++
++  it("lists linked files with their existence", () => {
++    const root = createRoot(
++      [
++        "## 管理データ一覧",
++        "- [QA一覧](QA一覧.md)",
++        "- [課題一覧](issue/README.md)",
++        "- [未作成](missing.md)",
++      ].join("\n"),
++    );
++    fs.writeFileSync(path.join(root, "QA一覧.md"), "# QA", "utf-8");
++    fs.mkdirSync(path.join(root, "issue"));
++    fs.writeFileSync(path.join(root, "issue", "README.md"), "# 課題", "utf-8");
++
++    const index = loadManagementDataIndex(root);
++
++    expect(index.status).toBe("ok");
++    expect(index.items).toEqual([
++      { title: "QA一覧", path: "QA一覧.md", exists: true },
++      { title: "課題一覧", path: "issue/README.md", exists: true },
++      { title: "未作成", path: "missing.md", exists: false },
++    ]);
++  });
++
++  it("drops links that point outside the management data path", () => {
++    const root = createRoot(
++      [
++        "## 管理データ一覧",
++        "- [外部](https://example.com/a.md)",
++        "- [親](../outside.md)",
++        "- [絶対](/etc/passwd)",
++        "- [配下](inside.md)",
++      ].join("\n"),
 +    );
 +
-     return {
++    expect(loadManagementDataIndex(root).items).toEqual([
++      { title: "配下", path: "inside.md", exists: false },
++    ]);
++  });
++});
++
++
++
++================================================================================
++FILE: src\repositories\__tests__\ProjectRepository.test.ts
++================================================================================
++
++import fs from "fs";
++import os from "os";
++import path from "path";
++
++import { afterEach, describe, expect, it } from "vitest";
++
++import {
++  createProject,
++  loadProjects,
++  updateProject,
++} from "@/repositories/ProjectRepository";
++
++const directories: string[] = [];
++
++const createOutputDir = () => {
++  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "project-repository-"));
++  directories.push(directory);
++  return directory;
++};
++
++afterEach(() => {
++  for (const directory of directories.splice(0)) {
++    fs.rmSync(directory, { recursive: true, force: true });
++  }
++});
++
++describe("ProjectRepository", () => {
++  it("uses the existing project as initial data when no file exists", () => {
++    const projects = loadProjects(createOutputDir());
++
++    expect(projects).toEqual([
++      {
++        id: "PRJ-001",
++        name: "AI駆動型開発支援システム",
++        description: "",
++        status: "進行中",
++        rootPath: "",
++      },
++    ]);
++  });
++
++  it("creates and persists projects with the next project ID", () => {
++    const outputDir = createOutputDir();
++    const input = {
++      name: "新規プロジェクト",
++      description: "説明",
++      status: "",
++      rootPath: "",
++    };
++
++    const created = createProject(input, outputDir);
++
++    expect(created).toEqual({ ...input, id: "PRJ-002" });
++    expect(loadProjects(outputDir)).toContainEqual(created);
++  });
++
++  it("updates a project without changing its ID", () => {
++    const outputDir = createOutputDir();
++    const updated = updateProject(
++      "PRJ-001",
++      { name: "更新名", description: "説明", status: "計画中", rootPath: "" },
++      outputDir,
++    );
++
++    expect(updated).toEqual({
++      id: "PRJ-001",
++      name: "更新名",
++      description: "説明",
++      status: "計画中",
++      rootPath: "",
++    });
++    expect(loadProjects(outputDir)).toContainEqual(updated);
++  });
++
++  it("does not create a replacement for an unknown project", () => {
++    const outputDir = createOutputDir();
++
++    expect(
++      updateProject(
++        "PRJ-999",
++        { name: "更新名", description: "", status: "", rootPath: "" },
++        outputDir,
++      ),
++    ).toBeUndefined();
++    expect(loadProjects(outputDir)).toHaveLength(1);
++  });
++
++  it("reports invalid stored JSON shape instead of returning empty data", () => {
++    const outputDir = createOutputDir();
++    fs.writeFileSync(
++      path.join(outputDir, "projects.json"),
++      JSON.stringify({ id: "PRJ-001" }),
++    );
++
++    expect(() => loadProjects(outputDir)).toThrow("プロジェクトデータの形式が不正です");
++  });
++});
++
++
++
++================================================================================
++FILE: src\repositories\__tests__\TaskRepository.test.ts
++================================================================================
++
++import fs from "fs";
++import os from "os";
++import path from "path";
++
++import { afterEach, describe, expect, it } from "vitest";
++
++import type { Task, TaskInput } from "@/models/Task";
++import {
++  createTask,
++  findTask,
++  listTasks,
++  loadTasks,
++  saveTasks,
++  updateTask,
++} from "@/repositories/TaskRepository";
++
++const temporaryDirectories: string[] = [];
++
++const createTemporaryDirectory = () => {
++  const directory = fs.mkdtempSync(path.join(os.tmpdir(), "task-repository-"));
++  temporaryDirectories.push(directory);
++  return directory;
++};
++
++const makeTask = (id: number, projectId?: string): Task => ({
++  id: `TSK-${String(id).padStart(3, "0")}`,
++  title: `Task ${id}`,
++  description: "",
++  status: "TODO",
++  priority: "NORMAL",
++  source: "test",
++  projectId,
++});
++
++const makeInput = (title: string): TaskInput => ({
++  title,
++  description: "",
++  status: "TODO",
++  priority: "NORMAL",
++  projectId: "PRJ-001",
++});
++
++afterEach(() => {
++  for (const directory of temporaryDirectories.splice(0)) {
++    fs.rmSync(directory, { recursive: true, force: true });
++  }
++});
++
++describe("TaskRepository", () => {
++  it("returns an empty list when the generated task file does not exist", () => {
++    expect(loadTasks(createTemporaryDirectory())).toEqual([]);
++  });
++
++  it("rejects malformed task data instead of treating it as a valid empty list", () => {
++    const directory = createTemporaryDirectory();
++    fs.writeFileSync(path.join(directory, "tasks.json"), "{}", "utf-8");
++
++    expect(() => loadTasks(directory)).toThrow("Invalid task data");
++  });
++
++  it("filters and paginates tasks in ID order", () => {
++    const tasks = Array.from({ length: 25 }, (_, index) =>
++      makeTask(25 - index, index % 2 === 0 ? undefined : "PRJ-001"),
++    );
++
++    const firstPage = listTasks(tasks, {
++      q: "task",
++      projectId: "unassigned",
++      status: "TODO",
++      priority: "NORMAL",
++      page: 1,
++    });
++
++    expect(firstPage.count).toBe(13);
++    expect(firstPage.items).toHaveLength(13);
++    expect(firstPage.items[0].id).toBe("TSK-001");
++    expect(firstPage.totalPages).toBe(1);
++    expect(firstPage.pageSize).toBe(20);
++  });
++
++  it("paginates more than one page", () => {
++    const tasks = Array.from({ length: 25 }, (_, index) =>
++      makeTask(index + 1, "PRJ-001"),
++    );
++
++    const firstPage = listTasks(tasks, { q: "", page: 1 });
++    const secondPage = listTasks(tasks, { q: "", page: 2 });
++
++    expect(firstPage.items).toHaveLength(20);
++    expect(firstPage.items[0].id).toBe("TSK-001");
++    expect(secondPage.items).toHaveLength(5);
++    expect(secondPage.items[0].id).toBe("TSK-021");
++    expect(secondPage.page).toBe(2);
++  });
++
++  it("starts new project task IDs after the WBS-reserved TSK-001 through TSK-030 range", () => {
++    const directory = createTemporaryDirectory();
++    saveTasks([makeTask(1), makeTask(8)], directory);
++
++    const first = createTask(makeInput("New task"), directory);
++    const second = createTask(makeInput("Another task"), directory);
++
++    expect(first.id).toBe("TSK-031");
++    expect(first.source).toBe("手動登録");
++    expect(second.id).toBe("TSK-032");
++    expect(loadTasks(directory)).toHaveLength(4);
++  });
++
++  it("updates a task without changing its ID or source", () => {
++    const directory = createTemporaryDirectory();
++    saveTasks([makeTask(31)], directory);
++    const updated = updateTask(
++      "TSK-031",
++      { ...makeInput("Updated task"), status: "DOING" },
++      directory,
++    );
++
++    expect(updated).toMatchObject({
++      id: "TSK-031",
++      title: "Updated task",
++      status: "DOING",
++      source: "test",
++      projectId: "PRJ-001",
++    });
++    expect(findTask("TSK-031", directory)).toEqual(updated);
++    expect(updateTask("TSK-999", makeInput("Missing"), directory)).toBeUndefined();
++  });
++});
++
++
++
++================================================================================
++FILE: src\routes\agentToolsRoutes.ts
++================================================================================
++
++import { Router } from "express";
++import {
++  getAgentCatalog,
++  getAgentToolStatus,
++  postAgentPlan
++} from "@/controllers/agentToolsController";
++
++const router = Router();
++
++router.get("/status", getAgentToolStatus);
++router.get("/agents", getAgentCatalog);
++router.post("/plan", postAgentPlan);
++
++export default router;
++
++
++
+ ================================================================================
+ FILE: src\routes\contextRoutes.ts
+ ================================================================================
+@@ -1432,6 +3301,7 @@ import dashboardRoutes from "./dashboardRoutes";
+ import matrixRoutes from "@/routes/matrixRoutes";
+ import traceabilityRoutes from "@/routes/traceabilityRoutes";
+ import contextRoutes from "./contextRoutes";
++import agentToolsRoutes from "./agentToolsRoutes";
  
-       document,
+ const router =
+   Router();
+@@ -1466,6 +3336,11 @@ router.use(
+   contextRoutes
+ );
+ 
++router.use(
++  "/agent-tools",
++  agentToolsRoutes
++);
++
+ router.use(
+   "/dashboard",
+   dashboardRoutes
+@@ -1512,19 +3387,63 @@ export default router;
+ FILE: src\routes\projectRoutes.ts
+ ================================================================================
+ 
++import { Router } from "express";
++
++import {
++  getProjectDetail,
++  getProjectManagementData,
++  getProjects,
++  postProject,
++  putProject,
++} from "@/controllers/project/projectController";
++
++const router = Router();
++
++router.get("/", getProjects);
++router.post("/", postProject);
++router.get("/:id", getProjectDetail);
++router.get("/:id/management-data", getProjectManagementData);
++router.put("/:id", putProject);
++
++export default router;
++
++
++
++================================================================================
++FILE: src\routes\taskRoutes.ts
++================================================================================
++
+ import { Router }
+ from "express";
+ 
+ import {
+-  getProjects
+-} from "@/controllers/projectController";
++  getTaskDetail,
++  getTasks,
++  postTask,
++  putTask,
++} from "@/controllers/taskController";
+ 
+ const router =
+   Router();
+ 
+ router.get(
+   "/",
+-  getProjects
++  getTasks
++);
++
++router.get(
++  "/:id",
++  getTaskDetail
++);
++
++router.post(
++  "/",
++  postTask
++);
++
++router.put(
++  "/:id",
++  putTask
+ );
+ 
+ export default router;
+@@ -1532,48 +3451,261 @@ export default router;
+ 
+ 
+ ================================================================================
+-FILE: src\routes\taskRoutes.ts
++FILE: src\routes\traceabilityRoutes.ts
+ ================================================================================
+ 
+ import { Router }
+ from "express";
+ 
+ import {
+-  getTasks
+-} from "@/controllers/taskController";
++  getTraceability
++} from "@/controllers/traceabilityController";
+ 
+ const router =
+   Router();
+ 
+ router.get(
+   "/",
+-  getTasks
++  getTraceability
+ );
+ 
+ export default router;
+ 
+ 
+ 
+-================================================================================
+-FILE: src\routes\traceabilityRoutes.ts
+-================================================================================
++================================================================================
++FILE: src\services\AgentToolsService.ts
++================================================================================
++
++import { execFileSync } from "node:child_process";
++import fs from "node:fs";
++import path from "node:path";
++
++export type AgentDefinition = {
++  id: string;
++  name: string;
++  description: string;
++  file: string;
++};
++
++export type AgentCandidate = AgentDefinition & {
++  score: number;
++  matchedCapabilities: string[];
++};
++
++export type RepositoryState = {
++  root: string;
++  branch: string;
++  status: string[];
++  clean: boolean;
++  worktrees: {
++    path: string;
++    branch: string;
++    current: boolean;
++  }[];
++};
++
++const agentCapabilities: Record<string, string[]> = {
++  "architecture": ["architecture", "system design", "アーキテクチャ", "システム設計"],
++  "backend": ["backend", "server", "api", "バックエンド", "サーバー"],
++  "cd": ["deployment", "release", "rollback", "デプロイ", "リリース"],
++  "ci": ["ci", "build", "lint", "coverage", "ビルド", "静的解析"],
++  "database": ["database", "schema", "sql", "データベース", "スキーマ", "DB"],
++  "detail-design": ["detailed design", "api contract", "interface", "詳細設計", "API仕様"],
++  "documentation": ["documentation", "readme", "docs", "ドキュメント", "文書"],
++  "fix": ["fix", "requested changes", "修正", "不具合対応"],
++  "frontend": ["frontend", "client-side", "フロントエンド", "画面実装"],
++  "git": ["git", "branch", "commit", "rebase", "ブランチ", "コミット"],
++  "github": ["github", "pull request", "issue", "プルリクエスト", "イシュー"],
++  "knowledge": ["handoff", "project knowledge", "コンテキスト整理", "ナレッジ"],
++  "performance": ["performance", "optimization", "パフォーマンス", "最適化"],
++  "project-audit": ["audit", "quality analysis", "プロジェクト監査", "品質監査"],
++  "project-manager": ["planning", "wbs", "schedule", "estimate", "計画", "見積", "スケジュール"],
++  "prompt-engineer": ["prompt", "agent prompt", "プロンプト"],
++  "requirement": ["requirement", "acceptance criteria", "要件", "受入条件"],
++  "review": ["review", "code review", "レビュー", "コードレビュー"],
++  "security": ["security", "vulnerability", "owasp", "セキュリティ", "脆弱性"],
++  "test-design": ["test strategy", "test cases", "テスト設計", "テストケース"],
++  "test-execution": ["test execution", "run tests", "テスト実行", "テスト実施"],
++  "traceability": ["traceability", "traceability matrix", "トレーサビリティ", "追跡可能性"],
++  "uiux": ["ux", "usability", "wireframe", "UX", "ユーザビリティ", "ワイヤーフレーム"]
++};
++
++const runGit = (root: string, args: string[]): string =>
++  execFileSync("git", args, {
++    cwd: root,
++    encoding: "utf8",
++    stdio: ["ignore", "pipe", "pipe"]
++  }).trim();
++
++export const getRepositoryState = (
++  workingDirectory = process.cwd()
++): RepositoryState => {
++  const root = path.resolve(
++    runGit(workingDirectory, ["rev-parse", "--show-toplevel"])
++  );
++  const branch = runGit(root, ["branch", "--show-current"]);
++  const status = runGit(root, ["status", "--short", "--branch"])
++    .split(/\r?\n/)
++    .filter(Boolean);
++  const worktreeOutput = runGit(root, ["worktree", "list", "--porcelain"]);
++  const worktrees: RepositoryState["worktrees"] = [];
++  let worktree: RepositoryState["worktrees"][number] | undefined;
++
++  for (const line of worktreeOutput.split(/\r?\n/)) {
++    if (line.startsWith("worktree ")) {
++      if (worktree) {
++        worktrees.push(worktree);
++      }
++
++      const worktreePath = path.resolve(line.slice("worktree ".length));
++      worktree = {
++        path: worktreePath,
++        branch: "",
++        current: path.resolve(worktreePath) === path.resolve(root)
++      };
++    } else if (line.startsWith("branch ") && worktree) {
++      worktree.branch = line
++        .slice("branch ".length)
++        .replace(/^refs\/heads\//, "");
++    }
++  }
++
++  if (worktree) {
++    worktrees.push(worktree);
++  }
++
++  return {
++    root,
++    branch,
++    status,
++    clean: status.every((line) => line.startsWith("##")),
++    worktrees
++  };
++};
++
++const readFrontmatterValue = (
++  frontmatter: string,
++  key: string,
++  fallbackKey?: string
++): string => {
++  let match = frontmatter.match(new RegExp(`^${key}:\\s*(.+)$`, "m"));
++  if (!match && fallbackKey) {
++    match = frontmatter.match(new RegExp(`^${fallbackKey}:\\s*(.+)$`, "m"));
++  }
++
++  if (!match) {
++    throw new Error(`Agent definition is missing "${key}" metadata.`);
++  }
++
++  return match[1].trim().replace(/^(['"])(.*)\1$/, "$2");
++};
++
++export const listAgents = (
++  repositoryRoot = getRepositoryState().root
++): AgentDefinition[] => {
++  const antigravityDirectory = path.join(repositoryRoot, ".agents", "agents");
++  const githubDirectory = path.join(repositoryRoot, ".github", "agents");
++
++  const useAntigravity =
++    fs.existsSync(antigravityDirectory) &&
++    fs.readdirSync(antigravityDirectory).some((f) => f.endsWith(".md"));
++
++  const agentsDirectory = useAntigravity ? antigravityDirectory : githubDirectory;
++  const relativeDir = useAntigravity
++    ? path.posix.join(".agents", "agents")
++    : path.posix.join(".github", "agents");
++
++  const files = fs
++    .readdirSync(agentsDirectory, { withFileTypes: true })
++    .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
++    .map((entry) => entry.name)
++    .sort();
++
++  return files.map((file) => {
++    const absolutePath = path.join(agentsDirectory, file);
++    const content = fs.readFileSync(absolutePath, "utf8");
++    const frontmatter = content.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/)?.[1];
++
++    if (!frontmatter) {
++      throw new Error(`Agent definition has invalid frontmatter: ${file}`);
++    }
++
++    return {
++      id: file.replace(/(\.agent)?\.md$/, ""),
++      name: readFrontmatterValue(frontmatter, "displayName", "name"),
++      description: readFrontmatterValue(frontmatter, "description"),
++      file: path.posix.join(relativeDir, file)
++    };
++  });
++};
++
++export const findAgentCandidates = (
++  request: string,
++  repositoryRoot = getRepositoryState().root
++): AgentCandidate[] => {
++  const normalizedRequest = request.toLocaleLowerCase();
++
++  if (!normalizedRequest.trim()) {
++    return [];
++  }
++
++  const requestWords = new Set(
++    normalizedRequest
++      .split(/[^\p{L}\p{N}]+/u)
++      .filter((word) => word.length > 2)
++  );
++
++  return listAgents(repositoryRoot)
++    .map((agent) => {
++      const capabilities = agentCapabilities[agent.id] ?? [];
++      const matchedCapabilities = capabilities.filter((capability) =>
++        normalizedRequest.includes(capability.toLocaleLowerCase())
++      );
++      const text = `${agent.name} ${agent.description}`.toLocaleLowerCase();
++      const descriptionMatches = text
++        .split(/[^\p{L}\p{N}]+/u)
++        .filter((word) => word.length > 2)
++        .filter((word) => requestWords.has(word));
++      const score = matchedCapabilities.length * 2 + descriptionMatches.length;
+ 
+-import { Router }
+-from "express";
++      return {
++        ...agent,
++        score,
++        matchedCapabilities
++      };
++    })
++    .filter((candidate) => candidate.score > 0)
++    .sort((left, right) =>
++      right.score - left.score || left.name.localeCompare(right.name)
++    )
++    .slice(0, 5);
++};
+ 
+-import {
+-  getTraceability
+-} from "@/controllers/traceabilityController";
++export const createAgentPlan = (
++  request: string,
++  workingDirectory = process.cwd()
++) => {
++  const trimmedRequest = request.trim();
+ 
+-const router =
+-  Router();
++  if (!trimmedRequest) {
++    throw new Error("A non-empty request is required to create an agent plan.");
++  }
+ 
+-router.get(
+-  "/",
+-  getTraceability
+-);
++  const repository = getRepositoryState(workingDirectory);
+ 
+-export default router;
++  return {
++    request: trimmedRequest,
++    repository,
++    candidateAgents: findAgentCandidates(trimmedRequest, repository.root),
++    nextSteps: [
++      "Confirm the ticket scope, allowed files, and deliverables.",
++      "Choose the appropriate specialist(s) from the candidates; this tool does not invoke agents.",
++      "Pass the verified repository root and relevant context to each specialist.",
++      "Run the required review and validation before completion."
++    ]
++  };
++};
+ 
+ 
+ 
+@@ -2226,6 +4358,89 @@ export const exportTraceability =
+ 
+ 
+ 
++================================================================================
++FILE: src\services\managementDataIndex\parseManagementDataIndex.ts
++================================================================================
++
++export const MANAGEMENT_DATA_SECTION_TITLE = "管理データ一覧";
++
++export type ManagementDataLink = {
++  title: string;
++  href: string;
++};
++
++const HEADING_PATTERN = /^(#{1,6})\s+(.+?)\s*#*\s*$/;
++const FENCE_PATTERN = /^\s*(```|~~~)/;
++const LINK_ITEM_PATTERN = /^\s*[-*+]\s+\[([^\]]+)\]\(([^)\s]+)\)\s*$/;
++
++const toHref = (rawTarget: string): string => {
++  const withoutAnchor = rawTarget.split("#")[0] ?? "";
++
++  try {
++    return decodeURI(withoutAnchor);
++  } catch {
++    return withoutAnchor;
++  }
++};
++
++/**
++ * README.md から「管理データ一覧」見出し配下の箇条書きリンクを取り出す。
++ * 見出しが存在しない場合は undefined、存在してリンクがなければ空配列を返す。
++ */
++export const parseManagementDataLinks = (
++  markdown: string,
++): ManagementDataLink[] | undefined => {
++  const lines = markdown.replace(/^\uFEFF/, "").split(/\r?\n/);
++  const links: ManagementDataLink[] = [];
++
++  let sectionLevel: number | undefined;
++  let found = false;
++  let inFence = false;
++
++  for (const line of lines) {
++    if (FENCE_PATTERN.test(line)) {
++      inFence = !inFence;
++      continue;
++    }
++
++    if (inFence) {
++      continue;
++    }
++
++    const heading = HEADING_PATTERN.exec(line);
++
++    if (heading) {
++      const level = heading[1].length;
++
++      if (sectionLevel !== undefined && level <= sectionLevel) {
++        break;
++      }
++
++      if (sectionLevel === undefined && heading[2] === MANAGEMENT_DATA_SECTION_TITLE) {
++        sectionLevel = level;
++        found = true;
++      }
++
++      continue;
++    }
++
++    if (sectionLevel === undefined) {
++      continue;
++    }
++
++    const item = LINK_ITEM_PATTERN.exec(line);
++    const href = item ? toHref(item[2]) : "";
++
++    if (item && href) {
++      links.push({ title: item[1].trim(), href });
++    }
++  }
++
++  return found ? links : undefined;
++};
++
++
++
+ ================================================================================
+ FILE: src\services\markdownParser\index.ts
+ ================================================================================
+@@ -2514,6 +4729,7 @@ FILE: src\services\TaskExtractor.ts
+ 
+ import type { DocumentModel } from "../models/DocumentModel";
+ import type { Task } from "../models/Task";
++import { createIdAllocator } from "./idGenerator/IdGenerator";
+ 
+ type Options = {
+   nextId?: () => string;
+@@ -2565,15 +4781,19 @@ export const extractTasks = (
+       tasks
+     );
+ 
++  const nextId =
++    options?.nextId ??
++    createIdAllocator(
++      "TSK",
++      []
++    );
++
+   return uniqueTasks.map(
+     task => ({
+ 
+       ...task,
+ 
+-      id:
+-        options?.nextId
+-          ? options.nextId()
+-          : "TSK-000"
++      id: nextId()
+ 
+     })
+   );
+@@ -2777,6 +4997,118 @@ export const buildTraceability =
+ 
+ 
+ 
++================================================================================
++FILE: src\services\__tests__\AgentToolsService.test.ts
++================================================================================
++
++import { execFileSync } from "node:child_process";
++import fs from "node:fs";
++import os from "node:os";
++import path from "node:path";
++import { afterEach, describe, expect, it } from "vitest";
++import {
++  createAgentPlan,
++  findAgentCandidates,
++  getRepositoryState,
++  listAgents
++} from "../AgentToolsService";
++
++const temporaryDirectories: string[] = [];
++
++const createRepository = () => {
++  const root = fs.mkdtempSync(path.join(os.tmpdir(), "agent-tools-"));
++  temporaryDirectories.push(root);
++  execFileSync("git", ["init", "-b", "feature/test"], { cwd: root });
++  fs.mkdirSync(path.join(root, ".github", "agents"), { recursive: true });
++  fs.writeFileSync(
++    path.join(root, ".github", "agents", "backend.agent.md"),
++    `---
++name: Backend Agent
++description: "Implement backend APIs and server-side behavior."
++---
++`
++  );
++  fs.writeFileSync(
++    path.join(root, ".github", "agents", "security.agent.md"),
++    `---
++name: Security Agent
++description: "Review security vulnerabilities and OWASP risks."
++---
++`
++  );
++  return root;
++};
++
++afterEach(() => {
++  temporaryDirectories.splice(0).forEach((directory) =>
++    fs.rmSync(directory, { recursive: true, force: true })
++  );
++});
++
++describe("AgentToolsService", () => {
++  it("reports branch, working tree status, and worktrees", () => {
++    const root = createRepository();
++    const state = getRepositoryState(root);
++
++    expect(state.root).toBe(root);
++    expect(state.branch).toBe("feature/test");
++    expect(state.clean).toBe(false);
++    expect(state.worktrees).toContainEqual({
++      path: root,
++      branch: "feature/test",
++      current: true
++    });
++  });
++
++  it("loads agent metadata and ranks matching candidates", () => {
++    const root = createRepository();
++
++    expect(listAgents(root).map((agent) => agent.id)).toEqual([
++      "backend",
++      "security"
++    ]);
++    expect(findAgentCandidates("バックエンド API", root)[0]?.id).toBe("backend");
++    expect(findAgentCandidates("OWASP 脆弱性レビュー", root)[0]?.id).toBe("security");
++  });
++
++  it("prioritizes .agents/agents definitions when present", () => {
++    const root = createRepository();
++    fs.mkdirSync(path.join(root, ".agents", "agents"), { recursive: true });
++    fs.writeFileSync(
++      path.join(root, ".agents", "agents", "backend.md"),
++      `---
++name: backend
++displayName: "Backend Agent (AGT-BE)"
++description: "Implement backend APIs and server-side behavior for Antigravity."
++---
++`
++    );
++
++    const agents = listAgents(root);
++    expect(agents).toHaveLength(1);
++    expect(agents[0].id).toBe("backend");
++    expect(agents[0].name).toBe("Backend Agent (AGT-BE)");
++    expect(agents[0].file).toBe(".agents/agents/backend.md");
++  });
++
++  it("creates an advisory plan with the repository snapshot", () => {
++    const root = createRepository();
++    const plan = createAgentPlan("backend API", root);
++
++    expect(plan.repository.root).toBe(root);
++    expect(plan.candidateAgents[0]?.id).toBe("backend");
++    expect(plan.nextSteps).toHaveLength(4);
++  });
++
++  it("rejects empty requests", () => {
++    expect(() => createAgentPlan("  ", process.cwd())).toThrow(
++      "A non-empty request is required"
++    );
++  });
++});
++
++
++
+ ================================================================================
+ FILE: src\services\__tests__\ConverterService.test.ts
+ ================================================================================
+@@ -2787,10 +5119,44 @@ import {
+   it
+ } from "vitest";
+ 
++import {
++  mkdtempSync,
++  rmSync
++} from "node:fs";
++import path from "node:path";
++
+ import {
+   convertMarkdown
+ } from "../ConverterService";
+ 
++const convertMarkdownInTemporaryDirectory = (
++  markdown: string
++) => {
++  const outputRoot =
++    mkdtempSync(
++      path.join(
++        process.cwd(),
++        "data",
++        ".converter-test-"
++      )
++    );
++
++  try {
++    return convertMarkdown(
++      markdown,
++      outputRoot
++    );
++  } finally {
++    rmSync(
++      outputRoot,
++      {
++        recursive: true,
++        force: true
++      }
++    );
++  }
++};
++
+ describe(
+   "ConverterService",
+   () => {
+@@ -2800,7 +5166,7 @@ describe(
+       () => {
+ 
+         const result =
+-          convertMarkdown(
++          convertMarkdownInTemporaryDirectory(
+ `
+ # 要件定義書
+ 
+@@ -2830,7 +5196,7 @@ describe(
+       () => {
+ 
+         const result =
+-          convertMarkdown(
++          convertMarkdownInTemporaryDirectory(
+ `
+ # WBS
+ 
+@@ -2854,7 +5220,7 @@ describe(
+       () => {
+ 
+         const result =
+-          convertMarkdown(
++          convertMarkdownInTemporaryDirectory(
+ `
+ # 要件定義書
+ `
+@@ -3652,6 +6018,87 @@ text
+ 
+ 
+ 
++================================================================================
++FILE: src\services\__tests__\parseManagementDataIndex.test.ts
++================================================================================
++
++import { describe, expect, it } from "vitest";
++
++import { parseManagementDataLinks } from "@/services/managementDataIndex/parseManagementDataIndex";
++
++describe("parseManagementDataLinks", () => {
++  it("extracts bullet links under the 管理データ一覧 heading only", () => {
++    const markdown = [
++      "# 管理データ",
++      "",
++      "## 管理データ一覧",
++      "",
++      "- [課題一覧・状態管理](issue/README.md)",
++      "- [QA一覧](QA一覧.md)",
++      "",
++      "## 開発標準",
++      "",
++      "- [コーディング規約](../01基本設計/コーディング規約.md)",
++    ].join("\n");
++
++    expect(parseManagementDataLinks(markdown)).toEqual([
++      { title: "課題一覧・状態管理", href: "issue/README.md" },
++      { title: "QA一覧", href: "QA一覧.md" },
++    ]);
++  });
++
++  it("returns undefined when the heading does not exist", () => {
++    expect(parseManagementDataLinks("# 管理データ\n\n- [A](a.md)")).toBeUndefined();
++  });
++
++  it("returns an empty list when the section has no links", () => {
++    expect(parseManagementDataLinks("## 管理データ一覧\n\n(なし)\n")).toEqual([]);
++  });
++
++  it("handles CRLF, BOM, anchors and percent-encoded targets", () => {
++    const markdown =
++      "\uFEFF## 管理データ一覧\r\n- [要件](requirements/README.md#top)\r\n- [空白](a%20b.md)\r\n";
++
++    expect(parseManagementDataLinks(markdown)).toEqual([
++      { title: "要件", href: "requirements/README.md" },
++      { title: "空白", href: "a b.md" },
++    ]);
++  });
++
++  it("ignores headings and links inside fenced code blocks", () => {
++    const markdown = [
++      "```",
++      "## 管理データ一覧",
++      "- [偽](fake.md)",
++      "```",
++      "## 管理データ一覧",
++      "- [本物](real.md)",
++    ].join("\n");
++
++    expect(parseManagementDataLinks(markdown)).toEqual([
++      { title: "本物", href: "real.md" },
++    ]);
++  });
++
++  it("ends the section at a heading of the same or higher level, keeping subsections", () => {
++    const markdown = [
++      "## 管理データ一覧",
++      "- [A](a.md)",
++      "### 補足",
++      "- [B](b.md)",
++      "# 別の章",
++      "- [C](c.md)",
++    ].join("\n");
++
++    expect(parseManagementDataLinks(markdown)).toEqual([
++      { title: "A", href: "a.md" },
++      { title: "B", href: "b.md" },
++    ]);
++  });
++});
++
++
++
+ ================================================================================
+ FILE: src\services\__tests__\TaskExtractor.test.ts
+ ================================================================================
+@@ -3836,6 +6283,124 @@ describe(
+ 
+ 
+ 
++================================================================================
++FILE: src\tools\agent-tools.ts
++================================================================================
++
++import {
++  createAgentPlan,
++  findAgentCandidates,
++  getRepositoryState,
++  listAgents
++} from "../services/AgentToolsService";
++
++const [requestedCommand, ...args] = process.argv.slice(2);
++const jsonCommand = requestedCommand?.endsWith("-json") ?? false;
++const command = jsonCommand
++  ? requestedCommand.slice(0, -"-json".length)
++  : requestedCommand;
++const jsonOutput = jsonCommand || args.includes("--json");
++const values = args.filter((arg) => arg !== "--json");
++
++const printHelp = () => {
++  console.log(`Agent support tools
++
++Usage:
++  npm run agent-tools -- status | status-json
++  npm run agent-tools -- agents [search words...] | agents-json [search words...]
++  npm run agent-tools -- plan <request> | plan-json <request>
++`);
++};
++
++const printStatus = () => {
++  const repository = getRepositoryState();
++
++  if (jsonOutput) {
++    console.log(JSON.stringify(repository, null, 2));
++    return;
++  }
++
++  console.log(`Repository: ${repository.root}`);
++  console.log(`Branch: ${repository.branch || "(detached HEAD)"}`);
++  console.log(`Working tree: ${repository.clean ? "clean" : "has changes"}`);
++  console.log("Status:");
++  repository.status.forEach((line) => console.log(`  ${line}`));
++  console.log("Worktrees:");
++  repository.worktrees.forEach(({ path, branch, current }) =>
++    console.log(`  ${current ? "* " : "  "}${path} (${branch || "detached HEAD"})`)
++  );
++};
++
++const printAgents = () => {
++  const query = values.join(" ");
++  const agents = query
++    ? findAgentCandidates(query)
++    : listAgents();
++
++  if (jsonOutput) {
++    console.log(JSON.stringify(agents, null, 2));
++    return;
++  }
++
++  agents.forEach((agent) => {
++    const score = "score" in agent ? ` [score: ${agent.score}]` : "";
++    console.log(`${agent.name}${score}\n  ${agent.description}\n  ${agent.file}`);
++  });
++  console.log(`Found ${agents.length} agent(s).`);
++};
++
++const printPlan = () => {
++  const request = values.join(" ");
++  const plan = createAgentPlan(request);
++
++  if (jsonOutput) {
++    console.log(JSON.stringify(plan, null, 2));
++    return;
++  }
++
++  console.log(`Request: ${plan.request}`);
++  console.log(`Repository: ${plan.repository.root}`);
++  console.log(`Branch: ${plan.repository.branch || "(detached HEAD)"}`);
++  console.log("Candidate agents:");
++
++  if (plan.candidateAgents.length === 0) {
++    console.log("  No matching candidates; select an agent manually.");
++  }
++
++  plan.candidateAgents.forEach((agent) =>
++    console.log(
++      `  ${agent.name} (${agent.score}) - ${agent.matchedCapabilities.join(", ") || agent.description}`
++    )
++  );
++  console.log("Next steps:");
++  plan.nextSteps.forEach((step, index) => console.log(`  ${index + 1}. ${step}`));
++};
++
++try {
++  switch (command) {
++    case "status":
++      printStatus();
++      break;
++    case "agents":
++      printAgents();
++      break;
++    case "plan":
++      printPlan();
++      break;
++    case "help":
++    case undefined:
++      printHelp();
++      break;
++    default:
++      throw new Error(`Unknown command: ${command}`);
++  }
++} catch (error) {
++  console.error(error instanceof Error ? error.message : error);
++  process.exitCode = 1;
++}
++
++
++
+ ================================================================================
+ FILE: src\tools\export-source.ts
+ ================================================================================
+@@ -4008,6 +6573,125 @@ export type ConvertResponse = {
+ 
+ 
+ 
++================================================================================
++FILE: src\utils\numberUtils.ts
++================================================================================
++
++import { POSITIVE_INTEGER } from "@/utils/textConst";
++
++export const isPositiveIntegerString = (value: unknown): value is string => {
++    return typeof value === "string" && POSITIVE_INTEGER.test(value)
++}
++
++export const positiveIntegerFrom = (value: unknown): number | undefined => {
++    if (!isPositiveIntegerString(value)) {
++        return undefined;
++    }
++
++    const parsed = Number(value);
++    return Number.isSafeInteger(parsed) ? parsed : undefined;
++};
++
++export const convertToPositiveIntegerOrDefault = (value: unknown, defaultValue: number): number | undefined => {
++    return positiveIntegerFrom(value) ?? defaultValue;
++}
++
++
++================================================================================
++FILE: src\utils\propUtils.ts
++================================================================================
++
++import { isBoolean, isNumber, isObject, isString } from "@/utils/typeUtils";
++
++export const isObjectProperty = (value: Record<string, unknown>, propName: string): boolean => {
++    return propName in value &&
++        isObject(value[propName]);
++}
++
++export const isStringProperty = (value: Record<string, unknown>, propName: string): boolean => {
++    return propName in value &&
++        isString(value[propName]);
++}
++
++export const isNumberProperty = (value: Record<string, unknown>, propName: string): boolean => {
++    return propName in value &&
++        isNumber(value[propName]);
++}
++
++export const isBooleanProperty = (value: Record<string, unknown>, propName: string): boolean => {
++    return propName in value &&
++        isBoolean(value[propName]);
++}
++
++
++
++
++================================================================================
++FILE: src\utils\responseUtils.ts
++================================================================================
++
++import type { Response } from "express";
++
++const CREATED = 201;
++const BAD_REQUEST = 400;
++const NOT_FOUND = 404;
++
++export const createResponse = (success: boolean, message?: string, item?: unknown) => {
++    const response: Record<string, unknown> = { success };
++    if (message) {
++        response.message = message;
++    }
++    if (item) {
++        response.item = item;
++    }
++    return response;
++};
++
++export const createSuccessResponse = (res: Response, item?: unknown) => {
++    return res.json(createResponse(true, undefined, item));
++}
++
++export const createPagedResponse = <T>(
++    res: Response,
++    paged: {
++        items: T[];
++        total: number;
++        page: number;
++        pageSize: number;
++    },
++) => {
++    return res.json({
++        success: true,
++        ...paged,
++    });
++};
++
++export const createCreatedResponse = (res: Response, item?: unknown) => {
++    return res.status(CREATED).json(createResponse(true, undefined, item));
++}
++
++export const createErrorResponse = (res: Response, message: string, errorCode: number) => {
++    return res.status(errorCode).json(createResponse(false, message));
++};
++
++export const createBadRequestResponse = (res: Response, message: string): Response => {
++    return createErrorResponse(res, message, BAD_REQUEST);
++};
++
++export const createNotFoundResponse = (res: Response, message: string): Response => {
++    return createErrorResponse(res, message, NOT_FOUND);
++};
++
++
++================================================================================
++FILE: src\utils\stringUtils.ts
++================================================================================
++
++export const trimAndtoLowerCase = (str: string) => {
++    return str.trim().toLowerCase();
++};
++
++
+ ================================================================================
+ FILE: src\utils\textConst.ts
+ ================================================================================
+@@ -4020,3 +6704,31 @@ export const LIST_ITEM = /^(\s*)[-*+]\s+(.+)$/;
+ 
+ export const TABLE_SEPARATOR = /^\s*\|?[\s:-]+\|/;
+ 
++export const POSITIVE_INTEGER = /^[1-9]\d*$/;
++
++
++================================================================================
++FILE: src\utils\typeUtils.ts
++================================================================================
++
++export const isString = (value: unknown): value is string => {
++    return typeof value === "string";
++}
++
++export const isNumber = (value: unknown): value is number => {
++    return typeof value === "number";
++}
++
++export const isBoolean = (value: unknown): value is boolean => {
++    return typeof value === "boolean";
++}
++
++export const isObject = (value: unknown): value is Record<string, unknown> => {
++    return typeof value === "object" && value !== null;
++}
++
++export const isArray = (value: unknown): value is unknown[] => {
++    return Array.isArray(value);
++}
++
++

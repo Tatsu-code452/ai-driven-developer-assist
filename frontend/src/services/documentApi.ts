@@ -1,13 +1,28 @@
 import { api } from "./api";
-import type { GeneratedDocument, ItemsResponse } from "../types/Api";
+
+import type {
+  GeneratedDocument,
+  ItemsResponse
+} from "../types/Api";
 
 export const fetchDocuments =
-  async () => {
+async (
+  projectId?: string
+) => {
 
-    const response =
-      await api.get<ItemsResponse<GeneratedDocument>>(
-        "/documents"
-      );
+  const query =
+    projectId
+      ? `?projectId=${encodeURIComponent(projectId)}`
+      : "";
 
-    return response.data;
-  };
+  const response =
+    await api.get<
+      ItemsResponse<GeneratedDocument>
+    >(
+      "/documents" +
+      query
+    );
+
+  return response.data;
+
+};

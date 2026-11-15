@@ -7,15 +7,62 @@ import {
   loadContexts
 } from "@/repositories/ContextRepository";
 
+import {
+  loadProjectById
+} from "@/repositories/ProjectRepository";
+
+import {
+  DATA_DIRECTORY
+} from "@/controllers/project/projectTypes";
+
+const resolveRootPath =
+(
+  req: Request
+) => {
+
+  const projectId =
+    String(
+      req.query.projectId ??
+      ""
+    );
+
+  if (
+    !projectId
+  ) {
+
+    return "data/generated";
+
+  }
+
+  const project =
+    loadProjectById(
+      projectId,
+      DATA_DIRECTORY,
+    );
+
+  if (
+    !project?.rootPath
+  ) {
+
+    return "data/generated";
+
+  }
+
+  return project.rootPath;
+
+};
+
 export const getContexts =
 (
-  _req: Request,
+  req: Request,
   res: Response
 ) => {
 
   const items =
     loadContexts(
-      "data/generated"
+      resolveRootPath(
+        req
+      )
     );
 
   res.json({
@@ -39,7 +86,9 @@ export const getContextDetail =
 
   const items =
     loadContexts(
-      "data/generated"
+      resolveRootPath(
+        req
+      )
     );
 
   const item =
@@ -49,7 +98,9 @@ export const getContextDetail =
         req.params.id
     );
 
-  if (!item) {
+  if (
+    !item
+  ) {
 
     return res
       .status(404)

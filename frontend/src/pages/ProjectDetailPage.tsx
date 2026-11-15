@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
+import { ManagementDataList } from "../components/project/ManagementDataList";
+import { useProject } from "../contexts/ProjectContext";
 import { apiErrorMessage } from "../services/api";
 import {
     createProject,
@@ -20,6 +22,7 @@ const listLocationFrom = (value: string | null) =>
     value && /^\/projects(?:\?|$)/.test(value) ? value : "/projects";
 
 export const ProjectDetailPage = () => {
+    const { setProject } = useProject();
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     const id = searchParams.get("id");
@@ -57,6 +60,7 @@ export const ProjectDetailPage = () => {
             .then((result) => {
                 if (!active) return;
                 setLoadedProject({ id, value: result });
+                setProject(result);
                 setForm({
                     name: result.name,
                     description: result.description,
@@ -87,6 +91,7 @@ export const ProjectDetailPage = () => {
                       name: project.name,
                       description: project.description,
                       status: project.status,
+                      rootPath: project.rootPath,
                   }
                 : emptyProject,
         [project],
@@ -138,6 +143,7 @@ export const ProjectDetailPage = () => {
             }
 
             setLoadedProject({ id: saved.id, value: saved });
+            setProject(saved);
             setForm({
                 name: saved.name,
                 description: saved.description,
@@ -366,6 +372,10 @@ export const ProjectDetailPage = () => {
                         <dt className="font-semibold">関連成果物</dt>
                         <dd>{project.documentCount}件</dd>
                     </dl>
+                    <ManagementDataList
+                        projectId={project.id}
+                        rootPath={project.rootPath}
+                    />
                     <Link
                         className="inline-block text-blue-700 underline"
                         to={returnTo}

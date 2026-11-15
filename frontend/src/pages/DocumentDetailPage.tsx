@@ -9,31 +9,56 @@ import {
 } from "react-router-dom";
 
 import {
+  useProject
+} from "../contexts/ProjectContext";
+
+import {
   fetchDocuments
 } from "../services/documentApi";
-import type { GeneratedDocument } from "../types/Api";
+
+import type {
+  GeneratedDocument
+} from "../types/Api";
 
 export const DocumentDetailPage =
 () => {
+
+  const {
+    project
+  } = useProject();
 
   const [
     searchParams
   ] = useSearchParams();
 
   const documentId =
-    searchParams.get("id");
+    searchParams.get(
+      "id"
+    );
 
   const [
     documents,
     setDocuments
-  ] = useState<GeneratedDocument[]>(
-    []
-  );
+  ] = useState<
+    GeneratedDocument[]
+  >([]);
 
   useEffect(
     () => {
 
-      fetchDocuments()
+      if (
+        !project
+      ) {
+
+        setDocuments([]);
+
+        return;
+
+      }
+
+      fetchDocuments(
+        project.id
+      )
         .then(
           result =>
             setDocuments(
@@ -42,7 +67,9 @@ export const DocumentDetailPage =
         );
 
     },
-    []
+    [
+      project
+    ]
   );
 
   const document =
@@ -59,7 +86,32 @@ export const DocumentDetailPage =
       ]
     );
 
-  if (!document) {
+  if (
+    !project
+  ) {
+
+    return (
+
+      <div
+        className="
+        bg-white
+        border
+        rounded
+        p-6
+        "
+      >
+
+        プロジェクトが選択されていません
+
+      </div>
+
+    );
+
+  }
+
+  if (
+    !document
+  ) {
 
     return (
 
@@ -97,6 +149,17 @@ export const DocumentDetailPage =
         SCR-008
         ドキュメント詳細
       </h1>
+
+      <div
+        className="
+        text-sm
+        text-slate-500
+        "
+      >
+        Project :
+        {" "}
+        {project.name}
+      </div>
 
       <div
         className="

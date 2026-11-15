@@ -1,5 +1,6 @@
 import type {
     ItemResponse,
+    ManagementDataIndex,
     PagedItemsResponse,
     Project,
     ProjectInput,
@@ -30,6 +31,13 @@ export const fetchProjects = async (query: ProjectListQuery) => {
 export const fetchProject = async (id: string) => {
     const response = await api.get<ItemResponse<Project>>(
         `/projects/${encodeURIComponent(id)}`,
+    );
+    return response.data.item;
+};
+
+export const fetchProjectManagementData = async (id: string) => {
+    const response = await api.get<ItemResponse<ManagementDataIndex>>(
+        `/projects/${encodeURIComponent(id)}/management-data`,
     );
     return response.data.item;
 };

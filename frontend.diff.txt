@@ -1,132 +1,2980 @@
-diff --git a/frontend/src/pages/TraceabilityMatrixPage.tsx b/frontend/src/pages/TraceabilityMatrixPage.tsx
-index 7cf01fd..0a3d3a5 100644
---- a/frontend/src/pages/TraceabilityMatrixPage.tsx
-+++ b/frontend/src/pages/TraceabilityMatrixPage.tsx
-@@ -1,28 +1,41 @@
--export const TraceabilityMatrixPage =
--() => {
+diff --git a/frontend.txt b/frontend.txt
+index 6380ad5..603dff7 100644
+--- a/frontend.txt
++++ b/frontend.txt
+@@ -30,9 +30,11 @@ import { QAListPage } from "./pages/QAListPage";
+ import { TaskDetailPage } from "./pages/TaskDetailPage";
+ import { TraceabilityMatrixPage } from "./pages/TraceabilityMatrixPage";
+ import { TraceabilityPage } from "./pages/TraceabilityPage";
++import { ProjectProvider } from "./contexts/ProjectContext";
+ 
+ export const App = () => {
+     return (
++        <ProjectProvider>
+         <BrowserRouter>
+             <Routes>
+                 <Route element={<AppLayout />}>
+@@ -143,6 +145,7 @@ export const App = () => {
+                 </Route>
+             </Routes>
+         </BrowserRouter>
++        </ProjectProvider>
+     );
+ };
+ 
+@@ -423,6 +426,143 @@ export const Sidebar =
+ 
+ 
+ 
++================================================================================
++FILE: ..\frontend\src\components\project\ManagementDataList.tsx
++================================================================================
++
 +import { useEffect, useState } from "react";
++
++import { apiErrorMessage } from "../../services/api";
++import { fetchProjectManagementData } from "../../services/projectApi";
++import type { ManagementDataIndex } from "../../types/Api";
++
++type Props = {
++    projectId: string;
++    rootPath: string;
++};
++
++export const ManagementDataList = ({ projectId, rootPath }: Props) => {
++    const [retry, setRetry] = useState(0);
++    const [loaded, setLoaded] = useState<{
++        key: string;
++        value: ManagementDataIndex;
++    }>();
++    const [failed, setFailed] = useState<{
++        key: string;
++        message: string;
++    }>();
++    // 保存で管理データパスが変わった場合も再取得する
++    const requestKey = `${projectId}:${rootPath}:${retry}`;
++    const index = loaded?.key === requestKey ? loaded.value : undefined;
++    const errorMessage =
++        failed?.key === requestKey ? failed.message : "";
++
++    useEffect(() => {
++        let active = true;
++
++        fetchProjectManagementData(projectId)
++            .then((result) => {
++                if (active) setLoaded({ key: requestKey, value: result });
++            })
++            .catch((cause: unknown) => {
++                if (!active) return;
++                setFailed({
++                    key: requestKey,
++                    message: apiErrorMessage(
++                        cause,
++                        "管理データ一覧を読み込めませんでした",
++                    ),
++                });
++            });
++
++        return () => {
++            active = false;
++        };
++    }, [projectId, requestKey]);
++
++    return (
++        <section aria-labelledby="management-data-heading" className="space-y-2">
++            <h2 className="text-xl font-bold" id="management-data-heading">
++                管理データ一覧
++            </h2>
++
++            {!index && !errorMessage && (
++                <p role="status">管理データ一覧を読み込み中...</p>
++            )}
++
++            {errorMessage && (
++                <div className="space-y-2">
++                    <p className="text-red-800" role="alert">
++                        {errorMessage}
++                    </p>
++                    <button
++                        className="text-blue-700 underline"
++                        onClick={() => setRetry((value) => value + 1)}
++                        type="button"
++                    >
++                        再試行
++                    </button>
++                </div>
++            )}
++
++            {index && index.status !== "ok" && (
++                <p
++                    className="rounded border border-amber-300 bg-amber-50 p-3"
++                    role="status"
++                >
++                    {index.message}
++                </p>
++            )}
++
++            {index && index.status === "ok" && index.items.length === 0 && (
++                <p>管理データ一覧にリンクが登録されていません。</p>
++            )}
++
++            {index && index.status === "ok" && index.items.length > 0 && (
++                <table className="w-full border-collapse text-left">
++                    <caption className="sr-only">
++                        管理データパス配下の管理データ一覧
++                    </caption>
++                    <thead>
++                        <tr className="border-b">
++                            <th className="py-1 pr-3" scope="col">
++                                名称
++                            </th>
++                            <th className="py-1 pr-3" scope="col">
++                                パス
++                            </th>
++                            <th className="py-1" scope="col">
++                                状態
++                            </th>
++                        </tr>
++                    </thead>
++                    <tbody>
++                        {index.items.map((item) => (
++                            <tr className="border-b" key={item.path}>
++                                <td className="py-1 pr-3">{item.title}</td>
++                                <td className="py-1 pr-3 break-all">
++                                    {item.path}
++                                </td>
++                                <td
++                                    className={
++                                        item.exists
++                                            ? "py-1"
++                                            : "py-1 text-red-800"
++                                    }
++                                >
++                                    {item.exists ? "あり" : "ファイルなし"}
++                                </td>
++                            </tr>
++                        ))}
++                    </tbody>
++                </table>
++            )}
++        </section>
++    );
++};
++
++
++
+ ================================================================================
+ FILE: ..\frontend\src\config\screens.ts
+ ================================================================================
+@@ -477,6 +617,83 @@ export const screens = [
+ 
+ 
+ 
++================================================================================
++FILE: ..\frontend\src\contexts\ProjectContext.tsx
++================================================================================
++
++import {
++    createContext,
++    ReactNode,
++    useContext,
++    useMemo,
++    useState,
++} from "react";
++
++import type {
++    Project,
++} from "../types/Api";
++
++type ProjectContextValue = {
++    project?: Project;
++    setProject: (
++        project?: Project,
++    ) => void;
++    clearProject: () => void;
++};
++
++const ProjectContext =
++    createContext<ProjectContextValue>({
++        setProject: () => {},
++        clearProject: () => {},
++    });
++
++export const ProjectProvider = ({
++    children,
++}: {
++    children: ReactNode;
++}) => {
++
++    const [
++        project,
++        setProjectState,
++    ] = useState<Project>();
++
++    const value = useMemo(
++        () => ({
++            project,
++
++            setProject: (
++                next?: Project,
++            ) =>
++                setProjectState(
++                    next,
++                ),
++
++            clearProject: () =>
++                setProjectState(
++                    undefined,
++                ),
++        }),
++        [project],
++    );
++
++    return (
++        <ProjectContext.Provider
++            value={value}
++        >
++            {children}
++        </ProjectContext.Provider>
++    );
++};
++
++export const useProject =
++    () =>
++        useContext(
++            ProjectContext,
++        );
++
++
++
+ ================================================================================
+ FILE: ..\frontend\src\index.css
+ ================================================================================
+@@ -489,101 +706,108 @@ FILE: ..\frontend\src\index.css
+ FILE: ..\frontend\src\layouts\AppLayout.tsx
+ ================================================================================
+ 
+-import {
+-  Outlet,
+-  NavLink
+-} from "react-router-dom";
++import { NavLink, Outlet } from "react-router-dom";
+ 
+-import {
+-  screens
+-} from "../config/screens";
++import { screens } from "../config/screens";
++import { useProject } from "../contexts/ProjectContext";
+ 
+ export const AppLayout = () => {
++    const { project } = useProject();
  
 -  return (
-+import { fetchMatrix } from "../services/matrixApi";
+-
+-    <div
+-      className="
++    return (
++        <div
++            className="
+       h-screen
+       flex
+       "
+-    >
+-
+-      <aside
+-        className="
++        >
++            <aside
++                className="
+         w-80
+         bg-white
+         border-r
+         overflow-auto
+         "
+-      >
+-
+-        <div
+-          className="
++            >
++                <div
++                    className="
+           p-4
+           font-bold
+           text-lg
+           border-b
+           "
+-        >
+-          AI駆動型開発支援
+-        </div>
+-
+-        {
++                >
++                    AI駆動型開発支援
++                </div>
++                {project && (
++                    <div
++                        className="
++      p-3
++      border-b
++      bg-blue-50
++      text-sm
++      "
++                    >
++                        <div>選択中プロジェクト</div>
  
--    <div>
-+export const TraceabilityMatrixPage = () => {
-+    const [items, setItems] = useState<any[]>([]);
+-          screens.map(
+-            screen => (
++                        <div
++                            className="
++        font-bold
++        "
++                        >
++                            {project.name}
++                        </div>
  
--      <h1>
--        SCR-016
--        トレーサビリティマトリクス
+-              <NavLink
+-                key={screen[0]}
+-                to={screen[2]}
+-                className="
++                        <div
++                            className="
++        text-xs
++        text-slate-500
++        break-all
++        "
++                        >
++                            {project.rootPath}
++                        </div>
++                    </div>
++                )}
++
++                {screens.map((screen) => (
++                    <NavLink
++                        key={screen[0]}
++                        to={screen[2]}
++                        className="
+                 block
+                 px-3
+                 py-2
+                 border-b
+                 hover:bg-slate-100
+                 "
+-              >
+-                <div
+-                  className="
++                    >
++                        <div
++                            className="
+                   text-xs
+                   text-slate-500
+                   "
+-                >
+-                  {screen[0]}
+-                </div>
++                        >
++                            {screen[0]}
++                        </div>
+ 
+-                <div>
+-                  {screen[1]}
+-                </div>
+-
+-              </NavLink>
+-
+-            )
+-          )
+-
+-        }
+-
+-      </aside>
++                        <div>{screen[1]}</div>
++                    </NavLink>
++                ))}
++            </aside>
+ 
+-      <main
+-        className="
++            <main
++                className="
+         flex-1
+         overflow-auto
+         p-6
+         bg-slate-100
+         "
+-      >
+-
+-        <Outlet />
+-
+-      </main>
+-
+-    </div>
+-
+-  );
+-
++            >
++                <Outlet />
++            </main>
++        </div>
++    );
+ };
+ 
+ 
+@@ -869,6 +1093,7 @@ import {
+ import {
+   fetchContextDetail
+ } from "../services/contextApi";
++import type { Context } from "../types/Api";
+ 
+ export const ContextDetailPage =
+ () => {
+@@ -887,7 +1112,7 @@ export const ContextDetailPage =
+     item,
+     setItem
+   ] =
+-  useState<any>();
++  useState<Context | null>(null);
+ 
+   useEffect(
+     () => {
+@@ -966,20 +1191,43 @@ import {
+   fetchContexts
+ } from "../services/contextApi";
+ 
++import {
++  useProject
++} from "../contexts/ProjectContext";
++
++import type {
++  Context
++} from "../types/Api";
++
+ export const ContextListPage =
+ () => {
+ 
++  const {
++    project
++  } = useProject();
++
+   const [
+     items,
+     setItems
+-  ] = useState<any[]>(
++  ] = useState<Context[]>(
+     []
+   );
+ 
+   useEffect(
+     () => {
+ 
+-      fetchContexts()
++      if (
++        !project
++      ) {
++
++        setItems(
++          []
++        );
++
++        return;
++      }
++
++      fetchContexts(project.id)
+         .then(
+           result =>
+             setItems(
+@@ -988,23 +1236,89 @@ export const ContextListPage =
+         );
+ 
+     },
+-    []
++    [
++      project
++    ]
+   );
+ 
++  if (
++    !project
++  ) {
++
++    return (
++
++      <section
++        className="
++        space-y-4
++        rounded
++        border
++        bg-white
++        p-6
++        "
++      >
++
++        <h1
++          className="
++          text-3xl
++          font-bold
++          "
++        >
++          SCR-004
++          コンテキスト一覧
++        </h1>
++
++        <p>
++          プロジェクトが選択されていません。
++        </p>
++
++        <Link
++          className="
++          text-blue-700
++          underline
++          "
++          to="/projects"
++        >
++          プロジェクト一覧へ
++        </Link>
++
++      </section>
++
++    );
++
++  }
++
+   return (
+ 
+     <div>
+ 
+-      <h1
++      <div
+         className="
+-        text-3xl
+-        font-bold
+         mb-4
+         "
+       >
+-        SCR-004
+-        コンテキスト一覧
 -      </h1>
-+    useEffect(() => {
-+        fetchMatrix().then((result) => setItems(result.items));
-+    }, []);
++
++        <h1
++          className="
++          text-3xl
++          font-bold
++          "
++        >
++          SCR-004
++          コンテキスト一覧
++        </h1>
++
++        <div
++          className="
++          text-sm
++          text-slate-500
++          "
++        >
++          Project :
++          {" "}
++          {project.name}
++        </div>
++
++      </div>
+ 
+       <table
+         className="
+@@ -1434,6 +1748,7 @@ import {
+ import {
+   fetchDashboard
+ } from "../services/dashboardApi";
++import type { DashboardData } from "../types/Api";
+ 
+ export const DashboardPage =
+ () => {
+@@ -1441,7 +1756,7 @@ export const DashboardPage =
+   const [
+     data,
+     setData
+-  ] = useState<any>();
++  ] = useState<DashboardData | null>(null);
+ 
+   useEffect(
+     () => {
+@@ -1544,7 +1859,7 @@ export const DashboardPage =
+           {
+             data?.latestTasks?.map(
+               (
+-                task: any
++                task
+               ) => (
+ 
+                 <div
+@@ -1584,7 +1899,7 @@ export const DashboardPage =
+           {
+             data?.latestDocuments?.map(
+               (
+-                doc: any
++                doc
+               ) => (
+ 
+                 <div
+@@ -1613,7 +1928,10 @@ export const DashboardPage =
+ 
+ const Card =
+ (
+-  props: any
++  props: {
++    title: string;
++    value: number | string;
++  }
+ ) => (
+ 
+   <div
+@@ -1661,6 +1979,7 @@ import {
+ import {
+   fetchDocuments
+ } from "../services/documentApi";
++import type { GeneratedDocument } from "../types/Api";
+ 
+ export const DocumentDetailPage =
+ () => {
+@@ -1675,7 +1994,7 @@ export const DocumentDetailPage =
+   const [
+     documents,
+     setDocuments
+-  ] = useState<any[]>(
++  ] = useState<GeneratedDocument[]>(
+     []
+   );
+ 
+@@ -1807,6 +2126,7 @@ import {
+ import {
+   fetchDocuments
+ } from "../services/documentApi";
++import type { GeneratedDocument } from "../types/Api";
+ 
+ export const DocumentListPage =
+ () => {
+@@ -1814,7 +2134,7 @@ export const DocumentListPage =
+   const [
+     items,
+     setItems
+-  ] = useState<any[]>(
++  ] = useState<GeneratedDocument[]>(
+     []
+   );
+ 
+@@ -2058,63 +2378,393 @@ export const PlaceholderPage = (
+ FILE: ..\frontend\src\pages\ProjectDetailPage.tsx
+ ================================================================================
+ 
+-import { useEffect, useMemo, useState } from "react";
++import { useEffect, useMemo, useState, type FormEvent } from "react";
++import { Link, useNavigate, useSearchParams } from "react-router-dom";
+ 
+-import { useSearchParams } from "react-router-dom";
+-import { fetchProjects } from "../services/projectApi";
++import { ManagementDataList } from "../components/project/ManagementDataList";
++import { useProject } from "../contexts/ProjectContext";
++import { apiErrorMessage } from "../services/api";
++import {
++    createProject,
++    fetchProject,
++    updateProject,
++} from "../services/projectApi";
++import type { Project, ProjectInput } from "../types/Api";
++
++const emptyProject: ProjectInput = {
++    name: "",
++    description: "",
++    status: "",
++    rootPath: "",
++};
+ 
+-export const ProjectDetailPage = () => {
+-    const [searchParams] = useSearchParams();
++const listLocationFrom = (value: string | null) =>
++    value && /^\/projects(?:\?|$)/.test(value) ? value : "/projects";
+ 
++export const ProjectDetailPage = () => {
++    const { setProject } = useProject();
++    const [searchParams, setSearchParams] = useSearchParams();
++    const navigate = useNavigate();
+     const id = searchParams.get("id");
+-
+-    const [items, setItems] = useState<any[]>([]);
++    const createMode = searchParams.get("mode") === "create";
++    const editMode = createMode || searchParams.get("mode") === "edit";
++    const returnTo = listLocationFrom(searchParams.get("returnTo"));
++    const [loadedProject, setLoadedProject] = useState<{
++        id: string;
++        value: Project;
++    }>();
++    const [form, setForm] = useState<ProjectInput>(emptyProject);
++    const [loadError, setLoadError] = useState<{
++        key: string;
++        message: string;
++    }>();
++    const [saveError, setSaveError] = useState("");
++    const [saving, setSaving] = useState(false);
++    const [retry, setRetry] = useState(0);
++    const project = loadedProject?.id === id ? loadedProject.value : undefined;
++    const requestKey = `${createMode ? "create" : (id ?? "missing")}:${retry}`;
++    const currentLoadError =
++        loadError?.key === requestKey ? loadError.message : "";
++    const loading =
++        !createMode && !!id && loadedProject?.id !== id && !currentLoadError;
+ 
+     useEffect(() => {
+-        fetchProjects().then((result) => setItems(result.items));
+-    }, []);
++        let active = true;
++        if (createMode || !id) {
++            return () => {
++                active = false;
++            };
++        }
+ 
+-    const item = useMemo(
+-        () => items.find((item) => item.id === id),
+-        [items, id],
++        fetchProject(id)
++            .then((result) => {
++                if (!active) return;
++                setLoadedProject({ id, value: result });
++                setProject(result);
++                setForm({
++                    name: result.name,
++                    description: result.description,
++                    status: result.status,
++                    rootPath: result.rootPath,
++                });
++            })
++            .catch((cause: unknown) => {
++                if (!active) return;
++                setLoadError({
++                    key: requestKey,
++                    message: apiErrorMessage(
++                        cause,
++                        "プロジェクトを読み込めませんでした",
++                    ),
++                });
++            });
++
++        return () => {
++            active = false;
++        };
++    }, [createMode, id, requestKey]);
++
++    const originalForm = useMemo(
++        () =>
++            project
++                ? {
++                      name: project.name,
++                      description: project.description,
++                      status: project.status,
++                      rootPath: project.rootPath,
++                  }
++                : emptyProject,
++        [project],
+     );
++    const dirty = JSON.stringify(form) !== JSON.stringify(originalForm);
++
++    const cancelEdit = () => {
++        if (dirty && !window.confirm("未保存の変更を破棄しますか？")) return;
++        if (createMode) {
++            navigate(returnTo);
++            return;
++        }
++
++        const next = new URLSearchParams(searchParams);
++        next.delete("mode");
++        setSearchParams(next);
++    };
++
++    const save = async (event: FormEvent<HTMLFormElement>) => {
++        event.preventDefault();
++        if (!form.name.trim()) {
++            setSaveError("名称を入力してください。");
++            return;
++        }
++        if (!createMode && !id) {
++            setSaveError(
++                "対象IDが指定されていません。プロジェクト一覧から選択してください。",
++            );
++            return;
++        }
+ 
+-    if (!item) {
++        setSaving(true);
++        setSaveError("");
++        const input = {
++            name: form.name.trim(),
++            description: form.description,
++            status: form.status,
++            rootPath: form.rootPath,
++        };
++
++        try {
++            let saved: Project;
++            if (createMode) {
++                saved = await createProject(input);
++            } else if (id) {
++                saved = await updateProject(id, input);
++            } else {
++                return;
++            }
++
++            setLoadedProject({ id: saved.id, value: saved });
++            setProject(saved);
++            setForm({
++                name: saved.name,
++                description: saved.description,
++                status: saved.status,
++                rootPath: saved.rootPath,
++            });
++
++            if (createMode) {
++                setSearchParams({ id: saved.id, returnTo });
++            } else {
++                const next = new URLSearchParams(searchParams);
++                next.delete("mode");
++                setSearchParams(next);
++            }
++        } catch (cause: unknown) {
++            setSaveError(
++                apiErrorMessage(cause, "プロジェクトを保存できませんでした"),
++            );
++        } finally {
++            setSaving(false);
++        }
++    };
++
++    if (!createMode && !id) {
+         return (
+-            <div
+-                className="
+-        bg-white
+-        border
+-        rounded
+-        p-6
+-        "
+-            >
+-                ドキュメントが見つかりません
+-            </div>
++            <section className="space-y-4 rounded border bg-white p-6">
++                <h1 className="text-3xl font-bold">SCR-003 プロジェクト詳細</h1>
++                <p role="alert">
++                    対象IDが指定されていません。プロジェクト一覧から選択してください。
++                </p>
++                <Link className="text-blue-700 underline" to={returnTo}>
++                    プロジェクト一覧へ戻る
++                </Link>
++            </section>
++        );
++    }
++
++    if (loading) {
++        return <p role="status">プロジェクトを読み込み中...</p>;
++    }
++
++    if (!createMode && !project) {
++        return (
++            <section className="space-y-4 rounded border bg-white p-6">
++                <h1 className="text-3xl font-bold">SCR-003 プロジェクト詳細</h1>
++                <p className="text-red-800" role="alert">
++                    {currentLoadError}
++                </p>
++                <button
++                    className="text-blue-700 underline"
++                    onClick={() => setRetry((value) => value + 1)}
++                    type="button"
++                >
++                    再試行
++                </button>
++                <Link className="text-blue-700 underline" to={returnTo}>
++                    プロジェクト一覧へ戻る
++                </Link>
++            </section>
+         );
+     }
+ 
+     return (
+-        <div
+-            className="
+-      bg-white
+-      border
+-      rounded
+-      p-6
+-      "
+-        >
+-            <h1
+-                className="
+-        text-3xl
+-        font-bold
+-        mb-4
+-        "
+-            >
+-                SCR-003 プロジェクト詳細
+-            </h1>
++        <section className="mx-auto max-w-3xl space-y-4">
++            <header className="flex items-center justify-between">
++                <h1 className="text-3xl font-bold">SCR-003 プロジェクト詳細</h1>
++                {project && !editMode && (
++                    <button
++                        className="rounded border px-4 py-2 hover:bg-slate-50"
++                        onClick={() => {
++                            const next = new URLSearchParams(searchParams);
++                            next.set("mode", "edit");
++                            setSearchParams(next);
++                        }}
++                        type="button"
++                    >
++                        編集
++                    </button>
++                )}
++            </header>
++
++            {(saveError || currentLoadError) && (
++                <p className="text-red-800" role="alert">
++                    {saveError || currentLoadError}
++                </p>
++            )}
++
++            {editMode ? (
++                <form
++                    className="space-y-4 rounded border bg-white p-6"
++                    onSubmit={save}
++                >
++                    {project && (
++                        <p>
++                            <span className="font-semibold">ID:</span>{" "}
++                            {project.id}
++                            <span className="ml-2 text-slate-600">
++                                （変更不可）
++                            </span>
++                        </p>
++                    )}
++                    <label className="block space-y-1">
++                        <span className="font-semibold">名称 *</span>
++                        <input
++                            autoFocus
++                            className="w-full rounded border px-3 py-2"
++                            disabled={saving}
++                            maxLength={200}
++                            onChange={(event) =>
++                                setForm((value) => ({
++                                    ...value,
++                                    name: event.target.value,
++                                }))
++                            }
++                            required
++                            value={form.name}
++                        />
++                    </label>
++                    <label className="block space-y-1">
++                        <span className="font-semibold">説明</span>
++                        <textarea
++                            className="min-h-32 w-full rounded border px-3 py-2"
++                            disabled={saving}
++                            onChange={(event) =>
++                                setForm((value) => ({
++                                    ...value,
++                                    description: event.target.value,
++                                }))
++                            }
++                            value={form.description}
++                        />
++                    </label>
++                    <label className="block space-y-1">
++                        <span className="font-semibold">状態</span>
++                        <input
++                            className="w-full rounded border px-3 py-2"
++                            disabled={saving}
++                            onChange={(event) =>
++                                setForm((value) => ({
++                                    ...value,
++                                    status: event.target.value,
++                                }))
++                            }
++                            value={form.status}
++                        />
++                    </label>
++                    <label
++                        className="
++  block
++  space-y-1
++  "
++                    >
++                        <span
++                            className="
++    font-semibold
++    "
++                        >
++                            管理データパス
++                        </span>
+ 
+-            <pre>{JSON.stringify(item, null, 2)}</pre>
+-        </div>
++                        <input
++                            className="
++    w-full
++    rounded
++    border
++    px-3
++    py-2
++    "
++                            value={form.rootPath}
++                            onChange={(event) =>
++                                setForm((value) => ({
++                                    ...value,
++                                    rootPath: event.target.value,
++                                }))
++                            }
++                        />
++                    </label>
++                    <div className="flex gap-3">
++                        <button
++                            className="rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50"
++                            disabled={saving}
++                            type="submit"
++                        >
++                            {saving ? "保存中..." : "保存"}
++                        </button>
++                        <button
++                            className="rounded border px-4 py-2"
++                            disabled={saving}
++                            onClick={cancelEdit}
++                            type="button"
++                        >
++                            キャンセル
++                        </button>
++                    </div>
++                </form>
++            ) : project ? (
++                <div className="space-y-5 rounded border bg-white p-6">
++                    <dl className="grid gap-3 sm:grid-cols-[10rem_1fr]">
++                        <dt className="font-semibold">ID</dt>
++                        <dd>{project.id}</dd>
++                        <dt className="font-semibold">名称</dt>
++                        <dd>{project.name}</dd>
++                        <dt className="font-semibold">説明</dt>
++                        <dd className="whitespace-pre-wrap">
++                            {project.description || "—"}
++                        </dd>
++                        <dt className="font-semibold">状態</dt>
++                        <dd>{project.status || "—"}</dd>
++                        <dt
++                            className="
++  font-semibold
++  "
++                        >
++                            管理データパス
++                        </dt>
++                        <dd>{project.rootPath}</dd>
++                        <dt className="font-semibold">関連タスク</dt>
++                        <dd>
++                            <Link
++                                className="text-blue-700 underline"
++                                to={`/tasks?projectId=${encodeURIComponent(project.id)}`}
++                            >
++                                {project.taskCount}件
++                            </Link>
++                        </dd>
++                        <dt className="font-semibold">関連成果物</dt>
++                        <dd>{project.documentCount}件</dd>
++                    </dl>
++                    <ManagementDataList
++                        projectId={project.id}
++                        rootPath={project.rootPath}
++                    />
++                    <Link
++                        className="inline-block text-blue-700 underline"
++                        to={returnTo}
++                    >
++                        一覧へ戻る
++                    </Link>
++                </div>
++            ) : null}
++        </section>
+     );
+ };
+ 
+@@ -2124,72 +2774,272 @@ export const ProjectDetailPage = () => {
+ FILE: ..\frontend\src\pages\ProjectListPage.tsx
+ ================================================================================
+ 
+-import { useEffect, useState } from "react";
++import { useEffect, useState, type FormEvent } from "react";
++import { Link, useSearchParams } from "react-router-dom";
+ 
+-import { Link } from "react-router-dom";
++import { useProject } from "../contexts/ProjectContext";
++import { apiErrorMessage } from "../services/api";
+ import { fetchProjects } from "../services/projectApi";
++import type { Project } from "../types/Api";
+ 
+ export const ProjectListPage = () => {
+-    const [items, setItems] = useState<any[]>([]);
++    const { setProject } = useProject();
++    const [searchParams, setSearchParams] = useSearchParams();
++    const [items, setItems] = useState<Project[]>([]);
++    const [total, setTotal] = useState(0);
++    const [pageSize, setPageSize] = useState(20);
++    const [loadedKey, setLoadedKey] = useState("");
++    const [loadError, setLoadError] = useState<{
++        key: string;
++        message: string;
++    }>();
++    const [retry, setRetry] = useState(0);
++
++    const currentQuery = searchParams.toString();
++    const pageValue = Number(searchParams.get("page") ?? "1");
++    const page =
++        Number.isSafeInteger(pageValue) && pageValue > 0 ? pageValue : 1;
++    const requestKey = `${currentQuery}:${retry}`;
++    const loading = loadedKey !== requestKey && loadError?.key !== requestKey;
++    const error = loadError?.key === requestKey ? loadError.message : "";
++    const visibleItems = loadedKey === requestKey ? (items ?? []) : [];
+ 
+     useEffect(() => {
+-        fetchProjects().then((result) => setItems(result.items));
+-    }, []);
++        let active = true;
++
++        fetchProjects({
++            q: new URLSearchParams(currentQuery).get("q") ?? "",
++            status: new URLSearchParams(currentQuery).get("status") ?? "",
++            page,
++        })
++            .then((result) => {
++                if (!active) return;
++                const fetchedItems = result.items ?? [];
++                setItems(fetchedItems);
++                setTotal(result.total ?? 0);
++                setPageSize(result.pageSize ?? 20);
++                setLoadedKey(requestKey);
++                setLoadError(undefined);
++                if (typeof result.page === "number" && result.page !== page) {
++                    const next = new URLSearchParams(currentQuery);
++                    if (result.page === 1) next.delete("page");
++                    else next.set("page", String(result.page));
++                    setSearchParams(next);
++                }
++            })
++            .catch((cause: unknown) => {
++                if (!active) return;
++                setLoadError({
++                    key: requestKey,
++                    message: apiErrorMessage(
++                        cause,
++                        "プロジェクト一覧を読み込めませんでした",
++                    ),
++                });
++            });
++
++        return () => {
++            active = false;
++        };
++    }, [currentQuery, page, requestKey, setSearchParams]);
++
++    const updateFilters = (event: FormEvent<HTMLFormElement>) => {
++        event.preventDefault();
++        const values = new FormData(event.currentTarget);
++        const next = new URLSearchParams(searchParams);
++        const keyword = String(values.get("q") ?? "").trim();
++        const status = String(values.get("status") ?? "").trim();
++        if (keyword) next.set("q", keyword);
++        else next.delete("q");
++        if (status) next.set("status", status);
++        else next.delete("status");
++        next.delete("page");
++        setSearchParams(next);
++    };
++
++    const goToPage = (nextPage: number) => {
++        const next = new URLSearchParams(searchParams);
++        if (nextPage === 1) next.delete("page");
++        else next.set("page", String(nextPage));
++        setSearchParams(next);
++    };
++
++    const pageCount = Math.max(1, Math.ceil(total / pageSize));
++    const returnTo = currentQuery
++        ? `/projects?${currentQuery}`
++        : "/projects";
++    const createUrl = `/projects/detail?mode=create&returnTo=${encodeURIComponent(returnTo)}`;
+ 
+     return (
+-        <div>
+-            <h1
+-                className="
+-        text-3xl
+-        font-bold
+-        mb-4
+-        "
+-            >
+-                SCR-002 プロジェクト一覧
+-            </h1>
+-
+-            <table
+-                className="
+-        w-full
+-        bg-white
+-        "
++        <section className="space-y-4">
++            <header className="flex items-center justify-between">
++                <h1 className="text-3xl font-bold">SCR-002 プロジェクト一覧</h1>
++                <Link
++                    className="rounded bg-blue-700 px-4 py-2 text-white hover:bg-blue-800"
++                    to={createUrl}
++                >
++                    新規プロジェクト
++                </Link>
++            </header>
++
++            <form
++                className="flex flex-wrap gap-3 rounded border bg-white p-4"
++                key={currentQuery}
++                onSubmit={updateFilters}
+             >
+-                <thead>
+-                    <tr>
+-                        <th>ID</th>
+-
+-                        <th>名称</th>
+-
+-                        <th>Task</th>
+-
+-                        <th>Document</th>
+-                    </tr>
+-                </thead>
+-
+-                <tbody>
+-                    {items.map((item) => (
+-                        <tr key={item.id}>
+-                            <td>
+-                                <Link
+-                                    className="
+-                      text-blue-600
+-                      "
+-                                    to={"/projects/detail?id=" + item.id}
+-                                >
+-                                    {item.id}
+-                                </Link>
+-                            </td>
+-
+-                            <td>{item.name}</td>
+-
+-                            <td>{item.taskCount}</td>
++                <label className="flex flex-col gap-1">
++                    <span>名前・ID</span>
++                    <input
++                        className="rounded border px-3 py-2"
++                        defaultValue={searchParams.get("q") ?? ""}
++                        name="q"
++                    />
++                </label>
++                <label className="flex flex-col gap-1">
++                    <span>状態</span>
++                    <input
++                        className="rounded border px-3 py-2"
++                        defaultValue={searchParams.get("status") ?? ""}
++                        name="status"
++                    />
++                </label>
++                <button
++                    className="self-end rounded border px-4 py-2 hover:bg-slate-100"
++                    type="submit"
++                >
++                    検索
++                </button>
++            </form>
+ 
+-                            <td>{item.documentCount}</td>
++            {error && (
++                <div
++                    className="rounded border border-red-300 bg-red-50 p-4 text-red-800"
++                    role="alert"
++                >
++                    <p>{error}</p>
++                    <button
++                        className="mt-2 underline"
++                        onClick={() => setRetry((value) => value + 1)}
++                        type="button"
++                    >
++                        再試行
++                    </button>
++                </div>
++            )}
++
++            <div className="overflow-x-auto rounded border bg-white">
++                <table className="w-full text-left">
++                    <thead className="border-b bg-slate-50">
++                        <tr>
++                            <th className="p-3">ID</th>
++                            <th className="p-3">名称</th>
++                            <th className="p-3">状態</th>
++                            <th className="p-3">管理データパス</th>
++                            <th className="p-3">関連タスク</th>
++                            <th className="p-3">関連成果物</th>
+                         </tr>
+-                    ))}
+-                </tbody>
+-            </table>
+-        </div>
++                    </thead>
++                    <tbody>
++                        {loading && (
++                            <tr>
++                                <td className="p-4" colSpan={6}>
++                                    読み込み中...
++                                </td>
++                            </tr>
++                        )}
++                        {!loading &&
++                            !error &&
++                            visibleItems.map((item) => {
++                                const detailUrl =
++                                    `/projects/detail?id=${encodeURIComponent(item.id)}` +
++                                    `&returnTo=${encodeURIComponent(returnTo)}`;
++                                const openDetail = () => {
++                                    setProject(item);
++                                };
++                                return (
++                                    <tr
++                                        className="border-b last:border-0"
++                                        key={item.id}
++                                    >
++                                        <td className="p-3">
++                                            <Link
++                                                to={detailUrl}
++                                                onClick={openDetail}
++                                            >
++                                                {item.id}
++                                            </Link>
++                                        </td>
++                                        <td className="p-3">
++                                            <Link
++                                                className="text-blue-700 underline"
++                                                to={detailUrl}
++                                                onClick={openDetail}
++                                            >
++                                                {item.name}
++                                            </Link>
++                                        </td>
++                                        <td className="p-3">
++                                            {item.status || "—"}
++                                        </td>
++                                        <td
++                                            className="
++  p-3
++  "
++                                        >
++                                            <div
++                                                className="
++    truncate
++    max-w-[400px]
++    "
++                                            >
++                                                {item.rootPath || "—"}
++                                            </div>
++                                        </td>
++                                        <td className="p-3">
++                                            {item.taskCount}
++                                        </td>
++                                        <td className="p-3">
++                                            {item.documentCount}
++                                        </td>
++                                    </tr>
++                                );
++                            })}
++                        {!loading && !error && visibleItems.length === 0 && (
++                            <tr>
++                                <td className="p-4 text-slate-600" colSpan={6}>
++                                    該当するプロジェクトがありません。
++                                </td>
++                            </tr>
++                        )}
++                    </tbody>
++                </table>
++            </div>
++
++            <nav
++                aria-label="ページ送り"
++                className="flex items-center justify-end gap-3"
++            >
++                <span>
++                    {total}件 / {page} / {pageCount}ページ
++                </span>
++                <button
++                    className="rounded border px-3 py-1 disabled:opacity-50"
++                    disabled={page <= 1 || loading}
++                    onClick={() => goToPage(page - 1)}
++                    type="button"
++                >
++                    前へ
++                </button>
++                <button
++                    className="rounded border px-3 py-1 disabled:opacity-50"
++                    disabled={page >= pageCount || loading}
++                    onClick={() => goToPage(page + 1)}
++                    type="button"
++                >
++                    次へ
++                </button>
++            </nav>
++        </section>
+     );
+ };
+ 
+@@ -2258,147 +3108,502 @@ export const QAListPage =
+ FILE: ..\frontend\src\pages\TaskDetailPage.tsx
+ ================================================================================
+ 
+-import {
+-  useMemo
+-} from "react";
+-
+-import {
+-  useSearchParams
+-} from "react-router-dom";
+-
+-import {
+-  useEffect,
+-  useState
+-} from "react";
++import { useEffect, useState, type FormEvent } from "react";
++import { Link, useNavigate, useSearchParams } from "react-router-dom";
+ 
++import { apiErrorMessage } from "../services/api";
+ import {
+-  fetchTasks
++    createTask,
++    fetchTask,
++    updateTask,
+ } from "../services/taskApi";
++import { fetchProjects } from "../services/projectApi";
++import type {
++    Project,
++    Task,
++    TaskInput,
++    TaskPriority,
++    TaskStatus,
++} from "../types/Api";
++
++const emptyTask: TaskInput = {
++    title: "",
++    description: "",
++    status: "TODO",
++    priority: "NORMAL",
++    projectId: "",
++};
+ 
+-export const TaskDetailPage =
+-() => {
+-
+-  const [
+-    searchParams
+-  ] = useSearchParams();
+-
+-  const taskId =
+-    searchParams.get("id");
+-
+-  const [
+-    tasks,
+-    setTasks
+-  ] = useState<any[]>(
+-    []
+-  );
+-
+-  useEffect(
+-    () => {
+-
+-      fetchTasks()
+-        .then(
+-          result =>
+-            setTasks(
+-              result.items
+-            )
+-        );
+-
+-    },
+-    []
+-  );
+-
+-  const task =
+-    useMemo(
+-      () =>
+-        tasks.find(
+-          item =>
+-            item.id === taskId
+-        ),
+-      [
+-        tasks,
+-        taskId
+-      ]
+-    );
+-
+-  if (!task) {
+-
+-    return (
++const listLocationFrom = (value: string | null) =>
++    value && /^\/tasks(?:\?|$)/.test(value) ? value : "/tasks";
  
 -      <div
 -        className="
 -        bg-white
 -        border
 -        rounded
--        p-4
+-        p-6
 -        "
 -      >
--        Matrix
++const transitions: Record<TaskStatus, TaskStatus[]> = {
++    TODO: ["TODO", "DOING"],
++    DOING: ["DOING", "DONE"],
++    DONE: ["DONE", "DOING"],
++};
+ 
+-        タスクが見つかりません
++const statuses: TaskStatus[] = ["TODO", "DOING", "DONE"];
++const priorities: TaskPriority[] = ["LOW", "NORMAL", "HIGH"];
++const noProjects: Project[] = [];
+ 
 -      </div>
-+    return (
-+        <div>
-+            <h1>SCR-016 トレーサビリティマトリクス</h1>
++const formFromTask = (task: Task): TaskInput => ({
++    title: task.title,
++    description: task.description,
++    status: task.status,
++    priority: task.priority,
++    projectId: task.projectId || "",
++});
  
--    </div>
-+            <table>
-+                <thead>
-+                    <tr>
-+                        <th>Source</th>
+-    );
++export const TaskDetailPage = () => {
++    const [searchParams, setSearchParams] = useSearchParams();
++    const navigate = useNavigate();
++    const id = searchParams.get("id");
++    const createMode = searchParams.get("mode") === "create";
++    const editMode = createMode || searchParams.get("mode") === "edit";
++    const returnTo = listLocationFrom(searchParams.get("returnTo"));
++    const formKey = createMode ? "create" : id || "missing";
++    const [loadedTask, setLoadedTask] = useState<{
++        id: string;
++        value: Task;
++    }>();
++    const [formState, setFormState] = useState<{
++        key: string;
++        value: TaskInput;
++    }>({ key: "", value: emptyTask });
++    const form =
++        formState.key === formKey ? formState.value : emptyTask;
++    const [retry, setRetry] = useState(0);
++    const [projectRetry, setProjectRetry] = useState(0);
++    const [projectState, setProjectState] = useState<{
++        retry: number;
++        items: Project[];
++        error: string;
++    }>({ retry: -1, items: [], error: "" });
++    const currentProjectState =
++        projectState.retry === projectRetry ? projectState : undefined;
++    const projects = currentProjectState?.items || noProjects;
++    const projectError = currentProjectState?.error || "";
++    const [loadError, setLoadError] = useState<{
++        key: string;
++        message: string;
++    }>();
++    const [saveError, setSaveError] = useState("");
++    const [saving, setSaving] = useState(false);
++    const task = loadedTask?.id === id ? loadedTask.value : undefined;
++    const requestKey = `${createMode ? "create" : id || "missing"}:${retry}`;
++    const currentLoadError =
++        loadError?.key === requestKey ? loadError.message : "";
++    const loading =
++        !createMode && !!id && loadedTask?.id !== id && !currentLoadError;
  
--  );
-+                        <th>Target</th>
- 
-+                        <th>Relation</th>
-+                    </tr>
-+                </thead>
-+
-+                <tbody>
-+                    {items.map((item) => (
-+                        <tr key={item.source + item.target}>
-+                            <td>{item.source}</td>
-+
-+                            <td>{item.target}</td>
-+
-+                            <td>{item.relation}</td>
-+                        </tr>
-+                    ))}
-+                </tbody>
-+            </table>
-+        </div>
-+    );
- };
-diff --git a/frontend/src/pages/TraceabilityPage.tsx b/frontend/src/pages/TraceabilityPage.tsx
-index c224032..a2d3921 100644
---- a/frontend/src/pages/TraceabilityPage.tsx
-+++ b/frontend/src/pages/TraceabilityPage.tsx
-@@ -1,28 +1,41 @@
--export const TraceabilityPage =
--() => {
-+import { useEffect, useState } from "react";
+-  }
++    useEffect(() => {
++        let active = true;
++        if (createMode || !id) {
++            return () => {
++                active = false;
++            };
++        }
  
 -  return (
-+import { fetchTraceability } from "../services/traceabilityApi";
++        fetchTask(id)
++            .then((result) => {
++                if (!active) return;
++                setLoadedTask({ id, value: result });
++                setFormState({ key: id, value: formFromTask(result) });
++            })
++            .catch((cause: unknown) => {
++                if (!active) return;
++                setLoadError({
++                    key: requestKey,
++                    message: apiErrorMessage(
++                        cause,
++                        "タスクを読み込めませんでした",
++                    ),
++                });
++            });
++
++        return () => {
++            active = false;
++        };
++    }, [createMode, id, requestKey]);
  
--    <div>
-+export const TraceabilityPage = () => {
-+    const [items, setItems] = useState<any[]>([]);
+-    <div
+-      className="
+-      space-y-4
+-      "
+-    >
++    useEffect(() => {
++        let active = true;
++        fetchProjects({ q: "", status: "", page: 1 })
++            .then((result) => {
++                if (active) {
++                    setProjectState({
++                        retry: projectRetry,
++                        items: result.items,
++                        error: "",
++                    });
++                }
++            })
++            .catch((cause: unknown) => {
++                if (!active) return;
++                setProjectState({
++                    retry: projectRetry,
++                    items: [],
++                    error: apiErrorMessage(
++                        cause,
++                        "プロジェクト一覧を読み込めませんでした",
++                    ),
++                });
++            });
++
++        return () => {
++            active = false;
++        };
++    }, [projectRetry]);
++
++    const originalForm = task ? formFromTask(task) : emptyTask;
++    const dirty =
++        editMode &&
++        JSON.stringify(form) !== JSON.stringify(originalForm);
  
--      <h1>
--        SCR-015
--        トレーサビリティ管理
+-      <h1
+-        className="
+-        text-3xl
+-        font-bold
+-        "
+-      >
+-        SCR-022
+-        タスク詳細
 -      </h1>
 +    useEffect(() => {
-+        fetchTraceability().then((result) => setItems(result.items));
-+    }, []);
++        if (!dirty) return;
++        const warnBeforeUnload = (event: BeforeUnloadEvent) => {
++            event.preventDefault();
++            event.returnValue = "";
++        };
++        window.addEventListener("beforeunload", warnBeforeUnload);
++        return () =>
++            window.removeEventListener("beforeunload", warnBeforeUnload);
++    }, [dirty]);
++
++    const updateForm = (updates: Partial<TaskInput>) => {
++        setFormState({
++            key: formKey,
++            value: { ...form, ...updates },
++        });
++        setSaveError("");
++    };
  
 -      <div
 -        className="
 -        bg-white
 -        border
 -        rounded
--        p-4
+-        p-6
 -        "
 -      >
--        Traceability
++    const returnToList = () => {
++        if (dirty && !window.confirm("未保存の変更を破棄しますか？")) return;
++        navigate(returnTo);
++    };
+ 
+-        <dl
+-          className="
+-          grid
+-          grid-cols-2
+-          gap-4
+-          "
+-        >
++    const cancelEdit = () => {
++        if (dirty && !window.confirm("未保存の変更を破棄しますか？")) return;
++        if (createMode) {
++            navigate(returnTo);
++            return;
++        }
+ 
+-          <dt>ID</dt>
+-          <dd>{task.id}</dd>
++        const next = new URLSearchParams(searchParams);
++        next.delete("mode");
++        setSearchParams(next);
++        if (task) {
++            setFormState({ key: task.id, value: formFromTask(task) });
++        }
++    };
+ 
+-          <dt>タイトル</dt>
+-          <dd>{task.title}</dd>
++    const save = async (event: FormEvent<HTMLFormElement>) => {
++        event.preventDefault();
++        if (!form.title.trim()) {
++            setSaveError("タイトルを入力してください。");
++            return;
++        }
++        if (!form.projectId) {
++            setSaveError("プロジェクトを選択してください。");
++            return;
++        }
++        if (!createMode && !id) {
++            setSaveError(
++                "対象IDが指定されていません。タスク一覧から選択してください。",
++            );
++            return;
++        }
++        if (
++            !createMode &&
++            task &&
++            !transitions[task.status].includes(form.status)
++        ) {
++            setSaveError("許可されていない状態遷移です。");
++            return;
++        }
+ 
+-          <dt>状態</dt>
+-          <dd>{task.status}</dd>
++        setSaving(true);
++        setSaveError("");
++        const input = {
++            ...form,
++            title: form.title.trim(),
++        };
++
++        try {
++            let saved: Task;
++            if (createMode) {
++                saved = await createTask({ ...input, status: "TODO" });
++            } else if (id) {
++                saved = await updateTask(id, input);
++            } else {
++                return;
++            }
+ 
+-          <dt>優先度</dt>
+-          <dd>{task.priority}</dd>
++            setLoadedTask({ id: saved.id, value: saved });
++            setFormState({
++                key: saved.id,
++                value: formFromTask(saved),
++            });
++            const next = new URLSearchParams(searchParams);
++            next.set("id", saved.id);
++            next.delete("mode");
++            next.set("returnTo", returnTo);
++            setSearchParams(next);
++        } catch (cause: unknown) {
++            setSaveError(
++                apiErrorMessage(cause, "タスクを保存できませんでした"),
++            );
++        } finally {
++            setSaving(false);
++        }
++    };
+ 
+-          <dt>ソース</dt>
+-          <dd>{task.source}</dd>
++    if (!createMode && !id) {
++        return (
++            <section className="space-y-4 rounded border bg-white p-6">
++                <h1 className="text-3xl font-bold">SCR-022 タスク詳細</h1>
++                <p role="alert">
++                    対象IDが指定されていません。タスク一覧から選択してください。
++                </p>
++                <Link className="text-blue-700 underline" to={returnTo}>
++                    タスク一覧へ戻る
++                </Link>
++            </section>
++        );
++    }
+ 
+-        </dl>
++    if (loading) {
++        return <p role="status">タスクを読み込み中...</p>;
++    }
+ 
 -      </div>
-+    return (
-+        <div>
-+            <h1>SCR-015 トレーサビリティ管理</h1>
++    if (!createMode && !task) {
++        return (
++            <section className="space-y-4 rounded border bg-white p-6">
++                <h1 className="text-3xl font-bold">SCR-022 タスク詳細</h1>
++                <p className="text-red-800" role="alert">
++                    {currentLoadError}
++                </p>
++                <button
++                    className="text-blue-700 underline"
++                    onClick={() => setRetry((value) => value + 1)}
++                    type="button"
++                >
++                    再試行
++                </button>
++                <button
++                    className="text-blue-700 underline"
++                    onClick={returnToList}
++                    type="button"
++                >
++                    タスク一覧へ戻る
++                </button>
++            </section>
++        );
++    }
  
 -    </div>
-+            <table>
-+                <thead>
-+                    <tr>
-+                        <th>Source</th>
++    const projectName = (projectId?: string) =>
++        projectId
++            ? projects.find((project) => project.id === projectId)?.name ||
++              projectId
++            : "プロジェクト未設定";
++    const allowedStatuses: TaskStatus[] = createMode
++        ? ["TODO"]
++        : task
++          ? transitions[task.status]
++          : statuses;
  
 -  );
-+                        <th>Target</th>
++    return (
++        <section className="mx-auto max-w-3xl space-y-4">
++            <header className="flex items-center justify-between">
++                <h1 className="text-3xl font-bold">SCR-022 タスク詳細</h1>
++                {task && !editMode && (
++                    <button
++                        className="rounded border px-4 py-2 hover:bg-slate-50"
++                        onClick={() => {
++                            const next = new URLSearchParams(searchParams);
++                            next.set("mode", "edit");
++                            setSearchParams(next);
++                        }}
++                        type="button"
++                    >
++                        編集
++                    </button>
++                )}
++            </header>
++
++            {(saveError || projectError) && (
++                <div className="space-y-2" role="alert">
++                    {saveError && <p className="text-red-800">{saveError}</p>}
++                    {projectError && (
++                        <div className="flex items-center gap-3">
++                            <p className="text-red-800">{projectError}</p>
++                            <button
++                                className="text-blue-700 underline"
++                                onClick={() =>
++                                    setProjectRetry((value) => value + 1)
++                                }
++                                type="button"
++                            >
++                                プロジェクトを再読み込み
++                            </button>
++                        </div>
++                    )}
++                </div>
++            )}
  
-+                        <th>Relation</th>
-+                    </tr>
-+                </thead>
-+
-+                <tbody>
-+                    {items.map((item) => (
-+                        <tr key={item.sourceId + item.targetId}>
-+                            <td>{item.sourceId}</td>
-+
-+                            <td>{item.targetId}</td>
-+
-+                            <td>{item.relationType}</td>
-+                        </tr>
-+                    ))}
-+                </tbody>
-+            </table>
-+        </div>
++            {editMode ? (
++                <form
++                    className="space-y-4 rounded border bg-white p-6"
++                    onSubmit={save}
++                >
++                    {task && (
++                        <p>
++                            <span className="font-semibold">ID:</span> {task.id}
++                            <span className="ml-2 text-slate-600">
++                                （変更不可）
++                            </span>
++                        </p>
++                    )}
++                    <label className="block space-y-1">
++                        <span className="font-semibold">タイトル *</span>
++                        <input
++                            autoFocus
++                            className="w-full rounded border px-3 py-2"
++                            disabled={saving}
++                            maxLength={200}
++                            onChange={(event) =>
++                                updateForm({ title: event.target.value })
++                            }
++                            required
++                            value={form.title}
++                        />
++                    </label>
++                    <label className="block space-y-1">
++                        <span className="font-semibold">説明</span>
++                        <textarea
++                            className="min-h-32 w-full rounded border px-3 py-2"
++                            disabled={saving}
++                            onChange={(event) =>
++                                updateForm({ description: event.target.value })
++                            }
++                            value={form.description}
++                        />
++                    </label>
++                    <label className="block space-y-1">
++                        <span className="font-semibold">プロジェクト *</span>
++                        <select
++                            className="w-full rounded border px-3 py-2"
++                            disabled={saving}
++                            onChange={(event) =>
++                                updateForm({ projectId: event.target.value })
++                            }
++                            required
++                            value={form.projectId}
++                        >
++                            <option value="">選択してください</option>
++                            {projects.map((project) => (
++                                <option key={project.id} value={project.id}>
++                                    {project.name} ({project.id})
++                                </option>
++                            ))}
++                        </select>
++                    </label>
++                    <label className="block space-y-1">
++                        <span className="font-semibold">状態</span>
++                        <select
++                            className="w-full rounded border px-3 py-2"
++                            disabled={saving || createMode}
++                            onChange={(event) => {
++                                const status = statuses.find(
++                                    (value) => value === event.target.value,
++                                );
++                                if (status) updateForm({ status });
++                            }}
++                            value={form.status}
++                        >
++                            {allowedStatuses.map((status) => (
++                                <option key={status} value={status}>
++                                    {status}
++                                </option>
++                            ))}
++                        </select>
++                    </label>
++                    <label className="block space-y-1">
++                        <span className="font-semibold">優先度</span>
++                        <select
++                            className="w-full rounded border px-3 py-2"
++                            disabled={saving}
++                            onChange={(event) => {
++                                const priority = priorities.find(
++                                    (value) => value === event.target.value,
++                                );
++                                if (priority) updateForm({ priority });
++                            }}
++                            value={form.priority}
++                        >
++                            {priorities.map((priority) => (
++                                <option key={priority} value={priority}>
++                                    {priority}
++                                </option>
++                            ))}
++                        </select>
++                    </label>
++                    <p>
++                        <span className="font-semibold">出典:</span>{" "}
++                        {task?.source || "手動登録"}（変更不可）
++                    </p>
++                    <div className="flex gap-3">
++                        <button
++                            className="rounded bg-blue-700 px-4 py-2 text-white disabled:opacity-50"
++                            disabled={saving || !!projectError}
++                            type="submit"
++                        >
++                            {saving ? "保存中..." : "保存"}
++                        </button>
++                        <button
++                            className="rounded border px-4 py-2 disabled:opacity-50"
++                            disabled={saving}
++                            onClick={cancelEdit}
++                            type="button"
++                        >
++                            キャンセル
++                        </button>
++                    </div>
++                </form>
++            ) : task ? (
++                <div className="space-y-5 rounded border bg-white p-6">
++                    <dl className="grid gap-3 sm:grid-cols-[10rem_1fr]">
++                        <dt className="font-semibold">ID</dt>
++                        <dd>{task.id}</dd>
++                        <dt className="font-semibold">タイトル</dt>
++                        <dd>{task.title}</dd>
++                        <dt className="font-semibold">説明</dt>
++                        <dd className="whitespace-pre-wrap">
++                            {task.description || "—"}
++                        </dd>
++                        <dt className="font-semibold">プロジェクト</dt>
++                        <dd>{projectName(task.projectId)}</dd>
++                        <dt className="font-semibold">状態</dt>
++                        <dd>{task.status}</dd>
++                        <dt className="font-semibold">優先度</dt>
++                        <dd>{task.priority}</dd>
++                        <dt className="font-semibold">出典</dt>
++                        <dd>{task.source}</dd>
++                    </dl>
++                    <button
++                        className="text-blue-700 underline"
++                        onClick={returnToList}
++                        type="button"
++                    >
++                        一覧へ戻る
++                    </button>
++                </div>
++            ) : null}
++        </section>
 +    );
  };
+ 
+ 
+@@ -2407,131 +3612,404 @@ export const TaskDetailPage =
+ FILE: ..\frontend\src\pages\TaskListPage.tsx
+ ================================================================================
+ 
+-import {
+-  Link
+-} from "react-router-dom";
++import { useEffect, useMemo, useState, type FormEvent } from "react";
++import { Link, useSearchParams } from "react-router-dom";
+ 
+-import {
+-  useEffect,
+-  useState
+-} from "react";
+-
+-import {
+-  fetchTasks
+-} from "../services/taskApi";
+-
+-export const TaskListPage =
+-() => {
+-
+-  const [
+-    items,
+-    setItems
+-  ] = useState<any[]>(
+-    []
+-  );
+-
+-  useEffect(
+-    () => {
+-
+-      fetchTasks()
+-        .then(
+-          result =>
+-            setItems(
+-              result.items
+-            )
+-        );
+-
+-    },
+-    []
+-  );
+-
+-  return (
+-
+-    <div>
+-
+-      <h1
+-        className="
+-        text-3xl
+-        font-bold
+-        mb-4
+-        "
+-      >
+-        SCR-021
+-        タスク一覧
+-      </h1>
+-
+-      <table
+-        className="
+-        w-full
+-        bg-white
+-        "
+-      >
+-
+-        <thead>
+-
+-          <tr>
++import { apiErrorMessage } from "../services/api";
++import { fetchProjects } from "../services/projectApi";
++import { fetchTasks } from "../services/taskApi";
++import type {
++    Project,
++    TaskListFilters,
++    TaskPriority,
++    TaskStatus,
++} from "../types/Api";
++
++const statuses: TaskStatus[] = ["TODO", "DOING", "DONE"];
++const priorities: TaskPriority[] = ["LOW", "NORMAL", "HIGH"];
++const noProjects: Project[] = [];
++
++const selectedOption = <T extends string>(
++    value: string | null,
++    options: T[],
++): T | undefined => options.find((option) => option === value);
++
++const parsePage = (value: string | null) => {
++    return value === null ? 1 : Number(value);
++};
+ 
+-            <th>ID</th>
+-            <th>タイトル</th>
+-            <th>状態</th>
+-            <th>優先度</th>
++export const TaskListPage = () => {
++    const [searchParams, setSearchParams] = useSearchParams();
++    const searchKey = searchParams.toString();
++    const filters = useMemo<TaskListFilters>(() => {
++        const params = new URLSearchParams(searchKey);
++        const projectId = params.get("projectId") || undefined;
++        return {
++            q: params.get("q") || "",
++            projectId,
++            status: params.get("status") || undefined,
++            priority: params.get("priority") || undefined,
++            page: parsePage(params.get("page")),
++        };
++    }, [searchKey]);
++    const [draftState, setDraftState] = useState<{
++        key: string;
++        value: TaskListFilters;
++    }>({ key: "", value: filters });
++    const draft =
++        draftState.key === searchKey ? draftState.value : filters;
++    const setDraft = (updates: Partial<TaskListFilters>) => {
++        setDraftState({
++            key: searchKey,
++            value: { ...draft, ...updates },
++        });
++    };
++    const [retry, setRetry] = useState(0);
++    const [projectRetry, setProjectRetry] = useState(0);
++    const requestKey = `${searchKey}:${retry}`;
++    const [taskState, setTaskState] = useState<{
++        key: string;
++        result?: Awaited<ReturnType<typeof fetchTasks>>;
++        error: string;
++    }>({ key: "", error: "" });
++    const currentTaskState =
++        taskState.key === requestKey ? taskState : undefined;
++    const items = currentTaskState?.result?.items || [];
++    const count = currentTaskState?.result?.count || 0;
++    const page = currentTaskState?.result?.page || filters.page || 1;
++    const totalPages = currentTaskState?.result?.totalPages || 1;
++    const listError = currentTaskState?.error || "";
++    const loading = !currentTaskState;
++    const [projectState, setProjectState] = useState<{
++        retry: number;
++        items: Project[];
++        error: string;
++    }>({ retry: -1, items: [], error: "" });
++    const currentProjectState =
++        projectState.retry === projectRetry ? projectState : undefined;
++    const projects = currentProjectState?.items || noProjects;
++    const projectError = currentProjectState?.error || "";
+ 
+-          </tr>
++    useEffect(() => {
++        let active = true;
++
++        fetchTasks(filters)
++            .then((result) => {
++                if (!active) return;
++                setTaskState({ key: requestKey, result, error: "" });
++            })
++            .catch((cause: unknown) => {
++                if (!active) return;
++                setTaskState({
++                    key: requestKey,
++                    error: apiErrorMessage(
++                        cause,
++                        "タスク一覧を読み込めませんでした",
++                    ),
++                });
++            });
++
++        return () => {
++            active = false;
++        };
++    }, [filters, requestKey]);
+ 
+-        </thead>
++    useEffect(() => {
++        let active = true;
++        fetchProjects({ q: "", status: "", page: 1 })
++            .then((result) => {
++                if (active) {
++                    setProjectState({
++                        retry: projectRetry,
++                        items: result.items,
++                        error: "",
++                    });
++                }
++            })
++            .catch((cause: unknown) => {
++                if (!active) return;
++                setProjectState({
++                    retry: projectRetry,
++                    items: [],
++                    error: apiErrorMessage(
++                        cause,
++                        "プロジェクト一覧を読み込めませんでした",
++                    ),
++                });
++            });
++
++        return () => {
++            active = false;
++        };
++    }, [projectRetry]);
++
++    const returnTo = searchKey ? `/tasks?${searchKey}` : "/tasks";
++    const createParams = new URLSearchParams({
++        mode: "create",
++        returnTo,
++    });
++
++    const applyFilters = (event: FormEvent<HTMLFormElement>) => {
++        event.preventDefault();
++        const next = new URLSearchParams();
++        const q = draft.q?.trim();
++        if (q) next.set("q", q);
++        if (draft.projectId) next.set("projectId", draft.projectId);
++        if (draft.status) next.set("status", draft.status);
++        if (draft.priority) next.set("priority", draft.priority);
++        setSearchParams(next);
++    };
+ 
+-        <tbody>
++    const changePage = (nextPage: number) => {
++        const next = new URLSearchParams(searchParams);
++        if (nextPage === 1) {
++            next.delete("page");
++        } else {
++            next.set("page", String(nextPage));
++        }
++        setSearchParams(next);
++    };
+ 
+-          {
+-            items.map(
+-              item => (
++    const projectNames = useMemo(
++        () => new Map(projects.map((project) => [project.id, project.name])),
++        [projects],
++    );
+ 
+-                <tr
+-                  key={item.id}
++    return (
++        <section className="space-y-5">
++            <header className="flex flex-wrap items-center justify-between gap-3">
++                <h1 className="text-3xl font-bold">SCR-021 タスク一覧</h1>
++                <Link
++                    className="rounded bg-blue-700 px-4 py-2 text-white"
++                    to={`/tasks/detail?${createParams.toString()}`}
+                 >
+-
+-                  <td>
+-
+-                    <Link
+-                      className="
+-                      text-blue-600
+-                      "
+-                      to={
+-                        "/tasks/detail?id=" +
+-                        item.id
+-                      }
++                    新規タスク
++                </Link>
++            </header>
++
++            {projectError && (
++                <div className="flex items-center gap-3" role="alert">
++                    <p className="text-red-800">{projectError}</p>
++                    <button
++                        className="text-blue-700 underline"
++                        onClick={() => setProjectRetry((value) => value + 1)}
++                        type="button"
+                     >
+-                      {item.id}
+-                    </Link>
+-
+-                  </td>
+-
+-                  <td>
+-                    {item.title}
+-                  </td>
+-
+-                  <td>
+-                    {item.status}
+-                  </td>
+-
+-                  <td>
+-                    {item.priority}
+-                  </td>
+-
+-                </tr>
+-
+-              )
+-            )
+-          }
+-
+-        </tbody>
+-
+-      </table>
+-
+-    </div>
+-
+-  );
++                        プロジェクトを再読み込み
++                    </button>
++                </div>
++            )}
+ 
++            <form
++                className="grid gap-3 rounded border bg-white p-4 md:grid-cols-5"
++                onSubmit={applyFilters}
++            >
++                <label className="space-y-1">
++                    <span className="block font-semibold">キーワード</span>
++                    <input
++                        className="w-full rounded border px-3 py-2"
++                        onChange={(event) =>
++                            setDraft({ q: event.target.value })
++                        }
++                        value={draft.q || ""}
++                    />
++                </label>
++                <label className="space-y-1">
++                    <span className="block font-semibold">プロジェクト</span>
++                    <select
++                        className="w-full rounded border px-3 py-2"
++                        onChange={(event) =>
++                            setDraft({
++                                projectId: event.target.value || undefined,
++                            })
++                        }
++                        value={draft.projectId || ""}
++                    >
++                        <option value="">すべて</option>
++                        <option value="unassigned">プロジェクト未設定</option>
++                        {projects.map((project) => (
++                            <option key={project.id} value={project.id}>
++                                {project.name} ({project.id})
++                            </option>
++                        ))}
++                    </select>
++                </label>
++                <label className="space-y-1">
++                    <span className="block font-semibold">状態</span>
++                    <select
++                        className="w-full rounded border px-3 py-2"
++                        onChange={(event) =>
++                            setDraft({
++                                status: selectedOption(
++                                    event.target.value,
++                                    statuses,
++                                ),
++                            })
++                        }
++                        value={draft.status || ""}
++                    >
++                        <option value="">すべて</option>
++                        {statuses.map((status) => (
++                            <option key={status} value={status}>
++                                {status}
++                            </option>
++                        ))}
++                    </select>
++                </label>
++                <label className="space-y-1">
++                    <span className="block font-semibold">優先度</span>
++                    <select
++                        className="w-full rounded border px-3 py-2"
++                        onChange={(event) =>
++                            setDraft({
++                                priority: selectedOption(
++                                    event.target.value,
++                                    priorities,
++                                ),
++                            })
++                        }
++                        value={draft.priority || ""}
++                    >
++                        <option value="">すべて</option>
++                        {priorities.map((priority) => (
++                            <option key={priority} value={priority}>
++                                {priority}
++                            </option>
++                        ))}
++                    </select>
++                </label>
++                <div className="flex items-end gap-2">
++                    <button
++                        className="rounded bg-slate-800 px-4 py-2 text-white"
++                        type="submit"
++                    >
++                        検索
++                    </button>
++                    <button
++                        className="rounded border px-4 py-2"
++                        onClick={() => {
++                            setDraft({
++                                q: "",
++                                projectId: undefined,
++                                status: undefined,
++                                priority: undefined,
++                            });
++                            setSearchParams({});
++                        }}
++                        type="button"
++                    >
++                        クリア
++                    </button>
++                </div>
++            </form>
++
++            {listError && (
++                <div className="flex items-center gap-3" role="alert">
++                    <p className="text-red-800">{listError}</p>
++                    <button
++                        className="text-blue-700 underline"
++                        onClick={() => setRetry((value) => value + 1)}
++                        type="button"
++                    >
++                        再試行
++                    </button>
++                </div>
++            )}
++
++            {loading ? (
++                <p role="status">タスク一覧を読み込み中...</p>
++            ) : !listError && (
++                <>
++                    <p aria-live="polite">
++                        {count}件 / {page} / {totalPages}ページ
++                    </p>
++                    {items.length === 0 ? (
++                        <p className="rounded border bg-white p-6">
++                            該当するデータがありません。
++                        </p>
++                    ) : (
++                        <div className="overflow-x-auto rounded border bg-white">
++                            <table className="w-full text-left">
++                                <thead>
++                                    <tr className="border-b bg-slate-50">
++                                        <th className="p-3">ID</th>
++                                        <th className="p-3">タイトル</th>
++                                        <th className="p-3">プロジェクト</th>
++                                        <th className="p-3">状態</th>
++                                        <th className="p-3">優先度</th>
++                                    </tr>
++                                </thead>
++                                <tbody>
++                                    {items.map((item) => {
++                                        const detailParams =
++                                            new URLSearchParams({
++                                                id: item.id,
++                                                returnTo,
++                                            });
++                                        return (
++                                            <tr
++                                                className="border-b last:border-0"
++                                                key={item.id}
++                                            >
++                                                <td className="p-3">
++                                                    <Link
++                                                        className="text-blue-700 underline"
++                                                        to={`/tasks/detail?${detailParams.toString()}`}
++                                                    >
++                                                        {item.id}
++                                                    </Link>
++                                                </td>
++                                                <td className="p-3">
++                                                    {item.title}
++                                                </td>
++                                                <td className="p-3">
++                                                    {item.projectId
++                                                        ? projectNames.get(
++                                                              item.projectId,
++                                                          ) || item.projectId
++                                                        : "プロジェクト未設定"}
++                                                </td>
++                                                <td className="p-3">
++                                                    {item.status}
++                                                </td>
++                                                <td className="p-3">
++                                                    {item.priority}
++                                                </td>
++                                            </tr>
++                                        );
++                                    })}
++                                </tbody>
++                            </table>
++                        </div>
++                    )}
++                    <nav
++                        aria-label="ページ送り"
++                        className="flex items-center justify-center gap-4"
++                    >
++                        <button
++                            className="rounded border px-3 py-2 disabled:opacity-50"
++                            disabled={page <= 1}
++                            onClick={() => changePage(page - 1)}
++                            type="button"
++                        >
++                            前へ
++                        </button>
++                        <span>
++                            {page} / {totalPages}
++                        </span>
++                        <button
++                            className="rounded border px-3 py-2 disabled:opacity-50"
++                            disabled={page >= totalPages}
++                            onClick={() => changePage(page + 1)}
++                            type="button"
++                        >
++                            次へ
++                        </button>
++                    </nav>
++                </>
++            )}
++        </section>
++    );
+ };
+ 
+ 
+@@ -2543,9 +4021,10 @@ FILE: ..\frontend\src\pages\TraceabilityMatrixPage.tsx
+ import { useEffect, useState } from "react";
+ 
+ import { fetchMatrix } from "../services/matrixApi";
++import type { TraceabilityMatrixItem } from "../types/Api";
+ 
+ export const TraceabilityMatrixPage = () => {
+-    const [items, setItems] = useState<any[]>([]);
++    const [items, setItems] = useState<TraceabilityMatrixItem[]>([]);
+ 
+     useEffect(() => {
+         fetchMatrix().then((result) => setItems(result.items));
+@@ -2591,9 +4070,10 @@ FILE: ..\frontend\src\pages\TraceabilityPage.tsx
+ import { useEffect, useState } from "react";
+ 
+ import { fetchTraceability } from "../services/traceabilityApi";
++import type { TraceabilityItem } from "../types/Api";
+ 
+ export const TraceabilityPage = () => {
+-    const [items, setItems] = useState<any[]>([]);
++    const [items, setItems] = useState<TraceabilityItem[]>([]);
+ 
+     useEffect(() => {
+         fetchTraceability().then((result) => setItems(result.items));
+@@ -2642,6 +4122,23 @@ export const api = axios.create({
+   baseURL: "http://localhost:3000/api"
+ });
+ 
++export const apiErrorMessage = (
++  error: unknown,
++  fallback: string,
++): string => {
++  if (axios.isAxiosError<{ message?: unknown }>(error)) {
++    const message = error.response?.data?.message;
++    if (typeof message === "string" && message.trim()) {
++      return message;
++    }
++    return error.message || fallback;
++  }
++
++  return error instanceof Error && error.message
++    ? error.message
++    : fallback;
++};
++
+ 
+ 
+ ================================================================================
+@@ -2651,12 +4148,28 @@ FILE: ..\frontend\src\services\contextApi.ts
+ import { api }
+ from "./api";
+ 
++import type {
++  Context,
++  ItemResponse,
++  ItemsResponse
++} from "../types/Api";
++
+ export const fetchContexts =
+-async () => {
++async (
++  projectId?: string
++) => {
++
++  const query =
++    projectId
++      ? `?projectId=${encodeURIComponent(projectId)}`
++      : "";
+ 
+   const response =
+-    await api.get(
+-      "/contexts"
++    await api.get<
++      ItemsResponse<Context>
++    >(
++      "/contexts" +
++      query
+     );
+ 
+   return response.data;
+@@ -2669,7 +4182,9 @@ async (
+ ) => {
+ 
+   const response =
+-    await api.get(
++    await api.get<
++      ItemResponse<Context>
++    >(
+       "/contexts/" +
+       id
+     );
+@@ -2706,12 +4221,13 @@ FILE: ..\frontend\src\services\dashboardApi.ts
+ ================================================================================
+ 
+ import { api } from "./api";
++import type { DashboardData } from "../types/Api";
+ 
+ export const fetchDashboard =
+   async () => {
+ 
+     const response =
+-      await api.get(
++      await api.get<DashboardData>(
+         "/dashboard"
+       );
+ 
+@@ -2725,12 +4241,13 @@ FILE: ..\frontend\src\services\documentApi.ts
+ ================================================================================
+ 
+ import { api } from "./api";
++import type { GeneratedDocument, ItemsResponse } from "../types/Api";
+ 
+ export const fetchDocuments =
+   async () => {
+ 
+     const response =
+-      await api.get(
++      await api.get<ItemsResponse<GeneratedDocument>>(
+         "/documents"
+       );
+ 
+@@ -2745,12 +4262,13 @@ FILE: ..\frontend\src\services\matrixApi.ts
+ 
+ import { api }
+ from "./api";
++import type { ItemsResponse, TraceabilityMatrixItem } from "../types/Api";
+ 
+ export const fetchMatrix =
+ async () => {
+ 
+   const response =
+-    await api.get(
++    await api.get<ItemsResponse<TraceabilityMatrixItem>>(
+       "/traceability/matrix"
+     );
+ 
+@@ -2764,18 +4282,62 @@ async () => {
+ FILE: ..\frontend\src\services\projectApi.ts
+ ================================================================================
+ 
++import type {
++    ItemResponse,
++    ManagementDataIndex,
++    PagedItemsResponse,
++    Project,
++    ProjectInput,
++} from "../types/Api";
+ import { api } from "./api";
+ 
+-export const fetchProjects =
+-  async () => {
++export type ProjectListQuery = {
++    q: string;
++    status: string;
++    page: number;
++};
+ 
+-    const response =
+-      await api.get(
+-        "/projects"
+-      );
++export const fetchProjects = async (query: ProjectListQuery) => {
++    const response = await api.get<
++        PagedItemsResponse<Project> | { success: boolean; item: PagedItemsResponse<Project> }
++    >("/projects", {
++        params: query,
++    });
+ 
+-    return response.data;
+-  };
++    const data = response.data;
++    if ("item" in data && data.item && typeof data.item === "object" && "items" in data.item) {
++        return data.item as PagedItemsResponse<Project>;
++    }
++
++    return data as PagedItemsResponse<Project>;
++};
++
++export const fetchProject = async (id: string) => {
++    const response = await api.get<ItemResponse<Project>>(
++        `/projects/${encodeURIComponent(id)}`,
++    );
++    return response.data.item;
++};
++
++export const fetchProjectManagementData = async (id: string) => {
++    const response = await api.get<ItemResponse<ManagementDataIndex>>(
++        `/projects/${encodeURIComponent(id)}/management-data`,
++    );
++    return response.data.item;
++};
++
++export const createProject = async (input: ProjectInput) => {
++    const response = await api.post<ItemResponse<Project>>("/projects", input);
++    return response.data.item;
++};
++
++export const updateProject = async (id: string, input: ProjectInput) => {
++    const response = await api.put<ItemResponse<Project>>(
++        `/projects/${encodeURIComponent(id)}`,
++        input,
++    );
++    return response.data.item;
++};
+ 
+ 
+ 
+@@ -2784,17 +4346,40 @@ FILE: ..\frontend\src\services\taskApi.ts
+ ================================================================================
+ 
+ import { api } from "./api";
++import type {
++  ItemResponse,
++  Task,
++  TaskInput,
++  TaskListFilters,
++  TaskListResponse,
++} from "../types/Api";
++
++export const fetchTasks = async (filters: TaskListFilters = {}) => {
++  const response = await api.get<TaskListResponse>("/tasks", {
++    params: filters,
++  });
++  return response.data;
++};
+ 
+-export const fetchTasks =
+-  async () => {
++export const fetchTask = async (id: string) => {
++  const response = await api.get<ItemResponse<Task>>(
++    `/tasks/${encodeURIComponent(id)}`,
++  );
++  return response.data.item;
++};
+ 
+-    const response =
+-      await api.get(
+-        "/tasks"
+-      );
++export const createTask = async (input: TaskInput) => {
++  const response = await api.post<ItemResponse<Task>>("/tasks", input);
++  return response.data.item;
++};
+ 
+-    return response.data;
+-  };
++export const updateTask = async (id: string, input: TaskInput) => {
++  const response = await api.put<ItemResponse<Task>>(
++    `/tasks/${encodeURIComponent(id)}`,
++    input,
++  );
++  return response.data.item;
++};
+ 
+ 
+ 
+@@ -2804,12 +4389,13 @@ FILE: ..\frontend\src\services\traceabilityApi.ts
+ 
+ import { api }
+ from "./api";
++import type { ItemsResponse, TraceabilityItem } from "../types/Api";
+ 
+ export const fetchTraceability =
+ async () => {
+ 
+   const response =
+-    await api.get(
++    await api.get<ItemsResponse<TraceabilityItem>>(
+       "/traceability"
+     );
+ 
+@@ -2819,6 +4405,142 @@ async () => {
+ 
+ 
+ 
++================================================================================
++FILE: ..\frontend\src\types\Api.ts
++================================================================================
++
++export type ItemsResponse<T> = {
++  success: boolean;
++  items: T[];
++};
++
++export type ItemResponse<T> = {
++  success: boolean;
++  item: T;
++};
++
++export type PagedItemsResponse<T> = {
++  success: boolean;
++  items: T[];
++  total: number;
++  page: number;
++  pageSize: number;
++};
++
++export type Project = {
++  id: string;
++  name: string;
++  description: string;
++  status: string;
++  rootPath: string;
++  taskCount: number;
++  documentCount: number;
++};
++
++export type ProjectInput = Pick<Project, "name" | "description" | "status" | "rootPath">;
++
++export type ManagementDataItem = {
++  title: string;
++  path: string;
++  exists: boolean;
++};
++
++export type ManagementDataIndexStatus =
++  | "ok"
++  | "root-path-not-set"
++  | "root-path-not-found"
++  | "readme-not-found"
++  | "section-not-found";
++
++export type ManagementDataIndex = {
++  status: ManagementDataIndexStatus;
++  message: string;
++  rootPath: string;
++  items: ManagementDataItem[];
++};
++
++export type Task = {
++  id: string;
++  title: string;
++  description: string;
++  status: TaskStatus;
++  priority: TaskPriority;
++  source: string;
++  projectId?: string;
++};
++
++export type TaskStatus = "TODO" | "DOING" | "DONE";
++export type TaskPriority = "LOW" | "NORMAL" | "HIGH";
++export type TaskInput = Omit<Task, "id" | "source" | "projectId"> & {
++  projectId: string;
++};
++
++export type TaskListResponse = {
++  success: boolean;
++  items: Task[];
++  count: number;
++  page: number;
++  pageSize: number;
++  totalPages: number;
++};
++
++export type TaskListFilters = {
++  q?: string;
++  projectId?: string;
++  status?: string;
++  priority?: string;
++  page?: number;
++};
++
++export type GeneratedDocument = {
++  id: string;
++  title: string;
++  type: string;
++  path: string;
++  source: string;
++  projectId?: string;
++};
++
++export type Context = {
++  id: string;
++  title: string;
++  type: string;
++  description: string;
++  status: string;
++  taskIds: string[];
++  documentIds: string[];
++  issueIds: string[];
++  qaIds: string[];
++  createdAt: string;
++  updatedAt: string;
++};
++
++export type TraceabilityItem = {
++  sourceId: string;
++  targetId: string;
++  relationType: string;
++};
++
++export type TraceabilityMatrixItem = {
++  source: string;
++  target: string;
++  relation: string;
++};
++
++export type DashboardData = {
++  success: boolean;
++  summary: {
++    taskCount: number;
++    completedTaskCount: number;
++    documentCount: number;
++    progress: number;
++  };
++  latestTasks: Task[];
++  latestDocuments: GeneratedDocument[];
++};
++
++
++
+ ================================================================================
+ FILE: ..\frontend\src\types\ConverterResult.ts
+ ================================================================================

@@ -105,8 +105,15 @@ export const getRepositoryState = (
   };
 };
 
-const readFrontmatterValue = (frontmatter: string, key: string): string => {
-  const match = frontmatter.match(new RegExp(`^${key}:\\s*(.+)$`, "m"));
+const readFrontmatterValue = (
+  frontmatter: string,
+  key: string,
+  fallbackKey?: string
+): string => {
+  let match = frontmatter.match(new RegExp(`^${key}:\\s*(.+)$`, "m"));
+  if (!match && fallbackKey) {
+    match = frontmatter.match(new RegExp(`^${fallbackKey}:\\s*(.+)$`, "m"));
+  }
 
   if (!match) {
     throw new Error(`Agent definition is missing "${key}" metadata.`);
@@ -118,9 +125,21 @@ const readFrontmatterValue = (frontmatter: string, key: string): string => {
 export const listAgents = (
   repositoryRoot = getRepositoryState().root
 ): AgentDefinition[] => {
-  const agentsDirectory = path.join(repositoryRoot, ".github", "agents");
-  const files = fs.readdirSync(agentsDirectory, { withFileTypes: true })
-    .filter((entry) => entry.isFile() && entry.name.endsWith(".agent.md"))
+  const antigravityDirectory = path.join(repositoryRoot, ".agents", "agents");
+  const githubDirectory = path.join(repositoryRoot, ".github", "agents");
+
+  const useAntigravity =
+    fs.existsSync(antigravityDirectory) &&
+    fs.readdirSync(antigravityDirectory).some((f) => f.endsWith(".md"));
+
+  const agentsDirectory = useAntigravity ? antigravityDirectory : githubDirectory;
+  const relativeDir = useAntigravity
+    ? path.posix.join(".agents", "agents")
+    : path.posix.join(".github", "agents");
+
+  const files = fs
+    .readdirSync(agentsDirectory, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".md"))
     .map((entry) => entry.name)
     .sort();
 
@@ -134,10 +153,10 @@ export const listAgents = (
     }
 
     return {
-      id: file.replace(/\.agent\.md$/, ""),
-      name: readFrontmatterValue(frontmatter, "name"),
+      id: file.replace(/(\.agent)?\.md$/, ""),
+      name: readFrontmatterValue(frontmatter, "displayName", "name"),
       description: readFrontmatterValue(frontmatter, "description"),
-      file: path.posix.join(".github", "agents", file)
+      file: path.posix.join(relativeDir, file)
     };
   });
 };

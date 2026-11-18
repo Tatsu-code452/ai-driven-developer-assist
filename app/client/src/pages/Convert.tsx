@@ -36,11 +36,12 @@ function Body() {
       setBusy(false);
     }
   };
-  const register = () => {
-    const a = add('artifacts', {
+  const register = async () => {
+    const a = await add('artifacts', {
       projectId: currentProject!.id, workItemId: '', artifactType: type, title: title.trim() || file!.name, path: file!.name, content: text,
       status: 'DRAFT', approved: false, origin: 'CONVERTED', version: 1, versions: [], reviewNote: '',
     });
+    if (!a) return;
     toast('ドキュメントとして登録しました');
     nav(`/documents/${a.id}`);
   };

@@ -71,14 +71,15 @@ function RegisterBody() {
     if (!d) return;
     setValues((v) => ({ ...v, title: v.title || d.title, content: d.content, sourceArtifactIds: [d.id] }));
   };
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const miss = firstMissing(fields, values);
     if (miss) return setError(`「${miss}」を入力してください`);
-    const c = add('contexts', {
+    const c = await add('contexts', {
       projectId: currentProject!.id, title: values.title as string, type: values.type as ContextType, content: values.content as string,
       sourceArtifactIds: values.sourceArtifactIds as string[], tags: splitTags(values.tags as string),
     });
+    if (!c) return;
     toast('コンテキストを登録しました');
     nav(`/contexts/${c.id}`);
   };
@@ -113,7 +114,7 @@ export function ContextRegister() {
 
 export function ContextDetail() {
   const { id } = useParams();
-  const { scoped, add, update, remove } = useStore();
+  const { scoped, update, remove, call } = useStore();
   const toast = useToast();
   const nav = useNavigate();
   const fields = useFields();
@@ -137,7 +138,7 @@ export function ContextDetail() {
           <button className="btn" onClick={() => setTaskTitle(`${c.title} の分析`)}>タスクを作成</button>
           <Link className="btn" to={`/prompts?contextId=${c.id}`}>プロンプトを生成</Link>
           <button className="btn" onClick={() => setEditing(true)}>編集</button>
-          <button className="btn danger" onClick={() => { if (confirm('このコンテキストを削除します。よろしいですか?')) { remove('contexts', c.id); toast('削除しました'); nav('/contexts'); } }}>削除</button>
+          <button className="btn danger" onClick={async () => { if (confirm('このコンテキストを削除します。よろしいですか?') && (await remove('contexts', c.id))) { toast('削除しました'); nav('/contexts'); } }}>削除</button>
         </>}
       />
       <DetailGrid items={[['ID', c.id], ['分類', labelOf(CONTEXT_TYPES, c.type)], ['タグ', c.tags.join(', ')], ['更新日時', formatDate(c.updatedAt)]]} />
@@ -159,7 +160,7 @@ export function ContextDetail() {
           wide title="コンテキスト編集" fields={fields}
           initial={{ title: c.title, type: c.type, content: c.content, tags: c.tags.join(', '), sourceArtifactIds: c.sourceArtifactIds }}
           onClose={() => setEditing(false)}
-          onSubmit={(v) => { update('contexts', c.id, { title: v.title as string, type: v.type as ContextType, content: v.content as string, tags: splitTags(v.tags as string), sourceArtifactIds: v.sourceArtifactIds as string[] }); setEditing(false); toast('更新しました'); }}
+          onSubmit={async (v) => { if (!(await update('contexts', c.id, { title: v.title as string, type: v.type as ContextType, content: v.content as string, tags: splitTags(v.tags as string), sourceArtifactIds: v.sourceArtifactIds as string[] }))) return; setEditing(false); toast('更新しました'); }}
         />
       )}
       {taskTitle !== null && (
@@ -167,9 +168,9 @@ export function ContextDetail() {
           title="コンテキストからタスクを作成" submitLabel="作成" initial={{ title: taskTitle }}
           fields={[{ name: 'title', label: 'タスク名', kind: 'text', required: true }]}
           onClose={() => setTaskTitle(null)}
-          onSubmit={(v) => {
-            const t = add('workItems', { projectId: c.projectId, type: 'TASK', title: v.title as string, description: `コンテキスト ${c.id} (${c.title}) をもとに実施する。`, status: 'TODO', priority: 'MEDIUM', assignee: '', parentId: '', answer: '', isKnowledge: false });
-            add('traces', { projectId: c.projectId, sourceType: 'Context', sourceId: c.id, targetType: 'WorkItem', targetId: t.id, relationType: 'INPUT' });
+          onSubmit={async (v) => {
+            const r = await call('POST', `/api/contexts/${c.id}/task`, { title: v.title });
+            if (!r) return;
             setTaskTitle(null);
             toast('タスクを作成し、関連付けました');
           }}

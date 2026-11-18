@@ -46,7 +46,7 @@ function RepoBody() {
               <button className="btn" disabled={busy !== ''} onClick={() => run('fetch', r)}>Fetch</button>
               <button className="btn" disabled={busy !== ''} onClick={() => run('pull', r)}>Pull</button>
               <button className="btn" onClick={() => setEditing(r)}>編集</button>
-              <button className="btn danger" onClick={() => { if (confirm('このリポジトリと、紐づくブランチ・PR・リリースの記録を削除します。よろしいですか?')) { remove('repositories', r.id); toast('削除しました'); } }}>削除</button>
+              <button className="btn danger" onClick={async () => { if (confirm('このリポジトリと、紐づくブランチ・PR・リリースの記録を削除します。よろしいですか?') && (await remove('repositories', r.id))) toast('削除しました'); }}>削除</button>
             </RowActions>
           ) },
         ]}
@@ -57,10 +57,10 @@ function RepoBody() {
           title={editing === 'new' ? 'リポジトリ登録' : 'リポジトリ編集'} fields={REPO_FIELDS}
           initial={editing === 'new' ? { defaultBranch: 'main' } : { url: editing.url, defaultBranch: editing.defaultBranch, worktreeRoot: editing.worktreeRoot }}
           onClose={() => setEditing(null)}
-          onSubmit={(v) => {
+          onSubmit={async (v) => {
             const body = { url: v.url as string, defaultBranch: v.defaultBranch as string, worktreeRoot: v.worktreeRoot as string };
-            if (editing === 'new') add('repositories', { ...body, projectId: currentProject!.id, currentBranch: body.defaultBranch });
-            else update('repositories', editing.id, body);
+            const saved = editing === 'new' ? await add('repositories', { ...body, projectId: currentProject!.id, currentBranch: body.defaultBranch }) : await update('repositories', editing.id, body);
+            if (!saved) return;
             setEditing(null);
             toast('保存しました');
           }}
@@ -111,9 +111,9 @@ function BranchBody() {
           { header: 'リポジトリ', render: (b) => repoOf(b.repositoryId)?.url ?? '' },
           { header: '', render: (b) => (
             <RowActions>
-              <button className="btn" onClick={() => { update('repositories', b.repositoryId, { currentBranch: b.name }); toast(`${b.name} をチェックアウト中として記録しました`); }}>切り替え</button>
+              <button className="btn" onClick={async () => { if (await update('repositories', b.repositoryId, { currentBranch: b.name })) toast(`${b.name} をチェックアウト中として記録しました`); }}>切り替え</button>
               <button className="btn" onClick={() => setEditing(b)}>編集</button>
-              <button className="btn danger" onClick={() => { remove('branches', b.id); toast('削除しました'); }}>削除</button>
+              <button className="btn danger" onClick={async () => { if (await remove('branches', b.id)) toast('削除しました'); }}>削除</button>
             </RowActions>
           ) },
         ]}
@@ -124,10 +124,10 @@ function BranchBody() {
           title={editing === 'new' ? 'ブランチ作成' : 'ブランチ編集'} fields={fields}
           initial={editing === 'new' ? { repositoryId: repoId || repoOptions[0]?.value, baseBranch: repoOf(repoId || repoOptions[0]?.value)?.defaultBranch ?? 'main' } : { repositoryId: editing.repositoryId, name: editing.name, baseBranch: editing.baseBranch, worktreePath: editing.worktreePath }}
           onClose={() => setEditing(null)}
-          onSubmit={(v) => {
+          onSubmit={async (v) => {
             const body = { repositoryId: v.repositoryId as string, name: v.name as string, baseBranch: v.baseBranch as string, worktreePath: v.worktreePath as string };
-            if (editing === 'new') add('branches', { ...body, projectId: currentProject!.id });
-            else update('branches', editing.id, body);
+            const saved = editing === 'new' ? await add('branches', { ...body, projectId: currentProject!.id }) : await update('branches', editing.id, body);
+            if (!saved) return;
             setEditing(null);
             toast('保存しました');
           }}
@@ -158,7 +158,8 @@ function PRBody() {
   const branchOptions = [...new Set(scoped.branches.map((b) => b.name))].map((n) => ({ value: n, label: n }));
   if (scoped.repositories.length === 0) return <NoRepo />;
   const rows = scoped.pullRequests.filter((p) => !status || p.status === status);
-  const setSt = (p: PullRequest, s: PullRequestStatus) => { update('pullRequests', p.id, { status: s, ...(s === 'MERGED' ? { mergedAt: new Date().toISOString() } : {}) }); toast(`「${labelOf(PR_STATUS, s)}」にしました`); };
+  // マージ日時はサーバーが記録する
+  const setSt = async (p: PullRequest, s: PullRequestStatus) => { if (await update('pullRequests', p.id, { status: s })) toast(`「${labelOf(PR_STATUS, s)}」にしました`); };
 
   return (
     <>
@@ -189,8 +190,9 @@ function PRBody() {
             { name: 'description', label: '説明', kind: 'textarea', rows: 5 },
           ]}
           onClose={() => setCreating(false)}
-          onSubmit={(v) => {
-            const p = add('pullRequests', { projectId: currentProject!.id, repositoryId: v.repositoryId as string, title: v.title as string, description: v.description as string, sourceBranch: v.sourceBranch as string, targetBranch: v.targetBranch as string, status: 'OPEN', reviewNote: '', mergedAt: '' });
+          onSubmit={async (v) => {
+            const p = await add('pullRequests', { projectId: currentProject!.id, repositoryId: v.repositoryId as string, title: v.title as string, description: v.description as string, sourceBranch: v.sourceBranch as string, targetBranch: v.targetBranch as string, status: 'OPEN', reviewNote: '', mergedAt: '' });
+            if (!p) return;
             setCreating(false);
             toast(`${p.id} を作成しました`);
           }}
@@ -203,11 +205,11 @@ function PRBody() {
           <Section title="レビュー">
             <textarea rows={5} aria-label="レビュー結果" value={note ?? open.reviewNote} onChange={(e) => setNote(e.target.value)} placeholder="レビューコメントを記録します" />
             <div className="toolbar" style={{ marginTop: 8 }}>
-              <button className="btn" disabled={note === null} onClick={() => { update('pullRequests', open.id, { reviewNote: note ?? '' }); setNote(null); toast('レビュー結果を保存しました'); }}>レビュー結果を保存</button>
+              <button className="btn" disabled={note === null} onClick={async () => { if (!(await update('pullRequests', open.id, { reviewNote: note ?? '' }))) return; setNote(null); toast('レビュー結果を保存しました'); }}>レビュー結果を保存</button>
               <button className="btn" disabled={open.status !== 'OPEN'} onClick={() => setSt(open, 'REVIEWING')}>レビュー開始</button>
               <button className="btn primary" disabled={open.status !== 'REVIEWING'} onClick={() => setSt(open, 'MERGED')}>マージ済みにする</button>
               <button className="btn" disabled={open.status === 'MERGED' || open.status === 'CLOSED'} onClick={() => setSt(open, 'CLOSED')}>クローズ</button>
-              <button className="btn danger" onClick={() => { remove('pullRequests', open.id); setOpenId(''); toast('削除しました'); }}>削除</button>
+              <button className="btn danger" onClick={async () => { if (!(await remove('pullRequests', open.id))) return; setOpenId(''); toast('削除しました'); }}>削除</button>
             </div>
           </Section>
         </Modal>
@@ -244,7 +246,7 @@ function ReleaseBody() {
             { header: 'ID', render: (p) => <span className="id">{p.id}</span> },
             { header: 'タイトル', render: (p) => p.title },
             { header: 'ブランチ', render: (p) => `${p.sourceBranch} → ${p.targetBranch}` },
-            { header: '', render: (p) => <RowActions><button className="btn primary" onClick={() => { update('pullRequests', p.id, { status: 'MERGED', mergedAt: new Date().toISOString() }); toast(`${p.id} をマージ済みにしました`); }}>マージ</button></RowActions> },
+            { header: '', render: (p) => <RowActions><button className="btn primary" onClick={async () => { if (await update('pullRequests', p.id, { status: 'MERGED' })) toast(`${p.id} をマージ済みにしました`); }}>マージ</button></RowActions> },
           ]}
         />
       </Section>
@@ -257,7 +259,7 @@ function ReleaseBody() {
             { header: 'リポジトリ', render: (r) => repoUrl(r.repositoryId) },
             { header: 'リリースノート', render: (r) => r.note },
             { header: '日時', render: (r) => formatDate(r.releasedAt) },
-            { header: '', render: (r) => <RowActions><button className="btn danger" onClick={() => { remove('releases', r.id); toast('削除しました'); }}>削除</button></RowActions> },
+            { header: '', render: (r) => <RowActions><button className="btn danger" onClick={async () => { if (await remove('releases', r.id)) toast('削除しました'); }}>削除</button></RowActions> },
           ]}
         />
       </Section>
@@ -270,9 +272,10 @@ function ReleaseBody() {
             { name: 'note', label: 'リリースノート', kind: 'textarea', rows: 6, placeholder: merged.map((p) => `- ${p.title}`).join('\n') },
           ]}
           onClose={() => setCreating(false)}
-          onSubmit={(v) => {
+          onSubmit={async (v) => {
             if (scoped.releases.some((r) => r.repositoryId === v.repositoryId && r.tag === v.tag)) return toast('同じタグが登録済みです', 'bad');
-            add('releases', { projectId: currentProject!.id, repositoryId: v.repositoryId as string, tag: v.tag as string, note: v.note as string, releasedAt: new Date().toISOString() });
+            const rel = await add('releases', { projectId: currentProject!.id, repositoryId: v.repositoryId as string, tag: v.tag as string, note: v.note as string, releasedAt: new Date().toISOString() });
+            if (!rel) return;
             setCreating(false);
             toast('リリースを記録しました');
           }}

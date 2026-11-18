@@ -3,15 +3,25 @@
 React + TypeScript (Vite)。画面一覧(SCR-001〜043)・機能一覧・データモデル設計書v2に沿った構成です。
 
 ## 起動
+バックエンド(`server/`)を先に起動してください。client の開発サーバーは `/api` を `localhost:8080` へプロキシします。
 ```bash
-npm install
-npm run dev      # http://localhost:5173
-npm run build    # 型チェック + ビルド
+# 1. サーバー (別ターミナル)
+cd server && node src/server.ts
+
+# 2. client
+cd client && npm install && npm run dev      # http://localhost:5173
+npm run build                                # 型チェック + ビルド
 ```
+接続先を変える場合は `.env` の `VITE_API_BASE`(本番ビルドなど)や、環境変数 `VITE_API_TARGET`(開発プロキシ先)を使います。
+サーバーで `API_TOKEN` を有効にしたときは `VITE_API_TOKEN` に同じ値を設定します(ビルド成果物に埋め込まれるため、ローカル・社内利用向けの簡易認証です)。
 
 ## データの保持
-バックエンド未接続でも動くよう、データはブラウザの localStorage(キー `aidda-client:v1`)に保存します。
-永続化層は `src/store.tsx` に集約しているため、API接続時はここを差し替えます。
+業務データはすべてサーバー(`DATA_DIR/db.json`)に保存されます。client が持つのは「作業中のプロジェクト」の選択だけ(localStorage)です。
+サーバーに接続できないときは画面に再試行ボタンを表示します。
+以前の localStorage 版で入力したデータは自動では移行されません。
+
+`src/store.tsx` が全データをメモリに持ち、更新系(`add` / `update` / `remove` / `call`)はサーバーへ送信します。失敗時はトーストでサーバーのメッセージを表示します。
+成果物の状態遷移・版管理・マージ日時・関連付けの自動作成など、整合性が必要な処理はサーバー側のAPIで行います。
 
 ## 画面とルート
 | SCR | ルート | ファイル |

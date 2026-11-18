@@ -41,7 +41,7 @@ function ListBody() {
           { header: '', render: (t) => (
             <RowActions>
               <button className="btn" onClick={() => setImpactId(t.sourceId)}>影響分析</button>
-              <button className="btn danger" onClick={() => { remove('traces', t.id); toast('関連付けを削除しました'); }}>削除</button>
+              <button className="btn danger" onClick={async () => { if (await remove('traces', t.id)) toast('関連付けを削除しました'); }}>削除</button>
             </RowActions>
           ) },
         ]}
@@ -62,13 +62,14 @@ function ListBody() {
             { name: 'targetId', label: '関連先', kind: 'select', options, required: true },
           ]}
           onClose={() => setCreating(false)}
-          onSubmit={(v) => {
+          onSubmit={async (v) => {
             if (v.sourceId === v.targetId) return toast('関連元と関連先に同じ項目は選べません', 'bad');
             if (scoped.traces.some((t) => t.sourceId === v.sourceId && t.targetId === v.targetId && t.relationType === v.relationType)) return toast('同じ関連付けが登録済みです', 'bad');
-            add('traces', {
+            const created = await add('traces', {
               projectId: currentProject!.id, sourceType: nodeInfo(scoped, v.sourceId as string).kind, sourceId: v.sourceId as string,
               targetType: nodeInfo(scoped, v.targetId as string).kind, targetId: v.targetId as string, relationType: v.relationType as RelationType,
             });
+            if (!created) return;
             setCreating(false);
             toast('関連付けを登録しました');
           }}

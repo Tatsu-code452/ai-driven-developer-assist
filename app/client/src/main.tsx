@@ -9,11 +9,11 @@ import './styles.css';
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <StoreProvider>
-        <ToastProvider>
+      <ToastProvider>
+        <StoreProvider>
           <App />
-        </ToastProvider>
-      </StoreProvider>
+        </StoreProvider>
+      </ToastProvider>
     </BrowserRouter>
   </StrictMode>,
 );

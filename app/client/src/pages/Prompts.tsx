@@ -48,8 +48,9 @@ function Generator() {
     setBusy(true);
     try { setResponse(await executeAI(aiType, generated)); toast('AIの回答を取得しました'); } catch (e) { toast(errMsg(e), 'bad'); } finally { setBusy(false); }
   };
-  const save = () => {
-    const e = add('executions', { projectId: currentProject!.id, workItemId, promptId, contextIds, requestText: generated, responseText: response, executedAt: new Date().toISOString(), aiType });
+  const save = async () => {
+    const e = await add('executions', { projectId: currentProject!.id, workItemId, promptId, contextIds, requestText: generated, responseText: response, executedAt: new Date().toISOString(), aiType });
+    if (!e) return;
     toast(`AI実行履歴 ${e.id} に保存しました`);
   };
 
@@ -132,7 +133,7 @@ function Templates() {
           { header: '', render: (p) => (
             <RowActions>
               <button className="btn" onClick={() => setEditing(p)}>編集</button>
-              <button className="btn danger" onClick={() => { if (confirm(`「${p.name}」を削除します。よろしいですか?`)) { remove('prompts', p.id); toast('削除しました'); } }}>削除</button>
+              <button className="btn danger" onClick={async () => { if (confirm(`「${p.name}」を削除します。よろしいですか?`) && (await remove('prompts', p.id))) toast('削除しました'); }}>削除</button>
             </RowActions>
           ) },
         ]}
@@ -142,10 +143,10 @@ function Templates() {
           wide title={editing === 'new' ? 'テンプレート登録' : 'テンプレート編集'} fields={TPL_FIELDS}
           initial={editing === 'new' ? { role: 'REQ', version: '1.0', template: '## タスク\n{{task}}\n\n## コンテキスト\n{{contexts}}\n\n## 出力形式\n{{outputFormat}}' } : { name: editing.name, role: editing.role, template: editing.template, outputFormat: editing.outputFormat, version: editing.version }}
           onClose={() => setEditing(null)}
-          onSubmit={(v) => {
+          onSubmit={async (v) => {
             const body = { name: v.name as string, role: v.role as PromptRole, template: v.template as string, outputFormat: v.outputFormat as string, version: v.version as string };
-            if (editing === 'new') add('prompts', { ...body, projectId: currentProject!.id });
-            else update('prompts', editing.id, body);
+            const saved = editing === 'new' ? await add('prompts', { ...body, projectId: currentProject!.id }) : await update('prompts', editing.id, body);
+            if (!saved) return;
             setEditing(null);
             toast('保存しました');
           }}

@@ -61,12 +61,13 @@ function ListBody({ mode }: { mode: Mode }) {
         <FormModal
           wide title={`${noun}登録`} fields={fields} submitLabel="登録" initial={{ artifactType: 'REQUIREMENT' }}
           onClose={() => setCreating(false)}
-          onSubmit={(v) => {
-            const a = add('artifacts', {
+          onSubmit={async (v) => {
+            const a = await add('artifacts', {
               projectId: currentProject!.id, workItemId: v.workItemId as string, artifactType: v.artifactType as ArtifactType, title: v.title as string,
               path: v.path as string, content: v.content as string, status: 'DRAFT', approved: false, origin: mode === 'ai' ? 'AI' : 'MANUAL',
               version: 1, versions: [], reviewNote: '',
             });
+            if (!a) return;
             setCreating(false);
             toast(`${noun}を登録しました`);
             nav(`${base(mode)}/${a.id}`);
@@ -82,7 +83,7 @@ export function ArtifactList({ mode }: { mode: Mode }) {
 
 export function ArtifactDetail({ mode }: { mode: Mode }) {
   const { id } = useParams();
-  const { scoped, update, remove } = useStore();
+  const { scoped, update, remove, call } = useStore();
   const toast = useToast();
   const nav = useNavigate();
   const fields = useFields();
@@ -96,7 +97,10 @@ export function ArtifactDetail({ mode }: { mode: Mode }) {
     const v = a.versions.find((x) => x.version === viewVer);
     return { content: v?.content ?? '', label: `v${viewVer}` };
   })();
-  const setStatus = (status: ArtifactStatus, approved = a.approved) => { update('artifacts', a.id, { status, approved }); toast(`状態を「${labelOf(ARTIFACT_STATUS, status)}」にしました`); };
+  // 状態遷移はサーバーのワークフローAPIで行う(承認フラグ等はサーバーが管理する)
+  const act = async (action: 'review' | 'approve' | 'baseline' | 'reject', label: string) => {
+    if (await call('POST', `/api/artifacts/${a.id}/${action}`, {})) toast(`状態を「${label}」にしました`);
+  };
 
   return (
     <>
@@ -104,7 +108,7 @@ export function ArtifactDetail({ mode }: { mode: Mode }) {
         title={a.title} scr={mode === 'ai' ? 'SCR-032' : 'SCR-008'}
         actions={<>
           <button className="btn" onClick={() => setEditing(true)}>編集</button>
-          <button className="btn danger" onClick={() => { if (confirm('この成果物を削除します。よろしいですか?')) { remove('artifacts', a.id); toast('削除しました'); nav(base(mode)); } }}>削除</button>
+          <button className="btn danger" onClick={async () => { if (confirm('この成果物を削除します。よろしいですか?') && (await remove('artifacts', a.id))) { toast('削除しました'); nav(base(mode)); } }}>削除</button>
         </>}
       />
       <DetailGrid items={[
@@ -115,16 +119,16 @@ export function ArtifactDetail({ mode }: { mode: Mode }) {
 
       <Section title="レビュー・承認">
         <div className="toolbar">
-          <button className="btn" disabled={a.status !== 'DRAFT'} onClick={() => setStatus('REVIEW')}>レビューを依頼</button>
-          <button className="btn" disabled={a.status !== 'REVIEW'} onClick={() => setStatus('APPROVED', true)}>承認</button>
-          <button className="btn" disabled={a.status !== 'APPROVED'} onClick={() => setStatus('BASELINE')}>ベースライン化</button>
-          <button className="btn" disabled={a.status === 'DRAFT'} onClick={() => setStatus('DRAFT', false)}>下書きに戻す</button>
+          <button className="btn" disabled={a.status !== 'DRAFT'} onClick={() => act('review', 'レビュー中')}>レビューを依頼</button>
+          <button className="btn" disabled={a.status !== 'REVIEW'} onClick={() => act('approve', '承認済み')}>承認</button>
+          <button className="btn" disabled={a.status !== 'APPROVED'} onClick={() => act('baseline', 'ベースライン')}>ベースライン化</button>
+          <button className="btn" disabled={a.status === 'DRAFT'} onClick={() => act('reject', '下書き')}>下書きに戻す</button>
         </div>
         <div className="field">
           <label htmlFor="note">レビュー結果</label>
           <textarea id="note" rows={3} value={note ?? a.reviewNote} onChange={(e) => setNote(e.target.value)} />
         </div>
-        <button className="btn" disabled={note === null} onClick={() => { update('artifacts', a.id, { reviewNote: note ?? '' }); setNote(null); toast('レビュー結果を保存しました'); }}>レビュー結果を保存</button>
+        <button className="btn" disabled={note === null} onClick={async () => { if (!(await update('artifacts', a.id, { reviewNote: note ?? '' }))) return; setNote(null); toast('レビュー結果を保存しました'); }}>レビュー結果を保存</button>
       </Section>
 
       <Section title={`内容 ${shown.label}`}>
@@ -146,15 +150,15 @@ export function ArtifactDetail({ mode }: { mode: Mode }) {
           wide title="成果物編集" fields={fields}
           initial={{ title: a.title, artifactType: a.artifactType, path: a.path, workItemId: a.workItemId, content: a.content }}
           onClose={() => setEditing(false)}
-          onSubmit={(v) => {
-            const changed = v.content !== a.content;
-            update('artifacts', a.id, {
+          onSubmit={async (v) => {
+            // 内容が変わると、サーバーが旧内容を履歴に残して版を上げ、状態を下書きに戻す
+            const r = await update('artifacts', a.id, {
               title: v.title as string, artifactType: v.artifactType as ArtifactType, path: v.path as string, workItemId: v.workItemId as string, content: v.content as string,
-              ...(changed ? { version: a.version + 1, versions: [...a.versions, { version: a.version, content: a.content, savedAt: new Date().toISOString() }], status: 'DRAFT' as const, approved: false } : {}),
             });
+            if (!r) return;
             setEditing(false);
             setViewVer(null);
-            toast(changed ? `v${a.version + 1} として保存しました(状態は下書きに戻ります)` : '更新しました');
+            toast(r.version > a.version ? `v${r.version} として保存しました(状態は下書きに戻ります)` : '更新しました');
           }}
         />
       )}

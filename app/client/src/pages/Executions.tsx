@@ -9,7 +9,7 @@ import { formatDate, lineDiff } from '../util';
 import type { ArtifactType } from '../types';
 
 function Body() {
-  const { scoped, currentProject, add, update, remove } = useStore();
+  const { scoped, update, remove, call } = useStore();
   const toast = useToast();
   const nav = useNavigate();
   const [aiType, setAiType] = useState('');
@@ -57,9 +57,9 @@ function Body() {
             </div>
           </div>
           <div className="form-actions">
-            <button className="btn danger" onClick={() => { if (confirm('この実行履歴を削除します。よろしいですか?')) { remove('executions', open.id); setOpenId(''); toast('削除しました'); } }}>削除</button>
+            <button className="btn danger" onClick={async () => { if (confirm('この実行履歴を削除します。よろしいですか?') && (await remove('executions', open.id))) { setOpenId(''); toast('削除しました'); } }}>削除</button>
             <button className="btn" onClick={() => nav(`/prompts?executionId=${open.id}`)}>プロンプトを再利用して再実行</button>
-            <button className="btn" disabled={resp === open.responseText} onClick={() => { update('executions', open.id, { responseText: resp }); toast('回答を保存しました'); }}>回答を保存</button>
+            <button className="btn" disabled={resp === open.responseText} onClick={async () => { if (await update('executions', open.id, { responseText: resp })) toast('回答を保存しました'); }}>回答を保存</button>
             <button className="btn primary" disabled={!resp.trim()} onClick={() => setRegistering(true)}>成果物として登録</button>
           </div>
         </Modal>
@@ -72,14 +72,15 @@ function Body() {
             { name: 'artifactType', label: '分類', kind: 'select', options: ARTIFACT_TYPES, required: true },
           ]}
           onClose={() => setRegistering(false)}
-          onSubmit={(v) => {
-            const a = add('artifacts', { projectId: currentProject!.id, workItemId: open.workItemId, artifactType: v.artifactType as ArtifactType, title: v.title as string, path: '', content: resp, status: 'DRAFT', approved: false, origin: 'AI', version: 1, versions: [], reviewNote: '' });
-            add('traces', { projectId: currentProject!.id, sourceType: 'AIExecution', sourceId: open.id, targetType: 'Artifact', targetId: a.id, relationType: 'OUTPUT' });
-            if (open.workItemId) add('traces', { projectId: currentProject!.id, sourceType: 'WorkItem', sourceId: open.workItemId, targetType: 'Artifact', targetId: a.id, relationType: 'OUTPUT' });
+          onSubmit={async (v) => {
+            // 編集中の回答を先に保存してから、サーバーに成果物登録(関連付けも自動作成)を依頼する
+            if (resp !== open.responseText && !(await update('executions', open.id, { responseText: resp }))) return;
+            const r = await call<{ artifact: { id: string } }>('POST', `/api/executions/${open.id}/artifact`, { title: v.title, artifactType: v.artifactType });
+            if (!r) return;
             setRegistering(false);
             setOpenId('');
             toast('AI成果物として登録しました');
-            nav(`/ai-artifacts/${a.id}`);
+            nav(`/ai-artifacts/${r.artifact.id}`);
           }}
         />
       )}

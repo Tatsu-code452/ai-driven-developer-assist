@@ -3,8 +3,11 @@ import {
 } from 'react';
 import type {
   AIExecution, Artifact, Base, Branch, Context, Project, PullRequest, Prompt,
-  Release, Repository, Traceability, WorkItem, WorkItemType,
+  Release, Repository, Traceability, WorkItem,
 } from './types';
+import { SEGMENTS, fetchAll, http } from './api';
+import { useToast } from './toast';
+import { errMsg } from './util';
 
 export interface Collections {
   projects: Project;
@@ -23,44 +26,10 @@ export type CollectionKey = keyof Collections;
 export type NewOf<K extends CollectionKey> = Omit<Collections[K], keyof Base>;
 export type Data = { [K in CollectionKey]: Collections[K][] };
 
-interface DB {
-  data: Data;
-  counters: Record<string, number>;
-  currentProjectId: string;
-}
-
-const STORAGE_KEY = 'aidda-client:v1';
-
-// 採番規則(データモデル設計書 7章)
-const PREFIX: Record<CollectionKey, string> = {
-  projects: 'PRJ', contexts: 'CTX', workItems: 'TSK', prompts: 'PRM', executions: 'EXE',
-  artifacts: 'ART', traces: 'TRC', repositories: 'REP', branches: 'BRN', pullRequests: 'PRQ', releases: 'REL',
-};
-const WI_PREFIX: Record<WorkItemType, string> = {
-  TASK: 'TSK', BUG: 'BUG', QA: 'QAA', REVIEW: 'RVW', FIX: 'FIX',
-};
-
-const emptyData = (): Data => ({
-  projects: [], contexts: [], workItems: [], prompts: [], executions: [], artifacts: [],
-  traces: [], repositories: [], branches: [], pullRequests: [], releases: [],
-});
-
-function addTo<K extends CollectionKey>(db: DB, k: K, v: NewOf<K>): [DB, Collections[K]] {
-  const prefix = k === 'workItems' ? WI_PREFIX[(v as unknown as NewOf<'workItems'>).type] : PREFIX[k];
-  const n = (db.counters[prefix] ?? 0) + 1;
-  const now = new Date().toISOString();
-  const item = {
-    ...v,
-    id: `${prefix}-${String(n).padStart(3, '0')}`,
-    createdAt: now,
-    updatedAt: now,
-  } as unknown as Collections[K];
-  const list = db.data[k] as Collections[K][];
-  return [
-    { ...db, counters: { ...db.counters, [prefix]: n }, data: { ...db.data, [k]: [...list, item] } as Data },
-    item,
-  ];
-}
+const KEYS = Object.keys(SEGMENTS) as CollectionKey[];
+const emptyData = (): Data => Object.fromEntries(KEYS.map((k) => [k, []])) as unknown as Data;
+// 作業中プロジェクトはUIの状態なのでブラウザに保存する(業務データはサーバーが持つ)
+const CURRENT_KEY = 'aidda-client:currentProject';
 
 export const DEFAULT_PROMPTS: Omit<NewOf<'prompts'>, 'projectId'>[] = [
   {
@@ -80,135 +49,126 @@ export const DEFAULT_PROMPTS: Omit<NewOf<'prompts'>, 'projectId'>[] = [
   },
 ];
 
-function seed(): DB {
-  let db: DB = { data: emptyData(), counters: {}, currentProjectId: '' };
-  const r = addTo(db, 'projects', {
-    name: 'サンプルプロジェクト', description: '動作確認用のサンプルです。不要になったら削除してください。',
-    status: 'ACTIVE', rootPath: './datas',
-  });
-  db = { ...r[0], currentProjectId: r[1].id };
-  for (const p of DEFAULT_PROMPTS) db = addTo(db, 'prompts', { ...p, projectId: r[1].id })[0];
-  return db;
-}
-
-function load(): DB {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const p = JSON.parse(raw) as DB;
-      if (p?.data) return { ...p, data: { ...emptyData(), ...p.data } };
-    }
-  } catch {
-    /* 破損データは無視して初期化 */
-  }
-  return seed();
-}
+type Status = 'loading' | 'ready' | 'error';
 
 interface Store {
+  status: Status;
+  error: string;
   data: Data;
   /** 選択中プロジェクトのデータのみ(projectsは全件) */
   scoped: Data;
   currentProject: Project | undefined;
   setCurrentProject: (id: string) => void;
-  add: <K extends CollectionKey>(k: K, v: NewOf<K>) => Collections[K];
-  update: <K extends CollectionKey>(k: K, id: string, patch: Partial<NewOf<K>>) => void;
-  remove: (k: CollectionKey, id: string) => void;
-  addDefaultPrompts: (projectId: string) => void;
-  resetAll: () => void;
+  /** 以下の更新系はサーバーへ送信し、失敗時はトーストを出して undefined / false を返す(例外は投げない) */
+  add: <K extends CollectionKey>(k: K, v: NewOf<K>) => Promise<Collections[K] | undefined>;
+  update: <K extends CollectionKey>(k: K, id: string, patch: Partial<NewOf<K>>) => Promise<Collections[K] | undefined>;
+  remove: (k: CollectionKey, id: string) => Promise<boolean>;
+  /** 個別エンドポイント(ワークフロー等)を呼び、サーバー側で変わったデータを再読込する */
+  call: <T>(method: string, path: string, body?: unknown) => Promise<T | undefined>;
+  addDefaultPrompts: (projectId: string) => Promise<void>;
+  reload: () => Promise<void>;
 }
 
 const Ctx = createContext<Store>(null as unknown as Store);
 export const useStore = () => useContext(Ctx);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [db, setDb] = useState<DB>(load);
-  const ref = useRef(db);
-  const commit = useCallback((next: DB) => {
-    ref.current = next;
-    setDb(next);
+  const toast = useToast();
+  const [data, setData] = useState<Data>(emptyData);
+  const [status, setStatus] = useState<Status>('loading');
+  const [error, setError] = useState('');
+  const [currentId, setCurrentId] = useState(() => {
+    try { return localStorage.getItem(CURRENT_KEY) ?? ''; } catch { return ''; }
+  });
+
+  // 初回読込が済んだか。状態更新関数の中で副作用(トースト)を出さないため ref で持つ
+  const loadedRef = useRef(false);
+  const reload = useCallback(async () => {
+    if (!loadedRef.current) setStatus('loading');
+    try {
+      const entries = await Promise.all(KEYS.map(async (k) => [k, await fetchAll(SEGMENTS[k])] as const));
+      setData(Object.fromEntries(entries) as unknown as Data);
+      loadedRef.current = true;
+      setStatus('ready');
+      setError('');
+    } catch (e) {
+      if (loadedRef.current) {
+        toast(`データの再読込に失敗しました: ${errMsg(e)}`, 'bad');
+      } else {
+        setError(errMsg(e));
+        setStatus('error');
+      }
+    }
+  }, [toast]);
+
+  useEffect(() => { void reload(); }, [reload]);
+
+  const add = useCallback(async <K extends CollectionKey>(k: K, v: NewOf<K>) => {
+    try {
+      const item = await http<Collections[K]>('POST', `/api/${SEGMENTS[k]}`, v);
+      setData((d) => ({ ...d, [k]: [...(d[k] as Collections[K][]), item] }) as Data);
+      return item;
+    } catch (e) {
+      toast(errMsg(e), 'bad');
+      return undefined;
+    }
+  }, [toast]);
+
+  const update = useCallback(async <K extends CollectionKey>(k: K, id: string, patch: Partial<NewOf<K>>) => {
+    try {
+      const item = await http<Collections[K]>('PATCH', `/api/${SEGMENTS[k]}/${encodeURIComponent(id)}`, patch);
+      setData((d) => ({ ...d, [k]: (d[k] as Collections[K][]).map((x) => (x.id === id ? item : x)) }) as Data);
+      return item;
+    } catch (e) {
+      toast(errMsg(e), 'bad');
+      return undefined;
+    }
+  }, [toast]);
+
+  const remove = useCallback(async (k: CollectionKey, id: string) => {
+    try {
+      await http<void>('DELETE', `/api/${SEGMENTS[k]}/${encodeURIComponent(id)}`);
+      await reload(); // 関連データ(トレーサビリティ・配下のデータ)もサーバー側で消えるため再読込する
+      return true;
+    } catch (e) {
+      toast(errMsg(e), 'bad');
+      return false;
+    }
+  }, [toast, reload]);
+
+  const call = useCallback(async <T,>(method: string, path: string, body?: unknown) => {
+    try {
+      const r = await http<T>(method, path, body ?? {});
+      await reload();
+      return r;
+    } catch (e) {
+      toast(errMsg(e), 'bad');
+      return undefined;
+    }
+  }, [toast, reload]);
+
+  const addDefaultPrompts = useCallback(async (projectId: string) => {
+    for (const p of DEFAULT_PROMPTS) await add('prompts', { ...p, projectId });
+  }, [add]);
+
+  // 選択中のIDが無効(未選択/削除済み)なら先頭のプロジェクトを使う
+  const currentProject = data.projects.find((p) => p.id === currentId) ?? data.projects[0];
+  const setCurrentProject = useCallback((id: string) => {
+    setCurrentId(id);
+    try { localStorage.setItem(CURRENT_KEY, id); } catch { /* 保存できなくても動作する */ }
   }, []);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
-    } catch {
-      /* 容量超過などは無視 */
-    }
-  }, [db]);
-
-  const add = useCallback(
-    <K extends CollectionKey>(k: K, v: NewOf<K>) => {
-      const [next, item] = addTo(ref.current, k, v);
-      commit(next);
-      return item;
-    },
-    [commit],
-  );
-
-  const update = useCallback(
-    <K extends CollectionKey>(k: K, id: string, patch: Partial<NewOf<K>>) => {
-      const cur = ref.current;
-      const now = new Date().toISOString();
-      const list = (cur.data[k] as Collections[K][]).map((x) =>
-        x.id === id ? ({ ...x, ...patch, updatedAt: now } as Collections[K]) : x,
-      );
-      commit({ ...cur, data: { ...cur.data, [k]: list } as Data });
-    },
-    [commit],
-  );
-
-  const remove = useCallback(
-    (k: CollectionKey, id: string) => {
-      const cur = ref.current;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const d = { ...cur.data } as unknown as Record<string, any[]>;
-      d[k] = d[k].filter((x) => x.id !== id);
-      d.traces = d.traces.filter((t) => t.sourceId !== id && t.targetId !== id);
-      if (k === 'projects') {
-        for (const key of Object.keys(d)) if (key !== 'projects') d[key] = d[key].filter((x) => x.projectId !== id);
-      }
-      if (k === 'repositories') {
-        for (const key of ['branches', 'pullRequests', 'releases']) d[key] = d[key].filter((x) => x.repositoryId !== id);
-      }
-      let currentProjectId = cur.currentProjectId;
-      if (k === 'projects' && currentProjectId === id) currentProjectId = d.projects[0]?.id ?? '';
-      commit({ ...cur, data: d as unknown as Data, currentProjectId });
-    },
-    [commit],
-  );
-
-  const setCurrentProject = useCallback((id: string) => commit({ ...ref.current, currentProjectId: id }), [commit]);
-
-  const addDefaultPrompts = useCallback(
-    (projectId: string) => {
-      let next = ref.current;
-      for (const p of DEFAULT_PROMPTS) next = addTo(next, 'prompts', { ...p, projectId })[0];
-      commit(next);
-    },
-    [commit],
-  );
-
-  const resetAll = useCallback(() => commit(seed()), [commit]);
-
   const scoped = useMemo(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const out: Record<string, any[]> = {};
-    for (const k of Object.keys(db.data) as CollectionKey[]) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      out[k] = (db.data[k] as any[]).filter((x) => k === 'projects' || x.projectId === db.currentProjectId);
+    const out: Record<string, unknown[]> = {};
+    for (const k of KEYS) {
+      out[k] = (data[k] as { id: string; projectId?: string }[]).filter((x) => k === 'projects' || x.projectId === currentProject?.id);
     }
     return out as unknown as Data;
-  }, [db]);
+  }, [data, currentProject?.id]);
 
   const value = useMemo<Store>(
-    () => ({
-      data: db.data,
-      scoped,
-      currentProject: db.data.projects.find((p) => p.id === db.currentProjectId),
-      setCurrentProject, add, update, remove, addDefaultPrompts, resetAll,
-    }),
-    [db, scoped, setCurrentProject, add, update, remove, addDefaultPrompts, resetAll],
+    () => ({ status, error, data, scoped, currentProject, setCurrentProject, add, update, remove, call, addDefaultPrompts, reload }),
+    [status, error, data, scoped, currentProject, setCurrentProject, add, update, remove, call, addDefaultPrompts, reload],
   );
-
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

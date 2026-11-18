@@ -210,17 +210,21 @@ export function FormModal({ title, fields, initial, submitLabel = '保存', onSu
   fields: FieldDef[];
   initial?: Values;
   submitLabel?: string;
-  onSubmit: (v: Values) => void;
+  /** 非同期でもよい。送信中はボタンを無効にする(失敗時はモーダルを閉じないのは呼び出し側の責務) */
+  onSubmit: (v: Values) => void | Promise<unknown>;
   onClose: () => void;
   wide?: boolean;
 }) {
   const [values, setValues] = useState<Values>(() => defaultValues(fields, initial));
   const [error, setError] = useState('');
-  const submit = (e: React.FormEvent) => {
+  const [busy, setBusy] = useState(false);
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (busy) return;
     const miss = firstMissing(fields, values);
     if (miss) return setError(`「${miss}」を入力してください`);
-    onSubmit(values);
+    setBusy(true);
+    try { await onSubmit(values); } finally { setBusy(false); }
   };
   return (
     <Modal title={title} onClose={onClose} wide={wide}>
@@ -229,34 +233,15 @@ export function FormModal({ title, fields, initial, submitLabel = '保存', onSu
         {error && <p className="error" role="alert">{error}</p>}
         <div className="form-actions">
           <button type="button" className="btn" onClick={onClose}>キャンセル</button>
-          <button type="submit" className="btn primary">{submitLabel}</button>
+          <button type="submit" className="btn primary" disabled={busy}>{busy ? '送信中…' : submitLabel}</button>
         </div>
       </form>
     </Modal>
   );
 }
 
-/* ---------- トースト ---------- */
-type ToastTone = 'ok' | 'bad';
-const ToastCtx = createContext<(msg: string, tone?: ToastTone) => void>(() => {});
-export const useToast = () => useContext(ToastCtx);
-export function ToastProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<{ id: number; msg: string; tone: ToastTone }[]>([]);
-  const seq = useRef(0);
-  const push = useCallback((msg: string, tone: ToastTone = 'ok') => {
-    const id = ++seq.current;
-    setItems((x) => [...x, { id, msg, tone }]);
-    setTimeout(() => setItems((x) => x.filter((i) => i.id !== id)), 4000);
-  }, []);
-  return (
-    <ToastCtx.Provider value={push}>
-      {children}
-      <div className="toasts" role="status" aria-live="polite">
-        {items.map((i) => <div key={i.id} className={`toast ${i.tone}`}>{i.msg}</div>)}
-      </div>
-    </ToastCtx.Provider>
-  );
-}
+/* ---------- トースト(実装は toast.tsx) ---------- */
+export { ToastProvider, useToast } from './toast';
 
 /* ---------- プロジェクト依存 ---------- */
 export function RequireProject({ children }: { children: ReactNode }) {

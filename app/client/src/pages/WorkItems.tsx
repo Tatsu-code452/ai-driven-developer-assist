@@ -79,11 +79,12 @@ function ListBody({ kind }: { kind: Kind }) {
           wide title={`${c.noun}登録`} fields={fields} submitLabel="登録"
           initial={{ type: c.types[0], status: c.statuses[0], priority: 'MEDIUM' }}
           onClose={() => setCreating(false)}
-          onSubmit={(v) => {
-            const w = add('workItems', {
+          onSubmit={async (v) => {
+            const w = await add('workItems', {
               projectId: currentProject!.id, type: (v.type as WorkItemType) || c.types[0], title: v.title as string, description: v.description as string,
               status: v.status as WorkItemStatus, priority: v.priority as Priority, assignee: v.assignee as string, parentId: v.parentId as string, answer: '', isKnowledge: false,
             });
+            if (!w) return;
             setCreating(false);
             toast(`${c.noun}を登録しました`);
             nav(`${c.base}/${w.id}`);
@@ -100,7 +101,7 @@ export function WorkItemList({ kind }: { kind: Kind }) {
 export function WorkItemDetail({ kind }: { kind: Kind }) {
   const c = CFG[kind];
   const { id } = useParams();
-  const { scoped, add, update, remove } = useStore();
+  const { scoped, update, remove, call } = useStore();
   const toast = useToast();
   const nav = useNavigate();
   const fields = useFields(c, id);
@@ -113,7 +114,7 @@ export function WorkItemDetail({ kind }: { kind: Kind }) {
   const exes = scoped.executions.filter((e) => e.workItemId === w.id);
   const arts = scoped.artifacts.filter((a) => a.workItemId === w.id);
   const parent = scoped.workItems.find((x) => x.id === w.parentId);
-  const setStatus = (s: WorkItemStatus) => { update('workItems', w.id, { status: s }); toast(`状態を「${statusLabel(c, s)}」にしました`); };
+  const setStatus = async (s: WorkItemStatus) => { if (await update('workItems', w.id, { status: s })) toast(`状態を「${statusLabel(c, s)}」にしました`); };
   const draft = answer ?? w.answer;
 
   return (
@@ -123,7 +124,7 @@ export function WorkItemDetail({ kind }: { kind: Kind }) {
         actions={<>
           {kind !== 'qa' ? <Link className="btn" to={`/prompts?workItemId=${w.id}`}>AIプロンプトを生成</Link> : <Link className="btn" to={`/prompts?workItemId=${w.id}`}>AI回答を生成</Link>}
           <button className="btn" onClick={() => setEditing(true)}>編集</button>
-          <button className="btn danger" onClick={() => { if (confirm(`この${c.noun}を削除します。よろしいですか?`)) { remove('workItems', w.id); toast('削除しました'); nav(c.base); } }}>削除</button>
+          <button className="btn danger" onClick={async () => { if (confirm(`この${c.noun}を削除します。よろしいですか?`) && (await remove('workItems', w.id))) { toast('削除しました'); nav(c.base); } }}>削除</button>
         </>}
       />
       <div className="toolbar" role="group" aria-label="状態">
@@ -140,8 +141,8 @@ export function WorkItemDetail({ kind }: { kind: Kind }) {
         <Section title="回答">
           <textarea rows={6} aria-label="回答" value={draft} onChange={(e) => setAnswer(e.target.value)} placeholder="AIの回答を貼り付けるか、直接入力します" />
           <div className="toolbar" style={{ marginTop: 8 }}>
-            <button className="btn" disabled={answer === null} onClick={() => { update('workItems', w.id, { answer: draft }); setAnswer(null); toast('回答を保存しました'); }}>回答を保存</button>
-            <button className="btn primary" disabled={!draft.trim()} onClick={() => { update('workItems', w.id, { answer: draft, status: 'DONE' }); setAnswer(null); toast('回答を確定しました'); }}>回答を確定</button>
+            <button className="btn" disabled={answer === null} onClick={async () => { if (!(await update('workItems', w.id, { answer: draft }))) return; setAnswer(null); toast('回答を保存しました'); }}>回答を保存</button>
+            <button className="btn primary" disabled={!draft.trim()} onClick={async () => { if (!(await update('workItems', w.id, { answer: draft, status: 'DONE' }))) return; setAnswer(null); toast('回答を確定しました'); }}>回答を確定</button>
             <label className="check">
               <input type="checkbox" checked={w.isKnowledge} disabled={w.status !== 'DONE'} onChange={(e) => update('workItems', w.id, { isKnowledge: e.target.checked })} />
               ナレッジ(FAQ)として登録{w.status !== 'DONE' && <span className="muted">(回答確定後に選べます)</span>}
@@ -153,11 +154,7 @@ export function WorkItemDetail({ kind }: { kind: Kind }) {
       {kind === 'issue' && (
         <>
           <Section title="対応" actions={
-            <button className="btn" onClick={() => {
-              const t = add('workItems', { projectId: w.projectId, type: 'FIX', title: `対応: ${w.title}`, description: `課題 ${w.id} の対応タスク。`, status: 'TODO', priority: w.priority, assignee: w.assignee, parentId: w.id, answer: '', isKnowledge: false });
-              add('traces', { projectId: w.projectId, sourceType: 'WorkItem', sourceId: t.id, targetType: 'WorkItem', targetId: w.id, relationType: 'FIXES' });
-              toast('対応タスクを作成しました');
-            }}>対応タスクを生成</button>
+            <button className="btn" onClick={async () => { if (await call('POST', `/api/work-items/${w.id}/fix-task`, {})) toast('対応タスクを作成しました'); }}>対応タスクを生成</button>
           }>
             {children.length === 0 ? <p className="muted">対応タスクはまだありません。</p> : (
               <ul className="plain">{children.map((x) => <li key={x.id}><Badge tone={statusTone(x.status)}>{x.status}</Badge> <Link to={pathOf(x)}><span className="id">{x.id}</span> {x.title}</Link></li>)}</ul>
@@ -190,14 +187,15 @@ export function WorkItemDetail({ kind }: { kind: Kind }) {
 
       {editing && (
         <FormModal
-          wide title={`${c.noun}編集`} fields={fields}
+          wide title={`${c.noun}編集`} fields={fields.filter((f) => f.name !== 'type') /* 種別は作成後に変更できない */}
           initial={{ type: w.type, title: w.title, description: w.description, status: w.status, priority: w.priority, assignee: w.assignee, parentId: w.parentId }}
           onClose={() => setEditing(false)}
-          onSubmit={(v) => {
-            update('workItems', w.id, {
-              ...(v.type ? { type: v.type as WorkItemType } : {}), title: v.title as string, description: v.description as string,
+          onSubmit={async (v) => {
+            const r = await update('workItems', w.id, {
+              title: v.title as string, description: v.description as string,
               status: v.status as WorkItemStatus, priority: v.priority as Priority, assignee: v.assignee as string, parentId: v.parentId as string,
             });
+            if (!r) return;
             setEditing(false);
             toast('更新しました');
           }}

@@ -46,9 +46,10 @@ export function ProjectList() {
         <FormModal
           title="プロジェクト登録" fields={FIELDS} initial={{ status: 'PLANNING' }} submitLabel="登録"
           onClose={() => setCreating(false)}
-          onSubmit={(v) => {
-            const p = add('projects', { name: v.name as string, description: v.description as string, status: v.status as ProjectStatus, rootPath: v.rootPath as string });
-            addDefaultPrompts(p.id);
+          onSubmit={async (v) => {
+            const p = await add('projects', { name: v.name as string, description: v.description as string, status: v.status as ProjectStatus, rootPath: v.rootPath as string });
+            if (!p) return;
+            await addDefaultPrompts(p.id);
             setCurrentProject(p.id);
             setCreating(false);
             toast('プロジェクトを登録しました');
@@ -84,7 +85,7 @@ export function ProjectDetail() {
         title={p.name} scr="SCR-003"
         actions={<>
           <button className="btn" onClick={() => setEditing(true)}>編集</button>
-          <button className="btn danger" onClick={() => { if (confirm(`「${p.name}」と配下のデータをすべて削除します。よろしいですか?`)) { remove('projects', p.id); toast('削除しました'); nav('/projects'); } }}>削除</button>
+          <button className="btn danger" onClick={async () => { if (confirm(`「${p.name}」と配下のデータをすべて削除します。よろしいですか?`) && (await remove('projects', p.id))) { toast('削除しました'); nav('/projects'); } }}>削除</button>
         </>}
       />
       <DetailGrid items={[
@@ -102,7 +103,7 @@ export function ProjectDetail() {
         <FormModal
           title="プロジェクト編集" fields={FIELDS} initial={{ name: p.name, description: p.description, status: p.status, rootPath: p.rootPath }}
           onClose={() => setEditing(false)}
-          onSubmit={(v) => { update('projects', p.id, { name: v.name as string, description: v.description as string, status: v.status as ProjectStatus, rootPath: v.rootPath as string }); setEditing(false); toast('更新しました'); }}
+          onSubmit={async (v) => { if (!(await update('projects', p.id, { name: v.name as string, description: v.description as string, status: v.status as ProjectStatus, rootPath: v.rootPath as string }))) return; setEditing(false); toast('更新しました'); }}
         />
       )}
     </>

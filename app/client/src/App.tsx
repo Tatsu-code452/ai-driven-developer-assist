@@ -33,7 +33,7 @@ const NAV: { title: string; items: { to: string; label: string; end?: boolean }[
 ];
 
 function Layout() {
-  const { data, currentProject, setCurrentProject } = useStore();
+  const { data, currentProject, setCurrentProject, status, error, reload } = useStore();
   return (
     <div className="app">
       <aside className="side">
@@ -62,7 +62,13 @@ function Layout() {
           </label>
           {currentProject && <span className="muted">rootPath: {currentProject.rootPath}</span>}
         </header>
-        <main className="content"><Outlet /></main>
+        <main className="content">
+          {status === 'ready' ? <Outlet /> : status === 'loading' ? (
+            <Empty title="サーバーに接続しています…" />
+          ) : (
+            <Empty title="サーバーに接続できません" hint={error} action={<button className="btn primary" onClick={() => void reload()}>再試行</button>} />
+          )}
+        </main>
       </div>
     </div>
   );

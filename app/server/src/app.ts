@@ -7,7 +7,7 @@ import { DEFAULT_BODY_LIMIT, parseJson, readBody, type Ctx } from './http.ts';
 import { buildRouter } from './routes.ts';
 
 export function createApp(cfg: Config, deps: { fetch?: typeof fetch } = {}) {
-  const db = new Database(cfg.dataDir, { maxLoadedProjects: cfg.maxLoadedProjects });
+  const db = new Database(cfg.dataDir, { maxLoadedProjects: cfg.maxLoadedProjects, auditMaxBytes: cfg.auditMaxBytes, auditKeepFiles: cfg.auditKeepFiles });
   const router = buildRouter(db, cfg, { fetch: deps.fetch ?? fetch });
 
   const send = (res: http.ServerResponse, status: number, body?: unknown) => {

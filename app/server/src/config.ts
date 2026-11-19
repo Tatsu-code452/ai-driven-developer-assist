@@ -13,6 +13,10 @@ export interface Config {
   git: { userName: string; userEmail: string };
   /** メモリに常駐させる案件データの上限(超えると最近使っていない案件から手放す。インデックスは常に常駐) */
   maxLoadedProjects: number;
+  /** 監査ログ(audit.jsonl)がこのサイズを超えたら新しいファイルに切り替える */
+  auditMaxBytes: number;
+  /** 切り替え後の旧ログ(audit.<日時>.jsonl)を残す世代数。古いものから削除する。0 なら削除しない */
+  auditKeepFiles: number;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -32,5 +36,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     githubCopilot: ep('GITHUB_COPILOT'),
     git: { userName: env.GIT_USER_NAME ?? 'AI Dev Assist', userEmail: env.GIT_USER_EMAIL ?? 'ai-dev-assist@localhost' },
     maxLoadedProjects: Number(env.MAX_LOADED_PROJECTS ?? 20),
+    auditMaxBytes: Number(env.AUDIT_MAX_BYTES ?? 5 * 1024 * 1024),
+    auditKeepFiles: Number(env.AUDIT_KEEP_FILES ?? 10),
   };
 }

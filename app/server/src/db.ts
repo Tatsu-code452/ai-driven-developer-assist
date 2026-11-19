@@ -22,11 +22,14 @@ interface Manifest {
 
 const SCHEMA_VERSION = 2;
 const now = () => new Date().toISOString();
-const AUDIT_TAIL_BYTES = 2 * 1024 * 1024;
+const AUDIT_MIN_READ_BYTES = 2 * 1024 * 1024;
+const ARCHIVE_RE = /^audit\.\d{8}T\d{9}Z-[0-9a-z]+\.jsonl$/;
 
 export class Database {
   dataDir: string;
   maxLoaded: number;
+  auditMaxBytes: number;
+  auditKeepFiles: number;
   manifestFile: string;
   counters: Record<string, number> = {};
   settings: Record<string, string> = {};
@@ -37,9 +40,11 @@ export class Database {
   private tick = 0;
   private auditSeq = 0;
 
-  constructor(dataDir: string, opts: { maxLoadedProjects?: number } = {}) {
+  constructor(dataDir: string, opts: { maxLoadedProjects?: number; auditMaxBytes?: number; auditKeepFiles?: number } = {}) {
     this.dataDir = dataDir;
     this.maxLoaded = Math.max(1, opts.maxLoadedProjects ?? 20);
+    this.auditMaxBytes = Math.max(1, opts.auditMaxBytes ?? 5 * 1024 * 1024);
+    this.auditKeepFiles = Math.max(0, opts.auditKeepFiles ?? 10);
     this.manifestFile = path.join(dataDir, 'workspace.json');
     fs.mkdirSync(path.join(dataDir, 'projects'), { recursive: true });
     this.acquireLock();
@@ -439,21 +444,55 @@ export class Database {
   }
   private appendAudit(pid: string | null, e: Omit<AuditEntry, 'id' | 'at'>): void {
     const entry: AuditEntry = { id: `AUD-${Date.now().toString(36)}-${(this.auditSeq++).toString(36)}`, at: now(), ...e };
-    try { fs.appendFileSync(this.auditFile(pid), JSON.stringify(entry) + '\n'); } catch (err) { console.warn('[warn] 監査ログを書けません:', (err as Error).message); }
+    try {
+      const file = this.auditFile(pid);
+      this.rotateAuditIfNeeded(file);
+      fs.appendFileSync(file, JSON.stringify(entry) + '\n');
+    } catch (err) { console.warn('[warn] 監査ログを書けません:', (err as Error).message); }
   }
+  /** サイズが上限を超えていたら audit.<日時>.jsonl に改名して新しいファイルに切り替え、古い世代を削除する */
+  private rotateAuditIfNeeded(file: string): void {
+    let size: number;
+    try { size = fs.statSync(file).size; } catch { return; }
+    if (size < this.auditMaxBytes) return;
+    const dir = path.dirname(file);
+    const stamp = `${new Date().toISOString().replace(/[-:.]/g, '')}-${(this.auditSeq++).toString(36).padStart(4, '0')}`;
+    fs.renameSync(file, path.join(dir, `audit.${stamp}.jsonl`));
+    if (this.auditKeepFiles > 0) {
+      for (const old of this.auditArchives(dir).slice(this.auditKeepFiles)) fs.rmSync(path.join(dir, old), { force: true });
+    }
+  }
+  /** 旧世代のログファイル名(新しい順) */
+  private auditArchives(dir: string): string[] {
+    return fs.readdirSync(dir).filter((n) => ARCHIVE_RE.test(n)).sort().reverse();
+  }
+
   /** ルートから明示的に記録する操作(git操作・ワークフロー等) */
   log(action: string, collection: string, entityId: string, detail?: string): void {
     this.appendAudit(this.projectIdOf(entityId) ?? null, { action, collection, entityId, ...(detail ? { detail } : {}) });
   }
+  /** 新しい順に返す。現行ファイルで足りなければ旧世代のファイルも順にさかのぼる */
   readAudit(opts: { projectId?: string; entityId?: string; limit: number }): AuditEntry[] {
     const pid = opts.projectId ?? (opts.entityId ? this.projectIdOf(opts.entityId) : undefined) ?? null;
-    const file = this.auditFile(pid);
-    if (!fs.existsSync(file)) return [];
+    const current = this.auditFile(pid);
+    const dir = path.dirname(current);
+    const files = [current, ...this.auditArchives(dir).map((n) => path.join(dir, n))];
+    const out: AuditEntry[] = [];
+    for (const f of files) {
+      if (!fs.existsSync(f)) continue;
+      out.push(...this.readAuditFile(f, opts.entityId).reverse());
+      if (out.length >= opts.limit) break;
+    }
+    return out.slice(0, opts.limit);
+  }
+  /** 1ファイルを古い順に読む(大きいファイルは末尾だけ。切り替えサイズ以内なら全体を読める) */
+  private readAuditFile(file: string, entityId?: string): AuditEntry[] {
     const size = fs.statSync(file).size;
+    const maxRead = Math.max(AUDIT_MIN_READ_BYTES, this.auditMaxBytes * 2);
     const fd = fs.openSync(file, 'r');
     let text: string;
     try {
-      const start = Math.max(0, size - AUDIT_TAIL_BYTES);
+      const start = Math.max(0, size - maxRead);
       const buf = Buffer.alloc(size - start);
       fs.readSync(fd, buf, 0, buf.length, start);
       text = buf.toString('utf8');
@@ -464,9 +503,9 @@ export class Database {
     const rows: AuditEntry[] = [];
     for (const line of text.split('\n')) {
       if (!line) continue;
-      try { const a = JSON.parse(line) as AuditEntry; if (!opts.entityId || a.entityId === opts.entityId) rows.push(a); } catch { /* 壊れた行は読み飛ばす */ }
+      try { const a = JSON.parse(line) as AuditEntry; if (!entityId || a.entityId === entityId) rows.push(a); } catch { /* 壊れた行は読み飛ばす */ }
     }
-    return rows.slice(-opts.limit).reverse();
+    return rows;
   }
 
   /* ---------- 運用 ---------- */

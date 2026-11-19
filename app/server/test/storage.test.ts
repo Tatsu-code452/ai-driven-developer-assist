@@ -338,3 +338,33 @@ test('運用API: workspace 概要・stats(インデックスのみ)・reindex・
   assert.ok(log[0].at >= log[2].at, '新しい順');
   await a.stop();
 });
+
+test('監査ログ: サイズで切り替え、古い世代は上限まで残して削除し、読み出しは世代をまたぐ', () => {
+  const N = 40;
+  const make = (dir: string, keep: number) => {
+    const db = new Database(dir, { auditMaxBytes: 800, auditKeepFiles: keep });
+    const p = db.create('projects', { name: 'A', rootPath: '.', status: 'ACTIVE' }).id;
+    for (let i = 0; i < N; i++) db.create('contexts', { projectId: p, title: `c${i}`, type: 'REQUIREMENT', content: 'x' });
+    return { db, p, folder: path.join(dir, 'projects', p) };
+  };
+  const archives = (folder: string) => fs.readdirSync(folder).filter((n) => /^audit\.\d{8}T\d{9}Z-[0-9a-z]+\.jsonl$/.test(n));
+
+  // 世代数の上限あり: 古い世代は削除され、現行ファイルは切り替えサイズを大きく超えない
+  const a = make(newDir(), 2);
+  assert.equal(archives(a.folder).length, 2, '旧世代は2つまで');
+  assert.ok(fs.statSync(path.join(a.folder, 'audit.jsonl')).size < 800 + 300, '現行ファイルは上限付近で切り替わる');
+  const recent = a.db.readAudit({ projectId: a.p, limit: 1000 });
+  assert.ok(recent.length > 8 && recent.length < N + 1, '残っているぶんだけ返る');
+  assert.equal(recent[0].entityId, `CTX-${String(N).padStart(3, '0')}`, '新しい順(最新が先頭)');
+  const idsDesc = recent.map((x) => Number(x.entityId.slice(4)));
+  assert.deepEqual(idsDesc, [...idsDesc].sort((x, y) => y - x), '世代をまたいでも順序が崩れない');
+  assert.equal(new Set(recent.map((x) => x.id)).size, recent.length, '重複しない');
+  a.db.close();
+
+  // 0 = 削除しない: 全件が世代をまたいで読める
+  const b = make(newDir(), 0);
+  assert.ok(archives(b.folder).length > 2, '世代は削除されず増える');
+  assert.equal(b.db.readAudit({ projectId: b.p, limit: 1000 }).length, N + 1, '案件作成 + コンテキスト作成のすべてが残る');
+  assert.equal(b.db.readAudit({ projectId: b.p, entityId: 'CTX-001', limit: 10 }).length, 1, '古い世代にある項目も entityId で引ける');
+  b.db.close();
+});

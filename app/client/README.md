@@ -16,12 +16,19 @@ npm run build                                # 型チェック + ビルド
 サーバーで `API_TOKEN` を有効にしたときは `VITE_API_TOKEN` に同じ値を設定します(ビルド成果物に埋め込まれるため、ローカル・社内利用向けの簡易認証です)。
 
 ## データの保持
-業務データはすべてサーバー(`DATA_DIR/db.json`)に保存されます。client が持つのは「作業中のプロジェクト」の選択だけ(localStorage)です。
-サーバーに接続できないときは画面に再試行ボタンを表示します。
-以前の localStorage 版で入力したデータは自動では移行されません。
+業務データはすべてサーバーに保存されます(案件ごとのフォルダに分割。詳細は server/README.md)。client が持つのは「作業中のプロジェクト」の選択だけ(localStorage)です。
+client は**プロジェクト一覧と、作業中のプロジェクトのデータだけ**を読み込みます。プロジェクトを切り替えると、そのプロジェクトのデータを読み直します。
+サーバーに接続できないときは画面に再試行ボタンを表示します。以前の localStorage 版で入力したデータは自動では移行されません。
 
-`src/store.tsx` が全データをメモリに持ち、更新系(`add` / `update` / `remove` / `call`)はサーバーへ送信します。失敗時はトーストでサーバーのメッセージを表示します。
+`src/store.tsx` が読み込んだデータをメモリに持ち、更新系(`add` / `update` / `remove` / `call`)はサーバーへ送信します。失敗時はトーストでサーバーのメッセージを表示します。
 成果物の状態遷移・版管理・マージ日時・関連付けの自動作成など、整合性が必要な処理はサーバー側のAPIで行います。
+
+## 検索
+`/search`(横断検索)。「作業中の案件」は本文全体、「すべての案件」はタイトル・タグ・本文冒頭(インデックス)を検索します。別の案件の結果を開くと、その案件に切り替わります。
+
+## Git/GitHub画面
+リポジトリ画面の Fetch / Pull / コミット / Push / 状態、ブランチ画面の作成・切り替え・Gitからの取り込み、PR画面の「gitでマージ」、リリース画面のタグ作成は**サーバー上のローカルリポジトリに対する実際のgit操作**です(`GIT_WORKSPACE_ROOT` 配下)。
+ブランチ作成とタグ作成は、チェックを外すと記録のみ登録できます。Pull Request自体は管理上の記録で、GitHubとは連携していません。ブランチの削除は記録だけを消し、gitのブランチは削除しません。
 
 ## 画面とルート
 | SCR | ルート | ファイル |
@@ -39,6 +46,7 @@ npm run build                                # 型チェック + ビルド
 | 032 AI成果物管理 | `/ai-artifacts`, `/ai-artifacts/:id` | pages/Artifacts.tsx |
 | 015/016 トレーサビリティ | `/traceability`, `/traceability/matrix` | pages/Traceability.tsx |
 | 040〜043 Git/GitHub | `/git/repositories` `/git/branches` `/git/pull-requests` `/git/releases` | pages/Git.tsx |
+| 横断検索 | `/search` | pages/Search.tsx |
 
 ## バックエンドAPI(任意・`src/api.ts`)
 | 用途 | リクエスト | レスポンス |

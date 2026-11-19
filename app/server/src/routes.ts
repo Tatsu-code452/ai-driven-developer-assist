@@ -3,7 +3,8 @@ import type { Database } from './db.ts';
 import { HttpError } from './errors.ts';
 import { Router, parseMultipart, readBody, UPLOAD_LIMIT, type Ctx } from './http.ts';
 import { COLLECTIONS, SCHEMAS, type CollKey, type Rec } from './schemas.ts';
-import { assertProject, buildMatrix, compareExecutions, dashboard, nodeOf, orphans, reachable, renderPrompt, search } from './domain.ts';
+import { assertProject, buildMatrix, compareExecutions, dashboard, nodeOf, orphans, reachable, renderPrompt } from './domain.ts';
+import { searchWorkspace } from './search.ts';
 import { convertToText } from './convert.ts';
 import { executeAI, type FetchFn } from './ai.ts';
 import * as git from './git.ts';
@@ -31,7 +32,19 @@ export function buildRouter(db: Database, cfg: Config, deps: { fetch: FetchFn })
   r.get('/api/search', (c) => {
     const q = (c.query.get('q') ?? '').trim();
     if (!q) throw new HttpError(400, 'q を指定してください');
-    return { body: { items: search(db, assertProject(db, c.query.get('projectId')), q) } };
+    const projectId = c.query.get('projectId') ?? undefined;
+    if (projectId) assertProject(db, projectId);
+    const deep = c.query.get('deep');
+    return { body: searchWorkspace(db, q, { projectId, deep: deep === null ? undefined : deep === '1' || deep === 'true', limit: intParam(c.query.get('limit'), 50, 1, 500) }) };
+  });
+
+  /* ---------- 案件フォルダの管理(オーケストレーション) ---------- */
+  r.get('/api/workspace', () => ({ body: db.workspaceSummary() }));
+  r.get('/api/projects/:id/stats', (c) => ({ body: db.stats(assertProject(db, c.params.id)) }));
+  r.post('/api/projects/:id/reindex', (c) => {
+    const r2 = db.reindex(assertProject(db, c.params.id));
+    db.log('reindex', 'projects', c.params.id, `entries=${r2.entries}`);
+    return { body: r2 };
   });
 
   /* ---------- F-006 プロンプト ---------- */
@@ -46,13 +59,10 @@ export function buildRouter(db: Database, cfg: Config, deps: { fetch: FetchFn })
   const transition = (id: string, from: string[], to: string, approved: boolean | null, note: unknown) => {
     const a = db.require('artifacts', id, '成果物');
     if (!from.includes(a.status as string)) throw new HttpError(409, `状態が「${a.status}」の成果物には実行できません(${from.join(' / ')} のときのみ)`);
-    a.status = to;
-    if (approved !== null) a.approved = approved;
-    if (typeof note === 'string' && note) a.reviewNote = note;
-    a.updatedAt = new Date().toISOString();
-    db.log(`artifact:${to.toLowerCase()}`, 'artifacts', id);
-    db.save();
-    return a;
+    const fields: Record<string, unknown> = { status: to };
+    if (approved !== null) fields.approved = approved;
+    if (typeof note === 'string' && note) fields.reviewNote = note;
+    return db.setInternal('artifacts', id, fields, `artifact:${to.toLowerCase()}`);
   };
   r.post('/api/artifacts/:id/review', async (c) => ({ body: transition(c.params.id, ['DRAFT'], 'REVIEW', null, (await c.json()).reviewNote) }));
   r.post('/api/artifacts/:id/approve', async (c) => ({ body: transition(c.params.id, ['REVIEW'], 'APPROVED', true, (await c.json()).reviewNote) }));
@@ -166,7 +176,6 @@ export function buildRouter(db: Database, cfg: Config, deps: { fetch: FetchFn })
         db.update('repositories', saved.id, { currentBranch: result.branch });
       }
       db.log(`git:${path.split('/').pop()}`, 'repositories', info.id);
-      db.save();
       return { body: result };
     };
     r[method](`/api/git/${path}`, h);
@@ -187,9 +196,8 @@ export function buildRouter(db: Database, cfg: Config, deps: { fetch: FetchFn })
   /* ---------- C-004 監査ログ / C-005 設定 ---------- */
   r.get('/api/audit', (c) => {
     const limit = intParam(c.query.get('limit'), 100, 1, 1000);
-    const entity = c.query.get('entityId');
-    const rows = db.audit.filter((a) => !entity || a.entityId === entity);
-    return { body: { items: rows.slice(-limit).reverse(), total: rows.length } };
+    const items = db.readAudit({ projectId: c.query.get('projectId') ?? undefined, entityId: c.query.get('entityId') ?? undefined, limit });
+    return { body: { items, total: items.length } };
   });
   r.get('/api/settings', () => ({ body: db.settings }));
   r.put('/api/settings', async (c) => {
@@ -197,10 +205,7 @@ export function buildRouter(db: Database, cfg: Config, deps: { fetch: FetchFn })
     const entries = Object.entries(b);
     if (entries.some(([k, v]) => typeof v !== 'string' || k.length > 100 || v.length > 1000)) throw new HttpError(400, '設定は文字列(キー100文字・値1000文字以内)で指定してください');
     if (Object.keys({ ...db.settings, ...b }).length > 200) throw new HttpError(400, '設定の数が上限(200)を超えます');
-    Object.assign(db.settings, b);
-    db.log('update', 'settings', 'settings', Object.keys(b).join(','));
-    db.save();
-    return { body: db.settings };
+    return { body: db.setSettings(b as Record<string, string>) };
   });
 
   /* ---------- 共通CRUD(個別ルートより後ろに登録する) ---------- */
@@ -208,9 +213,9 @@ export function buildRouter(db: Database, cfg: Config, deps: { fetch: FetchFn })
     r.get(`/api/${seg}`, (c) => {
       const schema = SCHEMAS[k];
       const q = (c.query.get('q') ?? '').toLowerCase();
-      let rows = db.list(k).filter((rec) => {
+      let rows = db.list(k, c.query.get('projectId') ?? undefined).filter((rec) => {
         for (const [name, value] of c.query) {
-          if (name === 'projectId' || name in schema) {
+          if ((name === 'projectId' && k !== 'projects') || name in schema) {
             if (String(rec[name]) !== value) return false;
           }
         }

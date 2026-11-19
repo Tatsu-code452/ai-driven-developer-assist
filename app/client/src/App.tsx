@@ -6,6 +6,7 @@ import { ProjectDetail, ProjectList } from './pages/Projects';
 import { ContextDetail, ContextList, ContextRegister } from './pages/Contexts';
 import { ArtifactDetail, ArtifactList } from './pages/Artifacts';
 import Convert from './pages/Convert';
+import Search from './pages/Search';
 import { WorkItemDetail, WorkItemList } from './pages/WorkItems';
 import Prompts from './pages/Prompts';
 import Executions from './pages/Executions';
@@ -14,7 +15,7 @@ import { Branches, PullRequests, Releases, Repositories } from './pages/Git';
 
 // 画面一覧の画面体系(開発フロー順)に合わせたナビゲーション
 const NAV: { title: string; items: { to: string; label: string; end?: boolean }[] }[] = [
-  { title: '', items: [{ to: '/', label: 'ダッシュボード', end: true }] },
+  { title: '', items: [{ to: '/', label: 'ダッシュボード', end: true }, { to: '/search', label: '横断検索' }] },
   { title: 'プロジェクト管理', items: [{ to: '/projects', label: 'プロジェクト' }] },
   { title: '入力管理', items: [{ to: '/documents', label: 'ドキュメント' }, { to: '/convert', label: 'ファイル変換' }] },
   { title: 'コンテキスト管理', items: [{ to: '/contexts', label: 'コンテキスト' }] },
@@ -64,7 +65,7 @@ function Layout() {
         </header>
         <main className="content">
           {status === 'ready' ? <Outlet /> : status === 'loading' ? (
-            <Empty title="サーバーに接続しています…" />
+            <Empty title="読み込んでいます…" />
           ) : (
             <Empty title="サーバーに接続できません" hint={error} action={<button className="btn primary" onClick={() => void reload()}>再試行</button>} />
           )}
@@ -87,6 +88,7 @@ export default function App() {
         <Route path="documents" element={<ArtifactList mode="document" />} />
         <Route path="documents/:id" element={<ArtifactDetail mode="document" />} />
         <Route path="convert" element={<Convert />} />
+        <Route path="search" element={<Search />} />
         <Route path="tasks" element={<WorkItemList kind="task" />} />
         <Route path="tasks/:id" element={<WorkItemDetail kind="task" />} />
         <Route path="issues" element={<WorkItemList kind="issue" />} />

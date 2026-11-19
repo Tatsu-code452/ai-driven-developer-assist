@@ -315,13 +315,28 @@ test('Git: 安全性(パストラバーサル・オプション注入・URL制�
   assert.equal((await f({ repositoryId: 'NEW', url: '--upload-pack=touch /tmp/pwned' })).status, 400);
   assert.equal((await f({ repositoryId: 'NEW' })).status, 400, 'url 必須');
   assert.equal((await f({ repositoryId: 'REPX', branch: '--upload-pack=x' }, 'push')).status, 400, 'ローカルにあるが未登録でもURL必須');
-  const regd = (await api('GET', '/api/repositories')).body.items[0];
+  const regd = (await api('GET', `/api/repositories?projectId=${pid}`)).body.items[0];
   assert.equal((await f({ repositoryId: regd.id, name: '--orphan' }, 'branch')).status, 400);
   assert.equal((await f({ repositoryId: regd.id, branch: 'a..b' }, 'checkout')).status, 400);
   // クライアントが従来どおり送る形式(未登録ID + url + worktreeRoot)で、既存のローカルリポジトリを扱える
   const legacy = await f({ repositoryId: 'LEGACY', url: 'https://github.com/o/r', worktreeRoot: 'REPX' });
   assert.equal(legacy.status, 200, JSON.stringify(legacy.body));
   assert.equal((await f({ repositoryId: 'GONE', url: 'https://github.com/o/r', worktreeRoot: 'nope', branch: 'main' }, 'checkout')).status, 404, 'ローカルにないリポジトリは操作できない(cloneはFetch/Pullのみ)');
+});
+
+test('Pull Request / Release: マージ日時の記録とタグ重複', async () => {
+  const p2 = (await api('POST', '/api/projects', { name: 'P2', rootPath: './d' })).body.id;
+  const repo = (await api('POST', '/api/repositories', { projectId: p2, url: 'https://github.com/o/r2', worktreeRoot: 'R2' })).body.id;
+  const pr = (await api('POST', '/api/pull-requests', { projectId: p2, repositoryId: repo, title: 'PR', sourceBranch: 'f', mergedAt: '2000-01-01' })).body;
+  assert.equal(pr.mergedAt, '', '作成時に mergedAt は指定できない');
+  const merged = (await api('PATCH', `/api/pull-requests/${pr.id}`, { status: 'MERGED', mergedAt: '2000-01-01' })).body;
+  assert.equal(merged.status, 'MERGED');
+  assert.ok(merged.mergedAt.startsWith('20') && merged.mergedAt !== '2000-01-01', 'マージ日時はサーバーが記録する');
+  const again = (await api('PATCH', `/api/pull-requests/${pr.id}`, { reviewNote: 'ok' })).body;
+  assert.equal(again.mergedAt, merged.mergedAt, '再更新しても日時は変わらない');
+  assert.equal((await api('POST', '/api/releases', { projectId: p2, repositoryId: repo, tag: 'v1' })).status, 201);
+  assert.equal((await api('POST', '/api/releases', { projectId: p2, repositoryId: repo, tag: 'v1' })).status, 409);
+  assert.equal((await api('DELETE', `/api/projects/${p2}`)).status, 204);
 });
 
 test('認証: API_TOKEN 設定時は Bearer 必須', async () => {
@@ -335,17 +350,20 @@ test('認証: API_TOKEN 設定時は Bearer 必須', async () => {
   app.server.close();
 });
 
-test('削除: 関連データのカスケードと永続化', async () => {
+test('削除: 関連データのカスケードと、案件フォルダの退避', async () => {
   const before = (await api('GET', `/api/traceability?projectId=${pid}`)).body.total;
   assert.ok(before > 0);
   assert.equal((await api('DELETE', `/api/work-items/${taskId}`)).status, 204);
-  const ids = (await api('GET', '/api/traceability')).body.items.flatMap((t: any) => [t.sourceId, t.targetId]);
+  const ids = (await api('GET', `/api/traceability?projectId=${pid}`)).body.items.flatMap((t: any) => [t.sourceId, t.targetId]);
   assert.ok(!ids.includes(taskId), '削除した項目の関連付けも消える');
+  assert.equal((await api('GET', '/api/traceability')).status, 400, '案件を指定しない一覧は400');
 
-  const reopened = JSON.parse(fs.readFileSync(path.join(cfg.dataDir, 'db.json'), 'utf8'));
-  assert.equal(reopened.data.projects[0].id, pid, 'ファイルに永続化されている');
+  const folder = path.join(cfg.dataDir, 'projects', pid);
+  assert.ok(fs.existsSync(path.join(folder, 'project.json')));
   assert.equal((await api('DELETE', `/api/projects/${pid}`)).status, 204);
+  assert.ok(!fs.existsSync(folder), '案件フォルダは projects/ から無くなる');
+  assert.ok(fs.readdirSync(path.join(cfg.dataDir, 'trash')).some((n) => n.startsWith(pid)), 'trash/ に退避されている');
   for (const seg of ['contexts', 'work-items', 'artifacts', 'executions', 'traceability', 'repositories', 'prompts']) {
-    assert.equal((await api('GET', `/api/${seg}`)).body.total, 0, `${seg} が残っている`);
+    assert.equal((await api('GET', `/api/${seg}?projectId=${pid}`)).status, 404, `${seg}`);
   }
 });

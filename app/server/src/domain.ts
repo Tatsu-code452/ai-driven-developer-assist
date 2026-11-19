@@ -31,7 +31,8 @@ export function renderPrompt(db: Database, promptId: string, opt: { workItemId?:
 
 /** トレーサビリティを無向グラフとみなして到達可能な項目と距離を返す(影響分析/網羅性) */
 export function reachable(db: Database, start: string, maxDepth: number): Map<string, number> {
-  const traces = db.list('traces');
+  const pid = db.projectIdOf(start);
+  const traces = pid ? db.list('traces', pid) : [];
   const dist = new Map<string, number>([[start, 0]]);
   let frontier = [start];
   for (let d = 1; d <= maxDepth && frontier.length; d++) {
@@ -79,7 +80,7 @@ export const MATRIX_COLUMNS = [
 
 /** F-012-003/004: 要件(コンテキスト)ごとの網羅性マトリクスと欠落 */
 export function buildMatrix(db: Database, projectId: string) {
-  const all = db.list('contexts').filter((c) => c.projectId === projectId);
+  const all = db.list('contexts', projectId);
   const reqs = all.filter((c) => c.type === 'REQUIREMENT');
   const rowsSrc = reqs.length ? reqs : all;
   const rows = rowsSrc.map((c) => {
@@ -102,15 +103,15 @@ export function buildMatrix(db: Database, projectId: string) {
 
 /** 関連が1件もない項目(コンテキスト・タスク・成果物) */
 export function orphans(db: Database, projectId: string): Node[] {
-  const linked = new Set(db.list('traces').flatMap((t) => [t.sourceId as string, t.targetId as string]));
+  const linked = new Set(db.list('traces', projectId).flatMap((t) => [t.sourceId as string, t.targetId as string]));
   return (['contexts', 'workItems', 'artifacts'] as CollKey[])
-    .flatMap((k) => db.list(k).filter((r) => r.projectId === projectId && !linked.has(r.id)))
+    .flatMap((k) => db.list(k, projectId).filter((r) => !linked.has(r.id)))
     .map((r) => nodeOf(db, r.id));
 }
 
 /** F-014: ダッシュボード集計 */
 export function dashboard(db: Database, projectId: string) {
-  const inProj = (k: CollKey) => db.list(k).filter((r) => r.projectId === projectId);
+  const inProj = (k: CollKey) => db.list(k, projectId);
   const wi = inProj('workItems');
   const tasks = wi.filter((w) => ['TASK', 'REVIEW', 'FIX'].includes(w.type as string));
   const issues = wi.filter((w) => w.type === 'BUG');
@@ -130,29 +131,6 @@ export function dashboard(db: Database, projectId: string) {
     qa: { total: qa.length, unanswered: qa.filter((q) => q.status === 'OPEN').length },
     executions: { total: execs.length, byAiType: count(execs, (e) => s(e, 'aiType')) },
   };
-}
-
-/** C-002: 横断検索 */
-export function search(db: Database, projectId: string, q: string, limit = 50) {
-  const needle = q.toLowerCase();
-  const targets: [CollKey, string[]][] = [
-    ['contexts', ['title', 'content']], ['workItems', ['title', 'description', 'answer']], ['artifacts', ['title', 'path', 'content']],
-    ['prompts', ['name', 'template']], ['executions', ['requestText', 'responseText']],
-  ];
-  const hits: { collection: string; id: string; title: string; snippet: string }[] = [];
-  for (const [k, fields] of targets) {
-    for (const r of db.list(k).filter((x) => x.projectId === projectId)) {
-      for (const f of fields) {
-        const text = s(r, f);
-        const i = text.toLowerCase().indexOf(needle);
-        if (i === -1) continue;
-        hits.push({ collection: k, id: r.id, title: nodeOf(db, r.id).title, snippet: text.slice(Math.max(0, i - 30), i + needle.length + 60).replace(/\s+/g, ' ') });
-        break;
-      }
-      if (hits.length >= limit) return hits;
-    }
-  }
-  return hits;
 }
 
 /** F-007-004: 回答比較(行単位で相手側にない行を示す) */

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useStore } from '../store';
+import { http } from '../api';
 import { Badge, DetailGrid, Empty, FilterSelect, FormModal, PageHeader, RowActions, SearchBox, Section, Table, statusTone, useToast, type FieldDef } from '../ui';
 import { PROJECT_STATUS, labelOf } from '../meta';
 import { formatDate } from '../util';
@@ -67,17 +68,25 @@ export function ProjectDetail() {
   const toast = useToast();
   const nav = useNavigate();
   const [editing, setEditing] = useState(false);
+  // 他の案件のデータは読み込んでいないため、件数はサーバーのインデックスから取得する
+  const [summary, setSummary] = useState<Record<string, number> | null>(null);
+  useEffect(() => {
+    let alive = true;
+    setSummary(null);
+    http<{ summary: Record<string, number> }>('GET', `/api/projects/${encodeURIComponent(id ?? '')}/stats`)
+      .then((r) => { if (alive) setSummary(r.summary); })
+      .catch(() => { if (alive) setSummary(null); });
+    return () => { alive = false; };
+  }, [id]);
   const p = data.projects.find((x) => x.id === id);
   if (!p) return <Empty title="プロジェクトが見つかりません" action={<Link className="btn" to="/projects">一覧へ戻る</Link>} />;
 
-  const mine = <T extends { projectId: string }>(list: T[]) => list.filter((x) => x.projectId === p.id);
-  const wi = mine(data.workItems);
-  const stats: [string, number, string][] = [
-    ['コンテキスト', mine(data.contexts).length, '/contexts'],
-    ['ドキュメント', mine(data.artifacts).filter((a) => a.origin !== 'AI').length, '/documents'],
-    ['タスク', wi.filter((w) => ['TASK', 'REVIEW', 'FIX'].includes(w.type)).length, '/tasks'],
-    ['課題', wi.filter((w) => w.type === 'BUG').length, '/issues'],
-    ['QA', wi.filter((w) => w.type === 'QA').length, '/qa'],
+  const stats: [string, number | undefined, string][] = [
+    ['コンテキスト', summary?.contexts, '/contexts'],
+    ['ドキュメント', summary?.documents, '/documents'],
+    ['タスク', summary?.tasks, '/tasks'],
+    ['課題', summary?.issues, '/issues'],
+    ['QA', summary?.qa, '/qa'],
   ];
   return (
     <>
@@ -95,7 +104,7 @@ export function ProjectDetail() {
       <Section title="管理データ状況">
         <div className="stats">
           {stats.map(([label, n, to]) => (
-            <Link key={label} to={to} className="stat" onClick={() => setCurrentProject(p.id)}><b>{n}</b>{label}</Link>
+            <Link key={label} to={to} className="stat" onClick={() => setCurrentProject(p.id)}><b>{n ?? '–'}</b>{label}</Link>
           ))}
         </div>
       </Section>

@@ -1,0 +1,222 @@
+[
+  {
+    "id": "TRC-003",
+    "projectId": "PRJ-001",
+    "sourceType": "workItems",
+    "sourceId": "TSK-001",
+    "targetType": "artifacts",
+    "targetId": "ART-001",
+    "relationType": "OUTPUT",
+    "createdAt": "2026-11-15T12:57:20.350Z",
+    "updatedAt": "2026-11-15T12:57:20.350Z"
+  },
+  {
+    "id": "TRC-004",
+    "projectId": "PRJ-001",
+    "sourceType": "workItems",
+    "sourceId": "TSK-001",
+    "targetType": "artifacts",
+    "targetId": "ART-003",
+    "relationType": "OUTPUT",
+    "createdAt": "2026-11-15T12:57:32.387Z",
+    "updatedAt": "2026-11-15T12:57:32.387Z"
+  },
+  {
+    "id": "TRC-005",
+    "projectId": "PRJ-001",
+    "sourceType": "workItems",
+    "sourceId": "TSK-001",
+    "targetType": "artifacts",
+    "targetId": "ART-002",
+    "relationType": "OUTPUT",
+    "createdAt": "2026-11-15T12:57:44.905Z",
+    "updatedAt": "2026-11-15T12:57:44.905Z"
+  },
+  {
+    "id": "TRC-007",
+    "projectId": "PRJ-001",
+    "sourceType": "workItems",
+    "sourceId": "TSK-001",
+    "targetType": "artifacts",
+    "targetId": "ART-005",
+    "relationType": "OUTPUT",
+    "createdAt": "2026-11-15T12:58:19.962Z",
+    "updatedAt": "2026-11-15T12:58:19.962Z"
+  },
+  {
+    "id": "TRC-008",
+    "projectId": "PRJ-001",
+    "sourceType": "executions",
+    "sourceId": "EXE-001",
+    "targetType": "artifacts",
+    "targetId": "ART-007",
+    "relationType": "OUTPUT",
+    "createdAt": "2026-11-15T13:08:33.126Z",
+    "updatedAt": "2026-11-15T13:08:33.126Z"
+  },
+  {
+    "id": "TRC-009",
+    "projectId": "PRJ-001",
+    "sourceType": "workItems",
+    "sourceId": "TSK-002",
+    "targetType": "artifacts",
+    "targetId": "ART-007",
+    "relationType": "OUTPUT",
+    "createdAt": "2026-11-15T13:08:33.128Z",
+    "updatedAt": "2026-11-15T13:08:33.128Z"
+  },
+  {
+    "id": "TRC-010",
+    "projectId": "PRJ-001",
+    "sourceType": "executions",
+    "sourceId": "EXE-002",
+    "targetType": "artifacts",
+    "targetId": "ART-008",
+    "relationType": "OUTPUT",
+    "createdAt": "2026-11-15T13:12:52.653Z",
+    "updatedAt": "2026-11-15T13:12:52.653Z"
+  },
+  {
+    "id": "TRC-011",
+    "projectId": "PRJ-001",
+    "sourceType": "workItems",
+    "sourceId": "TSK-002",
+    "targetType": "artifacts",
+    "targetId": "ART-008",
+    "relationType": "OUTPUT",
+    "createdAt": "2026-11-15T13:12:52.654Z",
+    "updatedAt": "2026-11-15T13:12:52.654Z"
+  },
+  {
+    "id": "TRC-013",
+    "projectId": "PRJ-001",
+    "sourceType": "contexts",
+    "sourceId": "CTX-002",
+    "targetType": "executions",
+    "targetId": "EXE-001",
+    "relationType": "OUTPUT",
+    "createdAt": "2026-11-15T13:24:34.894Z",
+    "updatedAt": "2026-11-15T13:24:34.894Z"
+  },
+  {
+    "id": "TRC-014",
+    "projectId": "PRJ-001",
+    "sourceType": "contexts",
+    "sourceId": "CTX-003",
+    "targetType": "executions",
+    "targetId": "EXE-002",
+    "relationType": "OUTPUT",
+    "createdAt": "2026-11-15T13:25:03.635Z",
+    "updatedAt": "2026-11-15T13:25:03.635Z"
+  },
+  {
+    "id": "TRC-015",
+    "projectId": "PRJ-001",
+    "sourceType": "contexts",
+    "sourceId": "CTX-004",
+    "targetType": "executions",
+    "targetId": "EXE-002",
+    "relationType": "INPUT",
+    "createdAt": "2026-11-15T13:25:24.293Z",
+    "updatedAt": "2026-11-15T13:25:24.293Z"
+  },
+  {
+    "id": "TRC-016",
+    "projectId": "PRJ-001",
+    "sourceType": "workItems",
+    "sourceId": "TSK-006",
+    "targetType": "artifacts",
+    "targetId": "ART-007",
+    "relationType": "INPUT",
+    "createdAt": "2026-11-15T13:27:24.749Z",
+    "updatedAt": "2026-11-15T13:27:24.749Z"
+  },
+  {
+    "id": "TRC-017",
+    "projectId": "PRJ-001",
+    "sourceType": "artifacts",
+    "sourceId": "ART-004",
+    "targetType": "workItems",
+    "targetId": "TSK-001",
+    "relationType": "INPUT",
+    "createdAt": "2026-11-15T13:27:44.326Z",
+    "updatedAt": "2026-11-15T13:27:44.326Z"
+  },
+  {
+    "id": "TRC-018",
+    "projectId": "PRJ-001",
+    "sourceType": "contexts",
+    "sourceId": "CTX-005",
+    "targetType": "workItems",
+    "targetId": "TSK-002",
+    "relationType": "INPUT",
+    "createdAt": "2026-11-15T13:28:23.780Z",
+    "updatedAt": "2026-11-15T13:28:23.780Z"
+  },
+  {
+    "id": "TRC-019",
+    "projectId": "PRJ-001",
+    "sourceType": "contexts",
+    "sourceId": "CTX-008",
+    "targetType": "workItems",
+    "targetId": "TSK-001",
+    "relationType": "INPUT",
+    "createdAt": "2026-11-15T13:28:36.996Z",
+    "updatedAt": "2026-11-15T13:28:36.996Z"
+  },
+  {
+    "id": "TRC-020",
+    "projectId": "PRJ-001",
+    "sourceType": "workItems",
+    "sourceId": "TSK-007",
+    "targetType": "artifacts",
+    "targetId": "ART-008",
+    "relationType": "OUTPUT",
+    "createdAt": "2026-11-15T13:28:54.194Z",
+    "updatedAt": "2026-11-15T13:28:54.194Z"
+  },
+  {
+    "id": "TRC-021",
+    "projectId": "PRJ-001",
+    "sourceType": "contexts",
+    "sourceId": "CTX-006",
+    "targetType": "workItems",
+    "targetId": "TSK-004",
+    "relationType": "INPUT",
+    "createdAt": "2026-11-15T13:29:18.126Z",
+    "updatedAt": "2026-11-15T13:29:18.126Z"
+  },
+  {
+    "id": "TRC-023",
+    "projectId": "PRJ-001",
+    "sourceType": "contexts",
+    "sourceId": "CTX-007",
+    "targetType": "workItems",
+    "targetId": "TSK-005",
+    "relationType": "INPUT",
+    "createdAt": "2026-11-15T13:30:00.691Z",
+    "updatedAt": "2026-11-15T13:30:00.691Z"
+  },
+  {
+    "id": "TRC-024",
+    "projectId": "PRJ-001",
+    "sourceType": "workItems",
+    "sourceId": "TSK-004",
+    "targetType": "workItems",
+    "targetId": "TSK-003",
+    "relationType": "DERIVED_FROM",
+    "createdAt": "2026-11-15T13:30:26.668Z",
+    "updatedAt": "2026-11-15T13:30:26.668Z"
+  },
+  {
+    "id": "TRC-025",
+    "projectId": "PRJ-001",
+    "sourceType": "workItems",
+    "sourceId": "TSK-005",
+    "targetType": "workItems",
+    "targetId": "TSK-003",
+    "relationType": "DERIVED_FROM",
+    "createdAt": "2026-11-15T13:30:39.433Z",
+    "updatedAt": "2026-11-15T13:30:39.433Z"
+  }
+]

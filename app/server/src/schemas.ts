@@ -142,3 +142,6 @@ export function validate(k: CollKey, input: Record<string, unknown>, mode: 'crea
   if (errors.length) throw new HttpError(400, '入力内容に誤りがあります', errors);
   return out;
 }
+
+/** コレクション名 → APIパス(= 案件フォルダ内のファイル名の語幹) */
+export const SEGMENT_OF = Object.fromEntries(Object.entries(COLLECTIONS).map(([seg, k]) => [k, seg])) as Record<CollKey, string>;

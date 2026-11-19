@@ -27,6 +27,7 @@ export type NewOf<K extends CollectionKey> = Omit<Collections[K], keyof Base>;
 export type Data = { [K in CollectionKey]: Collections[K][] };
 
 const KEYS = Object.keys(SEGMENTS) as CollectionKey[];
+const PKEYS = KEYS.filter((k) => k !== 'projects');
 const emptyData = (): Data => Object.fromEntries(KEYS.map((k) => [k, []])) as unknown as Data;
 // 作業中プロジェクトはUIの状態なのでブラウザに保存する(業務データはサーバーが持つ)
 const CURRENT_KEY = 'aidda-client:currentProject';
@@ -66,7 +67,7 @@ interface Store {
   /** 個別エンドポイント(ワークフロー等)を呼び、サーバー側で変わったデータを再読込する */
   call: <T>(method: string, path: string, body?: unknown) => Promise<T | undefined>;
   addDefaultPrompts: (projectId: string) => Promise<void>;
-  reload: () => Promise<void>;
+  reload: (forceId?: string) => Promise<void>;
 }
 
 const Ctx = createContext<Store>(null as unknown as Store);
@@ -74,32 +75,41 @@ export const useStore = () => useContext(Ctx);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const toast = useToast();
+  // data.projects は全案件。それ以外のコレクションは「作業中の案件」のぶんだけを持つ(案件ごとにサーバー側のフォルダが分かれているため)
   const [data, setData] = useState<Data>(emptyData);
   const [status, setStatus] = useState<Status>('loading');
   const [error, setError] = useState('');
   const [currentId, setCurrentId] = useState(() => {
     try { return localStorage.getItem(CURRENT_KEY) ?? ''; } catch { return ''; }
   });
+  const currentIdRef = useRef(currentId);
+  const statusRef = useRef<Status>('loading');
+  const seq = useRef(0);
+  const changeStatus = useCallback((s: Status) => { statusRef.current = s; setStatus(s); }, []);
 
-  // 初回読込が済んだか。状態更新関数の中で副作用(トースト)を出さないため ref で持つ
-  const loadedRef = useRef(false);
-  const reload = useCallback(async () => {
-    if (!loadedRef.current) setStatus('loading');
+  /** プロジェクト一覧と、作業中プロジェクトのデータを読み直す。古い応答が新しい応答を上書きしないよう世代番号で破棄する */
+  const reload = useCallback(async (forceId?: string) => {
+    const mine = ++seq.current;
     try {
-      const entries = await Promise.all(KEYS.map(async (k) => [k, await fetchAll(SEGMENTS[k])] as const));
-      setData(Object.fromEntries(entries) as unknown as Data);
-      loadedRef.current = true;
-      setStatus('ready');
+      const projects = await fetchAll<Project>(SEGMENTS.projects);
+      const pid = (projects.find((p) => p.id === (forceId ?? currentIdRef.current)) ?? projects[0])?.id ?? '';
+      const entries = await Promise.all(PKEYS.map(async (k) => [k, pid ? await fetchAll(SEGMENTS[k], pid) : []] as const));
+      if (mine !== seq.current) return;
+      currentIdRef.current = pid;
+      setCurrentId(pid);
+      setData({ projects, ...Object.fromEntries(entries) } as unknown as Data);
       setError('');
+      changeStatus('ready');
     } catch (e) {
-      if (loadedRef.current) {
+      if (mine !== seq.current) return;
+      if (statusRef.current === 'ready') {
         toast(`データの再読込に失敗しました: ${errMsg(e)}`, 'bad');
       } else {
         setError(errMsg(e));
-        setStatus('error');
+        changeStatus('error');
       }
     }
-  }, [toast]);
+  }, [toast, changeStatus]);
 
   useEffect(() => { void reload(); }, [reload]);
 
@@ -151,12 +161,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     for (const p of DEFAULT_PROMPTS) await add('prompts', { ...p, projectId });
   }, [add]);
 
-  // 選択中のIDが無効(未選択/削除済み)なら先頭のプロジェクトを使う
-  const currentProject = data.projects.find((p) => p.id === currentId) ?? data.projects[0];
+  const currentProject = data.projects.find((p) => p.id === currentId);
+  /** 作業中の案件を切り替える。切替後はその案件のデータを読み込む(他の案件のデータは読まない) */
   const setCurrentProject = useCallback((id: string) => {
+    if (id === currentIdRef.current) return;
+    currentIdRef.current = id;
     setCurrentId(id);
     try { localStorage.setItem(CURRENT_KEY, id); } catch { /* 保存できなくても動作する */ }
-  }, []);
+    changeStatus('loading');
+    void reload(id);
+  }, [reload, changeStatus]);
 
   const scoped = useMemo(() => {
     const out: Record<string, unknown[]> = {};

@@ -1,0 +1,35 @@
+[
+  {
+    "id": "PRM-001",
+    "projectId": "PRJ-001",
+    "name": "要件分析",
+    "role": "REQ",
+    "template": "あなたは{{role}}担当です。以下のコンテキストを分析し、タスクを実施してください。\n\n## タスク\n{{task}}\n\n## コンテキスト\n{{contexts}}\n\n## 出力形式\n{{outputFormat}}",
+    "outputFormat": "Markdown(見出し付き・箇条書き中心)",
+    "version": "1.0",
+    "createdAt": "2026-11-15T12:40:11.552Z",
+    "updatedAt": "2026-11-15T12:40:11.552Z"
+  },
+  {
+    "id": "PRM-002",
+    "projectId": "PRJ-001",
+    "name": "設計書作成",
+    "role": "ARCH",
+    "template": "あなたは{{role}}です。要件コンテキストをもとに設計書を作成してください。\n\n## タスク\n{{task}}\n\n## 要件コンテキスト\n{{contexts}}\n\n## 出力形式\n{{outputFormat}}",
+    "outputFormat": "Markdown(見出し付き・箇条書き中心)",
+    "version": "1.0",
+    "createdAt": "2026-11-15T12:40:11.575Z",
+    "updatedAt": "2026-11-15T12:40:11.575Z"
+  },
+  {
+    "id": "PRM-003",
+    "projectId": "PRJ-001",
+    "name": "テスト仕様作成",
+    "role": "TEST",
+    "template": "あなたは{{role}}担当です。設計コンテキストをもとにテスト仕様を作成してください。\n\n## タスク\n{{task}}\n\n## 設計コンテキスト\n{{contexts}}\n\n## 出力形式\n{{outputFormat}}",
+    "outputFormat": "表形式(Markdownテーブル)",
+    "version": "1.0",
+    "createdAt": "2026-11-15T12:40:11.584Z",
+    "updatedAt": "2026-11-15T12:40:11.584Z"
+  }
+]

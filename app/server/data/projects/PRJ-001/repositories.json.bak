@@ -1,0 +1,12 @@
+[
+  {
+    "id": "REP-001",
+    "projectId": "PRJ-001",
+    "url": "https://github.com/Tatsu-code452/ai-driven-developer-assist.git",
+    "defaultBranch": "main",
+    "currentBranch": "main",
+    "worktreeRoot": "C:\\workspace\\ai-driven-developer-assist",
+    "createdAt": "2026-11-19T12:20:26.697Z",
+    "updatedAt": "2026-11-19T12:23:00.833Z"
+  }
+]

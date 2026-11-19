@@ -62,12 +62,12 @@ export const SEGMENTS = {
   releases: 'releases',
 } as const;
 
-/** 全件取得(1000件ずつページング) */
-export async function fetchAll<T>(segment: string): Promise<T[]> {
+/** 全件取得(1000件ずつページング)。案件に属するデータは projectId が必須(サーバーは案件ごとのフォルダに保存している) */
+export async function fetchAll<T>(segment: string, projectId?: string): Promise<T[]> {
   const out: T[] = [];
   const limit = 1000;
   for (let offset = 0; ; offset += limit) {
-    const r = await http<{ items: T[]; total: number }>('GET', `/api/${segment}?limit=${limit}&offset=${offset}`);
+    const r = await http<{ items: T[]; total: number }>('GET', `/api/${segment}?limit=${limit}&offset=${offset}${projectId ? `&projectId=${encodeURIComponent(projectId)}` : ''}`);
     out.push(...r.items);
     if (out.length >= r.total || r.items.length === 0) break;
   }

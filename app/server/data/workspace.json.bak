@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 2,
+  "updatedAt": "2026-11-19T12:32:39.644Z",
+  "counters": {
+    "PRJ": 1,
+    "PRM": 3,
+    "ART": 8,
+    "TSK": 7,
+    "TRC": 25,
+    "CTX": 8,
+    "EXE": 2,
+    "REP": 1
+  },
+  "settings": {},
+  "projects": [
+    {
+      "id": "PRJ-001",
+      "name": "AI駆動型開発支援システム",
+      "status": "PLANNING",
+      "folder": "projects/PRJ-001",
+      "createdAt": "2026-11-15T12:40:11.543Z",
+      "updatedAt": "2026-11-15T12:40:11.543Z"
+    }
+  ]
+}

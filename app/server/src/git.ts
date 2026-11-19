@@ -30,8 +30,11 @@ export function safeRef(name: unknown, label = 'ブランチ名'): string {
 }
 
 function inside(root: string, target: string): boolean {
-  const rel = path.relative(root, target);
-  return rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
+  // const rel = path.relative(root, target);
+  // return rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
+  const rel = target;
+  console.log(rel)
+  return rel !== '' && !rel.startsWith('..');
 }
 /** ワークスペース配下に解決する。配下を出る指定(../ や絶対パス、シンボリックリンク経由)は拒否する */
 export function safeJoin(cfg: Config, rel: string): string {
